@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionTrig;
@@ -39,7 +38,7 @@ public class RobotContainer {
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
 
-  private final AHRS navX = new AHRS(NavXComType.kMXP_SPI, (byte) DriveConstants.odometryFrequency);
+  private final AHRS navX = new AHRS(NavXComType.kMXP_SPI, (byte) 100);
 
   // Dashboard inputs
   // private final LoggedDashboardChooser<Command> autoChooser;
