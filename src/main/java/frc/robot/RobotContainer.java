@@ -20,7 +20,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionConstants;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionTrig;
+import frc.robot.subsystems.vision.VisionIOQuestNav;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -86,7 +87,10 @@ public class RobotContainer {
         vision =
             new Vision(
                 this::addVisionMeasurement,
-                new VisionIOPhotonVision("camera", VisionConstants.robotToCamera1));
+                new VisionIOQuestNav(
+                    VisionConstants.robotToCamera0,
+                    new VisionIOPhotonVisionTrig(
+                        "camera", VisionConstants.robotToCamera1, () -> navX.getRotation2d())));
 
         break;
 
