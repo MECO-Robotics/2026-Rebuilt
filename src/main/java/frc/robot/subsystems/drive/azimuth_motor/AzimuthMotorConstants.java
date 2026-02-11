@@ -4,7 +4,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.drive.DriveConstants;
 
 public class AzimuthMotorConstants {
-  // by default, the drive is set to the RoboRio's CANBus
+  // by default, the drive is set to the RoboRio's CANBus (you can also make it the rio it by doing
+  // "")
   // change this value if using CANivore to CANivore's Bus name, set in Phoenix Tuner X
   // (if necessary, do this in DriveMotorConstants.java if drive motors are connected
   // to CANivore as well)
@@ -33,7 +34,7 @@ public class AzimuthMotorConstants {
 
   public static final AzimuthMotorHardwareConfig FRONT_LEFT_CONFIG =
       new AzimuthMotorHardwareConfig(
-          new int[] {41},
+          new int[] {1},
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
@@ -44,7 +45,7 @@ public class AzimuthMotorConstants {
 
   public static final AzimuthMotorHardwareConfig FRONT_RIGHT_CONFIG =
       new AzimuthMotorHardwareConfig(
-          new int[] {42},
+          new int[] {3},
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
@@ -55,7 +56,7 @@ public class AzimuthMotorConstants {
 
   public static final AzimuthMotorHardwareConfig BACK_LEFT_CONFIG =
       new AzimuthMotorHardwareConfig(
-          new int[] {43},
+          new int[] {5},
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
@@ -66,7 +67,7 @@ public class AzimuthMotorConstants {
 
   public static final AzimuthMotorHardwareConfig BACK_RIGHT_CONFIG =
       new AzimuthMotorHardwareConfig(
-          new int[] {44},
+          new int[] {7},
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
