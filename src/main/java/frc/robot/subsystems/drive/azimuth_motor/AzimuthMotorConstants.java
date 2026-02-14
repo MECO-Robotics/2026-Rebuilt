@@ -38,9 +38,9 @@ public class AzimuthMotorConstants {
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
-          EncoderType.EXTERNAL_CANCODER,
+          EncoderType.EXTERNAL_CANCODER_PRO,
           21,
-          Rotation2d.fromRotations(0),
+          Rotation2d.fromRotations(0.188965),
           canBusName);
 
   public static final AzimuthMotorHardwareConfig FRONT_RIGHT_CONFIG =
@@ -49,9 +49,9 @@ public class AzimuthMotorConstants {
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
-          EncoderType.EXTERNAL_CANCODER,
+          EncoderType.EXTERNAL_CANCODER_PRO,
           22,
-          Rotation2d.fromRotations(0),
+          Rotation2d.fromRotations(-0.302490),
           canBusName);
 
   public static final AzimuthMotorHardwareConfig BACK_LEFT_CONFIG =
@@ -60,9 +60,9 @@ public class AzimuthMotorConstants {
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
-          EncoderType.EXTERNAL_CANCODER,
+          EncoderType.EXTERNAL_CANCODER_PRO,
           23,
-          Rotation2d.fromRotations(0),
+          Rotation2d.fromRotations(-0.404053),
           canBusName);
 
   public static final AzimuthMotorHardwareConfig BACK_RIGHT_CONFIG =
@@ -71,9 +71,9 @@ public class AzimuthMotorConstants {
           new boolean[] {false},
           DriveConstants.steerMotorGearRatio,
           40,
-          EncoderType.EXTERNAL_CANCODER,
+          EncoderType.EXTERNAL_CANCODER_PRO,
           24,
-          Rotation2d.fromRotations(0),
+          Rotation2d.fromRotations(0.348877),
           canBusName);
 
   public static final AzimuthMotorGains EXAMPLE_GAINS = new AzimuthMotorGains(25, 0, 0, 0, 2.5, 0);

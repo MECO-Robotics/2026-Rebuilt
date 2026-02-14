@@ -8,7 +8,7 @@ public class DriveMotorConstants {
   // change this value if using CANivore to CANivore's Bus name, set in Phoenix Tuner X
   // (if necessary, do this in AzimuthMotorConstants.java if drive motors are connected
   // to CANivore as well)
-  public static final String canBusName = "rio";
+  public static final String canBusName = "MECO CANIvore";
 
   public record DriveMotorGains(double kP, double kI, double kD, double kS, double kV, double kA) {}
   ;

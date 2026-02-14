@@ -9,21 +9,19 @@ import edu.wpi.first.math.util.Units;
  */
 public class FieldConstants {
 
-    public static class Hub {
-        public static final Translation2d centerofHub =
+  public static class Hub {
+    public static final Translation2d centerofHub =
         new Translation2d(Units.inchesToMeters(182.105), Units.inchesToMeters(158.845));
 
-        //measured from floor to top of funnel
-        public static final double hubHeight = Units.inchesToMeters(72);
-    }
+    // measured from floor to top of funnel
+    public static final double hubHeight = Units.inchesToMeters(72);
+  }
 
-
-
-//   public static Translation2d hubPosition() {
-//     final Optional<Alliance> alliance = DriverStation.getAlliance();
-//     if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
-//       return new Translation2d(Units.inchesToMeters(182.105), Units.inchesToMeters(158.845));
-//     }
-//     return new Translation2d(Units.inchesToMeters(469.115), Units.inchesToMeters(158.845));
-//   }
+  //   public static Translation2d hubPosition() {
+  //     final Optional<Alliance> alliance = DriverStation.getAlliance();
+  //     if (alliance.isPresent() && alliance.get() == Alliance.Blue) {
+  //       return new Translation2d(Units.inchesToMeters(182.105), Units.inchesToMeters(158.845));
+  //     }
+  //     return new Translation2d(Units.inchesToMeters(469.115), Units.inchesToMeters(158.845));
+  //   }
 }
