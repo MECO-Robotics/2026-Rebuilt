@@ -19,4 +19,18 @@ public class FlywheelConstants {
 
   public static final FlywheelGains EXAMPLE_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+
+  // -----------
+  // Conveyor Constants
+  // -----------
+  public static final FlywheelHardwareConfig CONVEYOR_CONFIG =
+      new FlywheelHardwareConfig(new int[] {}, new boolean[] {false}, 0, 0, "");
+  public static final FlywheelGains CONVEYOR_GAINS =
+      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+
+
+
+
+
+
 }
