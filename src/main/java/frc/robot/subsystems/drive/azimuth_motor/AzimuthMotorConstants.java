@@ -9,7 +9,7 @@ public class AzimuthMotorConstants {
   // change this value if using CANivore to CANivore's Bus name, set in Phoenix Tuner X
   // (if necessary, do this in DriveMotorConstants.java if drive motors are connected
   // to CANivore as well)
-  public static final String canBusName = "rio";
+  public static final String canBusName = "MECO CANIvore";
 
   public record AzimuthMotorGains(
       double kP, double kI, double kD, double kS, double kV, double kA) {}
@@ -40,7 +40,7 @@ public class AzimuthMotorConstants {
           40,
           EncoderType.EXTERNAL_CANCODER_PRO,
           21,
-          Rotation2d.fromRotations(0.188965),
+          Rotation2d.fromRotations(-0.188965),
           canBusName);
 
   public static final AzimuthMotorHardwareConfig FRONT_RIGHT_CONFIG =
@@ -51,7 +51,7 @@ public class AzimuthMotorConstants {
           40,
           EncoderType.EXTERNAL_CANCODER_PRO,
           22,
-          Rotation2d.fromRotations(-0.302490),
+          Rotation2d.fromRotations(0.302490),
           canBusName);
 
   public static final AzimuthMotorHardwareConfig BACK_LEFT_CONFIG =
@@ -62,7 +62,7 @@ public class AzimuthMotorConstants {
           40,
           EncoderType.EXTERNAL_CANCODER_PRO,
           23,
-          Rotation2d.fromRotations(-0.404053),
+          Rotation2d.fromRotations(0.404053),
           canBusName);
 
   public static final AzimuthMotorHardwareConfig BACK_RIGHT_CONFIG =
@@ -73,10 +73,10 @@ public class AzimuthMotorConstants {
           40,
           EncoderType.EXTERNAL_CANCODER_PRO,
           24,
-          Rotation2d.fromRotations(0.348877),
+          Rotation2d.fromRotations(-0.348877),
           canBusName);
 
-  public static final AzimuthMotorGains EXAMPLE_GAINS = new AzimuthMotorGains(25, 0, 0, 0, 2.5, 0);
+  public static final AzimuthMotorGains EXAMPLE_GAINS = new AzimuthMotorGains(15, 0, 0, 0.25, 2, 0);
 
   public static final AzimuthMotorGains EXAMPLE_GAINS_SIM =
       new AzimuthMotorGains(35, 0, 0, 0.0, 3, 0);

@@ -35,5 +35,5 @@ public class DriveMotorConstants {
   public static final DriveMotorGains EXAMPLE_GAINS = new DriveMotorGains(1, 0, 0, 0.5, 0.71, 0);
 
   public static final DriveMotorGains EXAMPLE_GAINS_SIM =
-      new DriveMotorGains(1, 0, 0, 0.5, 0.71, 0);
+      new DriveMotorGains(1, 0, 0, 0.15, 0.91, 0);
 }
