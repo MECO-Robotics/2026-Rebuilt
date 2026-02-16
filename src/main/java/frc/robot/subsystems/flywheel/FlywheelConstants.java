@@ -27,10 +27,4 @@ public class FlywheelConstants {
       new FlywheelHardwareConfig(new int[] {}, new boolean[] {false}, 0, 0, "");
   public static final FlywheelGains CONVEYOR_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
-
-
-
-
-
-
 }
