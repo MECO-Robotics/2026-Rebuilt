@@ -1,15 +1,12 @@
 package frc.robot;
 
-import java.util.Optional;
-
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import java.util.Optional;
 
-/**
- * Contains various field dimensions and useful reference points. All units are in meters
- */
+/** Contains various field dimensions and useful reference points. All units are in meters */
 public class FieldConstants {
 
   public static class Hub {
