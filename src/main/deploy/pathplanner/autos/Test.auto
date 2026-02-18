@@ -7,19 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "StartSubwoofer"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "PivotUp"
+            "pathName": "Test 1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Note1ToMid"
+            "pathName": "Test 2"
           }
         }
       ]

@@ -50,8 +50,8 @@ public class IntakeCommands {
   }
 
   /**
-   * Spins the wheels to intake, and moves the rotation motor repeatedly up and down for feeding stuck balls to the
-   * shooter.
+   * Spins the wheels to intake, and moves the rotation motor repeatedly up and down for feeding
+   * stuck balls to the shooter.
    */
   public static Command agitateIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
     return Commands.parallel(
