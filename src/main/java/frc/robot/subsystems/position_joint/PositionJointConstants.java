@@ -60,4 +60,21 @@ public class PositionJointConstants {
           11,
           Rotation2d.fromRotations(0.5),
           "");
+
+  // -----------
+  // Intake Constants
+  // -----------
+  public static final PositionJointGains INTAKE_RACK_GAINS =
+      new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
+  public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG =
+      new PositionJointHardwareConfig(
+          new int[] {12},
+          new boolean[] {true},
+          85.33333 * 2 * Math.PI,
+          40,
+          GravityType.COSINE,
+          EncoderType.EXTERNAL_CANCODER,
+          13,
+          Rotation2d.fromRotations(0.25),
+          "");
 }

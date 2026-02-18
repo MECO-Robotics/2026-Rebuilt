@@ -24,7 +24,15 @@ public class FlywheelConstants {
   // Conveyor Constants
   // -----------
   public static final FlywheelHardwareConfig CONVEYOR_CONFIG =
-      new FlywheelHardwareConfig(new int[] {}, new boolean[] {false}, 0, 0, "");
+      new FlywheelHardwareConfig(new int[] {}, new boolean[] {false}, 1, 0, "");
   public static final FlywheelGains CONVEYOR_GAINS =
+      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+
+  // -----------
+  // Intake Constants
+  // -----------
+  public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG =
+      new FlywheelHardwareConfig(new int[] {}, new boolean[] {false}, 1, 0, "");
+  public static final FlywheelGains INTAKE_ROLLER_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 }
