@@ -73,8 +73,33 @@ public class PositionJointConstants {
           85.33333 * 2 * Math.PI,
           40,
           GravityType.COSINE,
-          EncoderType.EXTERNAL_CANCODER,
-          13,
+          EncoderType.INTERNAL,
+          0,
           Rotation2d.fromRotations(0.25),
           "");
+
+
+  // -----------
+  // Hood
+  // -----------
+  public static final PositionJointGains HOOD_GAINS =
+      new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
+  public static final PositionJointHardwareConfig HOOD_CONFIG =
+      new PositionJointHardwareConfig(
+          new int[] {}, 
+          new boolean[] {false},
+          85.33333 * 2 * Math.PI,
+          40,
+          GravityType.COSINE,
+          EncoderType.INTERNAL,
+          0,
+          Rotation2d.fromRotations(0.25),
+          "");
+
+
+
+  //------------
+  // Climber Constants TODO
+  //------------
+  
 }
