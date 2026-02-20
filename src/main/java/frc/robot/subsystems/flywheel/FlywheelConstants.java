@@ -24,7 +24,7 @@ public class FlywheelConstants {
   // Conveyor Constants
   // -----------
   public static final FlywheelHardwareConfig CONVEYOR_CONFIG =
-      new FlywheelHardwareConfig(new int[] {46}, new boolean[] {false}, 1, 40, "");
+      new FlywheelHardwareConfig(new int[] {23}, new boolean[] {false}, 1, 40, "");
   public static final FlywheelGains CONVEYOR_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 
@@ -32,7 +32,7 @@ public class FlywheelConstants {
   // Intake Constants
   // -----------
   public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {45}, new boolean[] {false}, 1, 40, "");
+      new FlywheelHardwareConfig(new int[] {22}, new boolean[] {false}, 1, 40, "");
   public static final FlywheelGains INTAKE_ROLLER_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 
@@ -41,9 +41,9 @@ public class FlywheelConstants {
  // Indexer Constants
  //------------
 public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG = 
-    new FlywheelHardwareConfig(new int[] {43}, new boolean[] {false}, 1, 40, "");
+    new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 40, "");
 public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG = 
-    new FlywheelHardwareConfig(new int[] {44}, new boolean[] {false}, 1, 40, "");
+    new FlywheelHardwareConfig(new int[] {31}, new boolean[] {false}, 1, 40, "");
 public static final FlywheelGains INDEXER_ROLLER_GAINS = 
     new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
 
@@ -54,7 +54,7 @@ public static final FlywheelGains INDEXER_ROLLER_GAINS =
  // Shooter Constants
  //------------
 public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = 
-    new FlywheelHardwareConfig(new int[] {41,42}, new boolean[] {false, true}, 1, 40, "");
+    new FlywheelHardwareConfig(new int[] {34,35}, new boolean[] {false, true}, 1, 40, "");
 public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = 
     new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 
