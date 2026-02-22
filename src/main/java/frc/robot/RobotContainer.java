@@ -14,8 +14,10 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.ShootCommands;
 import frc.robot.commands.ShootCommands.SHOOTER_VOLTS;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
@@ -34,10 +36,15 @@ import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelConstants;
+import frc.robot.subsystems.position_joint.PositionJointConstants;
+import frc.robot.subsystems.position_joint.PositionJointIOSim;
+import frc.robot.subsystems.position_joint.PositionJointIOReplay;
 import frc.robot.subsystems.flywheel.FlywheelIOReplay;
 import frc.robot.subsystems.flywheel.FlywheelIOSim;
 import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
+import frc.robot.subsystems.position_joint.PositionJoint;
+import frc.robot.subsystems.position_joint.PositionJointIOSparkMax;
 
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -54,6 +61,8 @@ public class RobotContainer {
   private final Flywheel topIndexer;
   private final Flywheel bottomIndexer;
   private final Flywheel conveyor;
+  private final Flywheel intakeRoller;
+  private final PositionJoint intakeRack;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -112,6 +121,14 @@ public class RobotContainer {
             FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
             FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
 
+        intakeRoller = new Flywheel(new FlywheelIOSparkMax("IntakeRoller",
+            FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
+            FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRack = new PositionJoint(new PositionJointIOSparkMax("IntakeRoller",
+            PositionJointConstants.INTAKE_RACK_CONFIG),
+            PositionJointConstants.INTAKE_RACK_GAINS);
+
         break;
 
       case SIM:
@@ -152,6 +169,14 @@ public class RobotContainer {
         shooterFlywheel = new Flywheel(new FlywheelIOSim("ShooterFlywheel",
             FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
             FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRoller = new Flywheel(new FlywheelIOSim("IntakeRoller",
+            FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
+            FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRack = new PositionJoint(new PositionJointIOSim("IntakeRoller",
+            PositionJointConstants.INTAKE_RACK_CONFIG),
+            PositionJointConstants.INTAKE_RACK_GAINS);
         break;
 
       default:
@@ -187,6 +212,13 @@ public class RobotContainer {
 
         shooterFlywheel = new Flywheel(new FlywheelIOReplay("ShooterFlywheel"),
             FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRoller = new Flywheel(new FlywheelIOReplay("IntakeRoller"),
+            FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRack = new PositionJoint(new PositionJointIOReplay("IntakeRoller"),
+            PositionJointConstants.INTAKE_RACK_GAINS);
+        
         break;
     }
 
@@ -269,6 +301,22 @@ public class RobotContainer {
     ).whileFalse(
         ShootCommands.idleRollers(bottomIndexer, topIndexer, conveyor)
     );
+
+    controller
+    .leftBumper()
+    .whileTrue(
+        IntakeCommands.deployIntake(intakeRack, intakeRoller)
+    ).whileFalse(
+        IntakeCommands.stowIntake(intakeRack, intakeRoller)
+    );
+
+    if (controller.pov(0).getAsBoolean()){
+         new RunCommand(() -> intakeRack.setVoltage(-6), intakeRack);
+    } else if (controller.pov(180).getAsBoolean()){
+        new RunCommand(() -> intakeRack.setVoltage(6), intakeRack);
+    } else{
+        new RunCommand(() -> intakeRack.setVoltage(0), intakeRack);
+    }
   }
 
   /**
