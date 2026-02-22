@@ -106,7 +106,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     for (int i = 1; i < config.canIds().length; i++) {
       motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
       motors[i] = new TalonFX(config.canIds()[i], config.canBus());
-      motors[i].setControl(new Follower(i, motorval));
+      motors[i].setControl(new Follower(config.canIds()[0], motorval));
 
       motorAlerts[i] =
           new Alert(

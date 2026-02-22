@@ -36,30 +36,22 @@ public class FlywheelConstants {
   public static final FlywheelGains INTAKE_ROLLER_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 
+  // ------------
+  // Indexer Constants
+  // ------------
+  public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG =
+      new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 40, "");
+  public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG =
+      new FlywheelHardwareConfig(new int[] {31}, new boolean[] {false}, 1, 40, "");
+  public static final FlywheelGains INDEXER_ROLLER_GAINS =
+      new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
 
- //------------
- // Indexer Constants
- //------------
-public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG = 
-    new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 40, "");
-public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG = 
-    new FlywheelHardwareConfig(new int[] {31}, new boolean[] {false}, 1, 40, "");
-public static final FlywheelGains INDEXER_ROLLER_GAINS = 
-    new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
-
-
-
-
-//------------
- // Shooter Constants
- //------------
-public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = 
-    new FlywheelHardwareConfig(new int[] {34,35}, new boolean[] {false, true}, 1, 40, "");
-public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = 
-    new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
-
-
-
-
-
+  // ------------
+  // Shooter Constants
+  // ------------
+  public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG =
+      new FlywheelHardwareConfig(
+          new int[] {35, 34}, new boolean[] {false, true}, 1, 40, "MECO CANIvore");
+  public static final FlywheelGains FLYWHEEL_ROLLER_GAINS =
+      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 }

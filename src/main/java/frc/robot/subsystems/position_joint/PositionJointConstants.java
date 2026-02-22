@@ -78,7 +78,6 @@ public class PositionJointConstants {
           Rotation2d.fromRotations(0),
           "");
 
-
   // -----------
   // Hood
   // -----------
@@ -86,7 +85,7 @@ public class PositionJointConstants {
       new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
   public static final PositionJointHardwareConfig HOOD_CONFIG =
       new PositionJointHardwareConfig(
-          new int[] {33}, 
+          new int[] {33},
           new boolean[] {false},
           85.33333 * 2 * Math.PI,
           40,
@@ -96,10 +95,8 @@ public class PositionJointConstants {
           Rotation2d.fromRotations(0),
           "");
 
-
-
-  //------------
+  // ------------
   // Climber Constants TODO
-  //------------
-  
+  // ------------
+
 }
