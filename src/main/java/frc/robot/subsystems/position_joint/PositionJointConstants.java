@@ -39,7 +39,29 @@ public class PositionJointConstants {
 
   // Position Joint Gear Ratio should be multiplied by Math.PI * 2 for rotation joints to convert
   // from rotations to radians
-  /** Hardware mapping and mechanism-specific constants for one position joint instance. */
+  /** Hardware mapping and mechanism-specific constants for one position joint instance. 
+   * @param canIds CAN IDs of the motors in the flywheel mechanism, in order from closest to furthest from the shooter.
+   * 
+   * @param reversed Whether each motor is reversed. First boolean corresponds to clockwise 
+   * / positive, rest of the booleans correspond to whether each subsequent motor is reversed relative to the first motor.
+   * 
+   * @param gearRatio The gear ratio between the motor and the joint output (output speed
+   * / motor speed). For rotation joints, this gear ratio should be multiplied by 2 * Math.PI to convert from rotations to radians.
+   * 
+   * @param currentLimit The current limit for the motors in amps.
+   * 
+   * @param gravity The gravity model used for feedforward and compensation.
+   * 
+   * @param encoderType The type of encoder used for position feedback.
+   * 
+   * @param encoderID The ID of the encoder. For external encoders, this is the CAN ID for 
+   * / a CANCoder or the DIO port for a digital encoder. For internal encoders, this can be set to 0 or ignored.
+   * 
+   * @param encoderOffset The offset to apply to the encoder reading to get the joint position 
+   * / in the correct reference frame. For example, if the joint's zero position corresponds to the encoder reading of 0.5 rotations, this would be set to Rotation2d.fromRotations(0.5).
+   * 
+   * @param canBus The CAN bus the motors are on, or an empty string for the rio bus.
+  */
   public record PositionJointHardwareConfig(
       int[] canIds,
       boolean[] reversed,

@@ -13,7 +13,18 @@ public class FlywheelConstants {
       double kMaxAccel,
       double kTolerance) {}
 
-  /** Hardware mapping and mechanical constants for one flywheel instance. */
+  /** Hardware mapping and mechanical constants for one flywheel instance. 
+   * @param canIds CAN IDs of the motors in the flywheel mechanism, in order from closest to furthest from the shooter.
+   * 
+   * @param reversed Whether each motor is reversed. First boolean corresponds to clockwise positive, 
+   * / rest of the booleans correspond to whether each subsequent motor is reversed relative to the first motor.
+   * 
+   * @param gearRatio The gear ratio between the motor and the flywheel (output speed / motor speed).
+   * 
+   * @param currentLimit The current limit for the motors in amps.
+   * 
+   * @param canBus The CAN bus the motors are on, or an empty string for the rio bus.
+  */
   public record FlywheelHardwareConfig(
       int[] canIds, boolean[] reversed, double gearRatio, int currentLimit, String canBus) {}
 
