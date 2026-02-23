@@ -17,6 +17,7 @@ import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
 import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
+/** SparkMax-backed implementation of {@link FlywheelIO}. */
 public class FlywheelIOSparkMax implements FlywheelIO {
   private final String name;
 
@@ -37,10 +38,23 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 
   private double velocitySetpoint = 0.0;
 
+  /**
+   * Creates a SparkMax flywheel IO implementation.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware mapping and mechanism constants
+   */
   public FlywheelIOSparkMax(String name, FlywheelHardwareConfig config) {
     this(name, config, true);
   }
 
+  /**
+   * Creates a SparkMax flywheel IO implementation with selectable motor type.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware mapping and mechanism constants
+   * @param isBrushless true for NEO/brushless mode, false for brushed mode
+   */
   public FlywheelIOSparkMax(String name, FlywheelHardwareConfig config, boolean isBrushless) {
     this.name = name;
 
@@ -165,6 +179,7 @@ public class FlywheelIOSparkMax implements FlywheelIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this flywheel's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

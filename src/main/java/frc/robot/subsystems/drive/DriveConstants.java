@@ -21,6 +21,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
 
+/** Mechanical, electrical, and path-planning constants for the swerve drivetrain. */
 public class DriveConstants {
   public static final double odometryFrequency =
       new CANBus(DriveMotorConstants.canBusName).isNetworkFD()

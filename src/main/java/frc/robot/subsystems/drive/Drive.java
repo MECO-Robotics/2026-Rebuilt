@@ -46,6 +46,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
+/** Main swerve drive subsystem coordinating modules, odometry, and auto integration. */
 public class Drive extends SubsystemBase {
   public static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
@@ -99,6 +100,19 @@ public class Drive extends SubsystemBase {
   private final LoggedTunableNumber azimuthkV;
   private final LoggedTunableNumber azimuthkA;
 
+  /**
+   * Creates a four-module swerve drive subsystem.
+   *
+   * @param gyroIO gyro abstraction
+   * @param flModuleIO front-left module wrapper
+   * @param frModuleIO front-right module wrapper
+   * @param blModuleIO back-left module wrapper
+   * @param brModuleIO back-right module wrapper
+   * @param driveGains initial drive motor gains
+   * @param azimuthGains initial azimuth motor gains
+   * @param phoenixOdometryThread optional Phoenix odometry thread
+   * @param sparkOdometryThread optional Spark odometry thread
+   */
   public Drive(
       GyroIO gyroIO,
       Module flModuleIO,

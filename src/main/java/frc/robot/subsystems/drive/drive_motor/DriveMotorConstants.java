@@ -2,6 +2,7 @@ package frc.robot.subsystems.drive.drive_motor;
 
 import frc.robot.subsystems.drive.DriveConstants;
 
+/** Constants and hardware mappings for drivetrain wheel motors. */
 public class DriveMotorConstants {
   // by default, the drive is set to the RoboRio's CANBus (you can also make it the rio it by doing
   // "")
@@ -10,9 +11,11 @@ public class DriveMotorConstants {
   // to CANivore as well)
   public static final String canBusName = "MECO CANIvore";
 
+  /** Closed-loop and feedforward gains for one drive motor. */
   public record DriveMotorGains(double kP, double kI, double kD, double kS, double kV, double kA) {}
   ;
 
+  /** Hardware mapping and mechanism constants for one drive motor instance. */
   public record DriveMotorHardwareConfig(
       int[] canIds, boolean[] reversed, double gearRatio, double currentLimit, String canBus) {}
 

@@ -26,6 +26,7 @@ import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
 import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
 import java.util.ArrayList;
 
+/** TalonFX-backed implementation of {@link FlywheelIO}. */
 public class FlywheelIOTalonFX implements FlywheelIO {
   private final String name;
 
@@ -58,6 +59,12 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private MotorAlignmentValue motorval;
 
+  /**
+   * Creates a TalonFX flywheel IO implementation.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware mapping and mechanism constants
+   */
   public FlywheelIOTalonFX(String name, FlywheelHardwareConfig config) {
     this.name = name;
 
@@ -185,6 +192,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this flywheel's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

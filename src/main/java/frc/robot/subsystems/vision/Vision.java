@@ -24,12 +24,21 @@ import java.util.LinkedList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * Aggregates camera inputs, filters observations, and feeds accepted poses to drivetrain odometry.
+ */
 public class Vision extends SubsystemBase {
   private final VisionConsumer consumer;
   private final VisionIO[] io;
   private final VisionIOInputsAutoLogged[] inputs;
   private final Alert[] disconnectedAlerts;
 
+  /**
+   * Creates the vision subsystem.
+   *
+   * @param consumer callback for accepted vision measurements
+   * @param io one or more camera IO implementations
+   */
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
     this.io = io;
@@ -169,6 +178,7 @@ public class Vision extends SubsystemBase {
   }
 
   @FunctionalInterface
+  /** Callback used to hand accepted vision observations to consumers (typically drivetrain). */
   public static interface VisionConsumer {
     public void accept(
         Pose2d visionRobotPoseMeters,

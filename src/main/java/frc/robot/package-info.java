@@ -4,8 +4,8 @@
  * <p>Key entry points:
  *
  * <ul>
- *   <li>{@link frc.robot.Main}: JVM startup wrapper for WPILib.</li>
- *   <li>{@link frc.robot.Robot}: robot lifecycle + AdvantageKit logger setup.</li>
+ *   <li>{@link frc.robot.Main}: JVM startup wrapper for WPILib.
+ *   <li>{@link frc.robot.Robot}: robot lifecycle + AdvantageKit logger setup.
  *   <li>{@link frc.robot.RobotContainer}: subsystem wiring, command bindings, and autonomous
  *       chooser.
  * </ul>

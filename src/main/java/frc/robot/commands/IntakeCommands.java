@@ -8,6 +8,7 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
+/** Factory methods for coordinated intake-rack and intake-roller command groups. */
 public class IntakeCommands {
 
   /** Intake rotation preset positions. */

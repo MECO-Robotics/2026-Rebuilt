@@ -3,6 +3,7 @@ package frc.robot.subsystems.drive.azimuth_motor;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.drive.DriveConstants;
 
+/** Constants and hardware mappings for drivetrain azimuth/steering motors. */
 public class AzimuthMotorConstants {
   // by default, the drive is set to the RoboRio's CANBus (you can also make it the rio it by doing
   // "")
@@ -11,9 +12,11 @@ public class AzimuthMotorConstants {
   // to CANivore as well)
   public static final String canBusName = "MECO CANIvore";
 
+  /** Closed-loop and feedforward gains for one azimuth motor. */
   public record AzimuthMotorGains(
       double kP, double kI, double kD, double kS, double kV, double kA) {}
 
+  /** Supported sensor sources for azimuth position. */
   public enum EncoderType {
     INTERNAL,
     EXTERNAL_CANCODER,
@@ -22,6 +25,7 @@ public class AzimuthMotorConstants {
     EXTERNAL_SPARK
   }
 
+  /** Hardware mapping and mechanism constants for one azimuth motor instance. */
   public record AzimuthMotorHardwareConfig(
       int[] canIds,
       boolean[] reversed,

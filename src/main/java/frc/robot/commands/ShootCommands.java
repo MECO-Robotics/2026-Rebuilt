@@ -6,6 +6,7 @@ import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
+/** Factory methods for coordinated shooter/indexer/conveyor command groups. */
 public class ShootCommands {
 
   /** Conveyor roller preset voltages. */

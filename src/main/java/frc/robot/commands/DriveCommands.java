@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+/** Factory methods for drivetrain teleop and characterization commands. */
 public class DriveCommands {
   private static final LoggedTunableNumber DEADBAND =
       new LoggedTunableNumber("DriveCommands/Deadband", 0.1);
@@ -49,6 +50,7 @@ public class DriveCommands {
 
   private DriveCommands() {}
 
+  /** Maps joystick x/y inputs into a deadbanded, squared translation command. */
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     // Apply deadband
     double linearMagnitude = MathUtil.applyDeadband(Math.hypot(x, y), DEADBAND.get());

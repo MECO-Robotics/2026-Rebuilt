@@ -10,6 +10,12 @@ import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * Subsystem wrapper for a velocity-controlled flywheel/roller.
+ *
+ * <p>This class owns profile generation and tunable gains while {@link FlywheelIO} handles
+ * hardware-specific control.
+ */
 public class Flywheel extends SubsystemBase {
   private final FlywheelIO flywheel;
   private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
@@ -34,6 +40,12 @@ public class Flywheel extends SubsystemBase {
 
   private boolean voltageMode = false;
 
+  /**
+   * Creates a flywheel subsystem.
+   *
+   * @param io hardware implementation for this mechanism
+   * @param gains default gains and profile limits
+   */
   public Flywheel(FlywheelIO io, FlywheelGains gains) {
     super(io.getName());
 
@@ -90,38 +102,39 @@ public class Flywheel extends SubsystemBase {
         kSetpoint);
   }
 
+  /** Sets a new velocity goal for profiled closed-loop control. */
   public void setVelocity(double velocity) {
     voltageMode = false;
     profile.setGoal(velocity, velocitySetpoint);
   }
 
+  /** Enables open-loop control and applies a direct voltage command. */
   public void setVoltage(double voltage) {
     voltageMode = true;
     flywheel.setVoltage(voltage);
   }
 
+  /** Returns current measured velocity. */
   public double getVelocity() {
     return inputs.velocity;
   }
 
+  /** Returns the last requested velocity setpoint from the IO layer. */
   public double getVelocitySetpoint() {
     return inputs.desiredVelocity;
   }
 
+  /** Returns true when measured velocity is within configured tolerance of setpoint. */
   public boolean isFinished() {
     return Math.abs(inputs.velocity - inputs.desiredVelocity) < kTolerance.get();
   }
 
-  /*
-   * Command factory to set flywheel velocity
-   */
+  /** Builds a command that continuously sets flywheel velocity from a supplier. */
   public static Command setVelocity(Flywheel flywheel, DoubleSupplier velocity) {
     return new FlywheelVelocityCommand(flywheel, velocity);
   }
 
-  /*
-   * Command factory to set flywheel voltage
-   */
+  /** Builds a command that continuously sets flywheel voltage from a supplier. */
   public static Command setVoltage(Flywheel flywheel, DoubleSupplier voltage) {
     return new FlywheelVoltageCommand(flywheel, voltage);
   }

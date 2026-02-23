@@ -1,6 +1,8 @@
 package frc.robot.subsystems.flywheel;
 
+/** Shared constants and configuration records for flywheel/roller mechanisms. */
 public class FlywheelConstants {
+  /** Closed-loop and feedforward gains for one flywheel mechanism. */
   public record FlywheelGains(
       double kP,
       double kI,
@@ -11,12 +13,15 @@ public class FlywheelConstants {
       double kMaxAccel,
       double kTolerance) {}
 
+  /** Hardware mapping and mechanical constants for one flywheel instance. */
   public record FlywheelHardwareConfig(
       int[] canIds, boolean[] reversed, double gearRatio, int currentLimit, String canBus) {}
 
+  /** Reference hardware config used as a template when adding new flywheels. */
   public static final FlywheelHardwareConfig EXAMPLE_CONFIG =
       new FlywheelHardwareConfig(new int[] {1}, new boolean[] {true}, 2.0, 40, "");
 
+  /** Reference gains used as a template when adding new flywheels. */
   public static final FlywheelGains EXAMPLE_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 

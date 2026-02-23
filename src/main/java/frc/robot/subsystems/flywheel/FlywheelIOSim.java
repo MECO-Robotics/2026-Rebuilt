@@ -11,6 +11,7 @@ import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
 import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
+/** Physics-simulation implementation of {@link FlywheelIO}. */
 public class FlywheelIOSim implements FlywheelIO {
   private final String name;
 
@@ -32,6 +33,12 @@ public class FlywheelIOSim implements FlywheelIO {
 
   private double velocitySetpoint = 0;
 
+  /**
+   * Creates a DC motor simulation for a flywheel mechanism.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware constants used to shape the simulation model
+   */
   public FlywheelIOSim(String name, FlywheelHardwareConfig config) {
     this.name = name;
 
@@ -98,6 +105,7 @@ public class FlywheelIOSim implements FlywheelIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this flywheel's loggable subsystem name. */
   @Override
   public String getName() {
     return name;
