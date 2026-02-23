@@ -51,13 +51,13 @@ Edit `PositionJointConstants` for each joint:
 
 - `PositionJointHardwareConfig`
   - `canIds`: motor IDs, index `0` is leader
-  - `reversed`: inversion config
+  - `reversed`: inversion config, first bool is for clockwise positive and the rest are leader-relative
   - `gearRatio`: motor rotations per mechanism unit
   - `currentLimit`: motor current limit
   - `gravity`: `CONSTANT`, `COSINE`, or `SINE` (SINE not supported on TalonFX path)
   - `encoderType`: `INTERNAL`, `EXTERNAL_CANCODER`, `EXTERNAL_CANCODER_PRO`, `EXTERNAL_DIO`, `EXTERNAL_SPARK`
   - `encoderID`: CAN/DIO encoder ID if external
-  - `encoderOffset`: absolute encoder offset (`Rotation2d`)
+  - `encoderOffset`: absolute encoder offset (`Rotation2d`) Use a hardware client and set the 0 position to be either horizontal (cosine) or vertical (sine gravity)
   - `canBus`: CAN bus name used by CTRE devices
 - `PositionJointGains`
   - feedback: `kP`, `kI`, `kD`
@@ -71,18 +71,30 @@ Example pattern:
 ```java
 public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG =
     new PositionJointHardwareConfig(
-        new int[] {21},
-        new boolean[] {true},
-        85.33333 * 2 * Math.PI,
+        new int[] {21, 22},
+        new boolean[] {true, true},
+        80/12,
         40,
         GravityType.COSINE,
         EncoderType.INTERNAL,
         0,
-        Rotation2d.fromRotations(0),
+        Rotation2d.fromRotations(.),
         "");
 public static final PositionJointGains INTAKE_RACK_GAINS =
     new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
 ```
+
+Note:
+- This config is set to use the motor ids 21 and 22.
+- The first motor inversion is set to true, so the motor is counterclockwise positive
+- The second motor inversion is also set to true, so the second motor will spin opposite of the leader (first) motor
+- The gear ratio is set to 80/12, so that could be a 12t input pinion on a 80t output gear
+- The current limit is set to 40 amps
+- The gravity model is set to COSINE
+- The encoder type is set to internal (motor encoder)
+- The encoder id is set to zeron (Unused for internal encoder)
+- The offset is set to .1234 Rotations (Found in REV Hardware Client for horizontal position parallel to the ground)
+- The CanBus is set to default (Rio)
 
 ## Wire Constants Into RobotContainer
 
@@ -96,27 +108,43 @@ intakeRack =
 
 topIndexer =
     new Flywheel(
-        new FlywheelIOSparkMax("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
+        new FlywheelIOTalonFx("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
         FlywheelConstants.INDEXER_ROLLER_GAINS);
 ```
 
 Use `...IOTalonFX`, `...IOSparkMax`, `...IOSim`, or `...IOReplay` depending on mode/hardware.
 
+This example code creates an intake rack position joint for a SparkMax (REV) and a Flywheel TalonFx (CTRE).
+
 ## Command Usage
 
+Compose commands using WPILIB standard composing
+
 - Flywheel:
-  - `flywheel.setVelocity(targetRps)`
-  - `flywheel.setVoltage(volts)`
+  - `new FlywheelVelocityCommand(<subsystem>, <doubleSupplier>)`
+  - `new FlywheelVoltageCommand(<subsystem>, <doubleSupplier>)`
 - PositionJoint:
-  - `joint.setPosition(targetPosition)`
-  - `joint.setVoltage(volts)`
+  - `new PositionJointPositionCommand(<subsystem>, <doubleSupplier>)`
+  - `new PositionJointVelocityCommand(<subsystem>, <doubleSupplier>)`
 
 Or use command factories already in the project:
 
-- `Flywheel.setVelocity(...)`
-- `Flywheel.setVoltage(...)`
-- `PositionJoint.setPosition(...)`
+- `Flywheel.setVelocity(<subsystem>, <doubleSupplier>)`
+- `Flywheel.setVoltage(<subsystem>, <doubleSupplier>)`
+- `PositionJoint.setPosition(<subsystem>, <doubleSupplier>)`
 
+```java
+controller.a().whileTrue(Flywheel.setVelocity(shooter, vision::getRPM));
+controller.b().whileFalse(new PositionJointPositionCommand(rack, ()->10));
+```
+
+Note:
+- In the first line, the a button on the controller is used to set a velocity setpoint command
+- The setpoint RPM is provided by the getRPM method
+- The first line schedules the command when the button is held and deschedules when it is released.
+- In the second line, the b button on the controller is used as a trigger to set a position setpoint command
+- The setpoint position is provided by a lambda function as the input supplier: You can set the gear ratio constant for the rack subsystem config to make the input 10 = 10 inches
+- The second line schedules the command when the button is released and deschedules when it is pressed.
 ## Notes
 
 - Keep units consistent with your `gearRatio` and mechanism representation.
