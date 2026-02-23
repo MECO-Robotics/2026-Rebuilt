@@ -41,13 +41,15 @@ public class PositionJointIOSim implements PositionJointIO {
 
     this.config = config;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
+
+    motorsConnected = new boolean[numMotors];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
 
     gearBox = DCMotor.getKrakenX60Foc(config.canIds().length);
 

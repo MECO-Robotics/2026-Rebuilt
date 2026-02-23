@@ -69,15 +69,17 @@ public class DriveMotorIOTalonFX implements DriveMotorIO {
   public DriveMotorIOTalonFX(String name, DriveMotorHardwareConfig config) {
     this.name = name;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motors = new TalonFX[config.canIds().length];
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
-    motorAlerts = new Alert[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
+
+    motors = new TalonFX[numMotors];
+    motorsConnected = new boolean[numMotors];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
+    motorAlerts = new Alert[numMotors];
 
     motors[0] = new TalonFX(config.canIds()[0], config.canBus());
     leaderConfig =

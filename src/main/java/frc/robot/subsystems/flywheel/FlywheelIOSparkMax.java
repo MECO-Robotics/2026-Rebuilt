@@ -44,15 +44,17 @@ public class FlywheelIOSparkMax implements FlywheelIO {
   public FlywheelIOSparkMax(String name, FlywheelHardwareConfig config, boolean isBrushless) {
     this.name = name;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motors = new SparkMax[config.canIds().length];
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
-    motorAlerts = new Alert[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
+
+    motors = new SparkMax[numMotors];
+    motorsConnected = new boolean[numMotors];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
+    motorAlerts = new Alert[numMotors];
 
     motors[0] =
         new SparkMax(config.canIds()[0], isBrushless ? MotorType.kBrushless : MotorType.kBrushed);
