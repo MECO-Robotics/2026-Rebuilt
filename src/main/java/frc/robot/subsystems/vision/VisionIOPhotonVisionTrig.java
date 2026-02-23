@@ -23,7 +23,8 @@ public class VisionIOPhotonVisionTrig implements VisionIO {
    * Creates a new VisionIOPhotonVision.
    *
    * @param name The configured name of the camera.
-   * @param rotationSupplier The 3D position of the camera relative to the robot.
+   * @param robotToCamera The 3D position of the camera relative to the robot.
+   * @param gyroRotation Supplier for robot heading used in trig pose solve.
    */
   public VisionIOPhotonVisionTrig(
       String name, Transform3d robotToCamera, Supplier<Rotation2d> gyroRotation) {
