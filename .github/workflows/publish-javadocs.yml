@@ -19,7 +19,7 @@ concurrency:
 jobs:
   publish-javadocs:
     name: Build And Publish Javadocs
-    if: github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event.deployment_status.state == 'success'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
