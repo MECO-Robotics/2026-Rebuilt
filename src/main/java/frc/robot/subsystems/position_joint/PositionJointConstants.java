@@ -2,7 +2,9 @@ package frc.robot.subsystems.position_joint;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 
+/** Shared constants and configuration records for the position-joint subsystem. */
 public class PositionJointConstants {
+  /** Gravity model used by feedforward/controller configuration. */
   public enum GravityType {
     CONSTANT,
     COSINE,
@@ -10,6 +12,7 @@ public class PositionJointConstants {
     SINE
   }
 
+  /** Supported sensor sources for mechanism position. */
   public enum EncoderType {
     INTERNAL,
     EXTERNAL_CANCODER,
@@ -18,6 +21,7 @@ public class PositionJointConstants {
     EXTERNAL_SPARK
   }
 
+  /** Closed-loop tuning values and profiling constraints for a position joint. */
   public record PositionJointGains(
       double kP,
       double kI,
@@ -35,6 +39,7 @@ public class PositionJointConstants {
 
   // Position Joint Gear Ratio should be multiplied by Math.PI * 2 for rotation joints to convert
   // from rotations to radians
+  /** Hardware mapping and mechanism-specific constants for one position joint instance. */
   public record PositionJointHardwareConfig(
       int[] canIds,
       boolean[] reversed,
@@ -46,9 +51,11 @@ public class PositionJointConstants {
       Rotation2d encoderOffset,
       String canBus) {}
 
+  /** Reference tuning/config used as a template while creating new joints. */
   public static final PositionJointGains EXAMPLE_GAINS =
       new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
 
+  /** Reference hardware config used as a template while creating new joints. */
   public static final PositionJointHardwareConfig EXAMPLE_CONFIG =
       new PositionJointHardwareConfig(
           new int[] {10},

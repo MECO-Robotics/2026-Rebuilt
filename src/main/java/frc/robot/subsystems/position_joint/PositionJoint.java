@@ -11,6 +11,12 @@ import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * Subsystem wrapper for a single position-controlled mechanism joint.
+ *
+ * <p>This class owns motion profiling and tunable gains, while the backing {@link PositionJointIO}
+ * handles device-specific hardware control.
+ */
 public class PositionJoint extends SubsystemBase {
   private final PositionJointIO positionJoint;
   private final PositionJointIOInputsAutoLogged inputs = new PositionJointIOInputsAutoLogged();
@@ -43,6 +49,12 @@ public class PositionJoint extends SubsystemBase {
 
   private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
 
+  /**
+   * Creates a position-joint subsystem.
+   *
+   * @param io hardware implementation for this joint
+   * @param gains default gains and profile constraints
+   */
   public PositionJoint(PositionJointIO io, PositionJointGains gains) {
     super(io.getName());
 
@@ -128,41 +140,50 @@ public class PositionJoint extends SubsystemBase {
     Logger.recordOutput(name + "/isFinished", isFinished());
   }
 
+  /** Sets a new goal position, clamped to configured mechanism limits. */
   public void setPosition(double position) {
     goal =
         new TrapezoidProfile.State(
             MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get()), 0);
   }
 
+  /** Adds an offset to the current goal position. */
   public void incrementPosition(double deltaPosition) {
     goal.position += deltaPosition;
   }
 
+  /** Applies open-loop voltage to the joint leader motor. */
   public void setVoltage(double voltage) {
     positionJoint.setVoltage(voltage);
   }
 
+  /** Returns current measured mechanism position. */
   public double getPosition() {
     return inputs.outputPosition;
   }
 
+  /** Returns the last requested position setpoint reported by the IO layer. */
   public double getDesiredPosition() {
     return inputs.desiredPosition;
   }
 
+  /** Returns true when measured position is within tolerance of the goal. */
   public boolean isFinished() {
     return Math.abs(inputs.outputPosition - goal.position) < kTolerance.get();
   }
 
+  /** Resets sensor position and clears the active goal to zero. */
   public void resetPosition() {
     positionJoint.resetPosition();
     goal.position = 0;
   }
 
+  /** Builds a command that continuously sets position from a supplier. */
   public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier) {
     return new PositionJointPositionCommand(positionJoint, positionSupplier);
   }
 
+  /** Builds a command that continuously sets velocity from a supplier. */
   public static Command setVelocity(PositionJoint positionJoint, DoubleSupplier velocitySupplier) {
     return new PositionJointPositionCommand(positionJoint, velocitySupplier);
   }

@@ -30,6 +30,7 @@ import frc.robot.util.feedforwards.TunableArmFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 import java.util.function.DoubleSupplier;
 
+/** SparkMax-backed implementation of {@link PositionJointIO}. */
 public class PositionJointIOSparkMax implements PositionJointIO {
   private final String name;
 
@@ -61,6 +62,14 @@ public class PositionJointIOSparkMax implements PositionJointIO {
   private double positionSetpoint = 0.0;
   private double velocitySetpoint = 0.0;
 
+  /**
+   * Creates a SparkMax position-joint IO implementation.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware configuration and encoder source
+   * @param externalFeedforward additional feedforward term supplied by higher-level code
+   * @param isBrushless true for NEO/brushless mode, false for brushed mode
+   */
   public PositionJointIOSparkMax(
       String name,
       PositionJointHardwareConfig config,
@@ -317,6 +326,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
     }
   }
 
+  /** Returns this joint's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

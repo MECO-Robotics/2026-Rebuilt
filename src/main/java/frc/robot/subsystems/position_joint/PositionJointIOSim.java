@@ -12,6 +12,7 @@ import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointH
 import frc.robot.util.feedforwards.PositionJointFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 
+/** Physics-simulation implementation of {@link PositionJointIO}. */
 public class PositionJointIOSim implements PositionJointIO {
   private final String name;
 
@@ -36,6 +37,12 @@ public class PositionJointIOSim implements PositionJointIO {
   private double velocitySetpoint = 0.0;
   private double inputVoltage = 0.0;
 
+  /**
+   * Creates a simple DC-motor simulation for a position-controlled joint.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware constants used to shape the simulation model
+   */
   public PositionJointIOSim(String name, PositionJointHardwareConfig config) {
     this.name = name;
 
@@ -112,6 +119,7 @@ public class PositionJointIOSim implements PositionJointIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this joint's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

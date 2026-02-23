@@ -36,6 +36,7 @@ import frc.robot.util.encoder.IAbsoluteEncoder;
 import java.util.ArrayList;
 import java.util.function.DoubleSupplier;
 
+/** TalonFX-backed implementation of {@link PositionJointIO}. */
 public class PositionJointIOTalonFX implements PositionJointIO {
   private final String name;
 
@@ -78,6 +79,13 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 
   private MotorAlignmentValue motorval;
 
+  /**
+   * Creates a TalonFX position-joint IO implementation.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware configuration and encoder source
+   * @param externalFeedforward additional feedforward term supplied by higher-level code
+   */
   public PositionJointIOTalonFX(
       String name, PositionJointHardwareConfig config, DoubleSupplier externalFeedforward) {
     this.name = name;
@@ -355,6 +363,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
     motors[0].setPosition(0);
   }
 
+  /** Returns this joint's loggable subsystem name. */
   @Override
   public String getName() {
     return name;
