@@ -1,14 +1,14 @@
 {
-  "name": "Remy", 
-  "isFTC": false, 
-  "disableSimplification": true, 
+  "name": "Remy",
+  "isFTC": false,
+  "disableSimplification": true,
   "rotations": [],
   "position": [],
-  "cameras": [ 
+  "cameras": [
     {
       "name": "Limelight",
       "rotations": [],
-      "position": [], 
+      "position": [],
       "resolution": [],
       "fov": "10"
     }
