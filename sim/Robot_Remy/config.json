@@ -1,0 +1,17 @@
+{
+  "name": "Remy",
+  "isFTC": false,
+  "disableSimplification": true,
+  "rotations": [],
+  "position": [],
+  "cameras": [
+    {
+      "name": "Limelight",
+      "rotations": [],
+      "position": [],
+      "resolution": [],
+      "fov": "10"
+    }
+  ],
+  "components": []
+}
