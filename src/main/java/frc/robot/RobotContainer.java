@@ -289,6 +289,12 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
 
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.joystickAimToHub(
+                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+
     // // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
