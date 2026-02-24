@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.position_joint.PositionJointPositionCommand;
+import frc.robot.commands.position_joint.PositionJointVelocityCommand;
 import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointGains;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
@@ -185,6 +186,6 @@ public class PositionJoint extends SubsystemBase {
 
   /** Builds a command that continuously sets velocity from a supplier. */
   public static Command setVelocity(PositionJoint positionJoint, DoubleSupplier velocitySupplier) {
-    return new PositionJointPositionCommand(positionJoint, velocitySupplier);
+    return new PositionJointVelocityCommand(positionJoint, velocitySupplier);
   }
 }
