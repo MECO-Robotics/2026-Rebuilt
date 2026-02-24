@@ -56,7 +56,8 @@ public class Drive extends SubsystemBase {
   private final Alert gyroDisconnectedAlert =
       new Alert("Drive", "Disconnected gyro, using kinematics as fallback.", AlertType.kError);
   private final Alert gyroSampleMismatchAlert =
-      new Alert("Drive", "Gyro odometry sample mismatch, using kinematics fallback.", AlertType.kWarning);
+      new Alert(
+          "Drive", "Gyro odometry sample mismatch, using kinematics fallback.", AlertType.kWarning);
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = new Rotation2d();

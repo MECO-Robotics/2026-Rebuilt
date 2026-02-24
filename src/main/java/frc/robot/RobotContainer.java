@@ -331,10 +331,14 @@ public class RobotContainer {
 
     controller
         .pov(0)
-        .whileTrue(Commands.runEnd(() -> intakeRack.setVoltage(-6), () -> intakeRack.setVoltage(0), intakeRack));
+        .whileTrue(
+            Commands.runEnd(
+                () -> intakeRack.setVoltage(-6), () -> intakeRack.setVoltage(0), intakeRack));
     controller
         .pov(180)
-        .whileTrue(Commands.runEnd(() -> intakeRack.setVoltage(6), () -> intakeRack.setVoltage(0), intakeRack));
+        .whileTrue(
+            Commands.runEnd(
+                () -> intakeRack.setVoltage(6), () -> intakeRack.setVoltage(0), intakeRack));
   }
 
   /**
