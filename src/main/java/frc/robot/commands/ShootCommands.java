@@ -23,25 +23,24 @@ public class ShootCommands {
   /** Indexer roller preset voltages. */
   public final class INDEXER_VOLTS {
     public static final LoggedTunableNumber FEED =
-        new LoggedTunableNumber("ConveyorVolts/IntakeSpeed", -10);
+        new LoggedTunableNumber("IndexerVolts/IntakeSpeed", -10);
     public static final LoggedTunableNumber FEEDOTHER =
-        new LoggedTunableNumber("ConveyorVolts/IntakeSpeed", 10);
-    public static final LoggedTunableNumber SLOW =
-        new LoggedTunableNumber("ConveyorVolts/Slow", -4);
+        new LoggedTunableNumber("IndexerVolts/IntakeSpeedOther", 10);
+    public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("IndexerVolts/Slow", -4);
     public static final LoggedTunableNumber EJECT =
-        new LoggedTunableNumber("ConveyorVolts/Eject", 12);
-    public static final LoggedTunableNumber STOP = new LoggedTunableNumber("ConveyorVolts/Stop", 0);
+        new LoggedTunableNumber("IndexerVolts/Eject", 12);
+    public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IndexerVolts/Stop", 0);
   }
 
   /** Shooter roller preset voltages. (NOTE: MAINLY FOR TESTING/SHUTTLE (maybe)) */
   public final class SHOOTER_VOLTS {
     public static final LoggedTunableNumber SHOOT =
-        new LoggedTunableNumber("ConveyorVolts/IntakeSpeed", -11);
+        new LoggedTunableNumber("ShooterVolts/Shoot", -11);
     public static final LoggedTunableNumber SLOW =
-        new LoggedTunableNumber("ConveyorVolts/Slow", -1.5);
+        new LoggedTunableNumber("ShooterVolts/Slow", -1.5);
     public static final LoggedTunableNumber EJECT =
-        new LoggedTunableNumber("ConveyorVolts/Eject", 12);
-    public static final LoggedTunableNumber STOP = new LoggedTunableNumber("ConveyorVolts/Stop", 0);
+        new LoggedTunableNumber("ShooterVolts/Eject", 12);
+    public static final LoggedTunableNumber STOP = new LoggedTunableNumber("ShooterVolts/Stop", 0);
   }
 
   /** Puts the Shooter and bottom indexers in a slow idle speed, and stopping the top indexer */

@@ -176,7 +176,9 @@ public class VisionIOQuestNav implements VisionIO {
 
   public void resetHeading() {
     resetHeading(
-        DriverStation.getAlliance().get() == Alliance.Red ? Rotation2d.kPi : Rotation2d.kZero);
+        DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red
+            ? Rotation2d.kPi
+            : Rotation2d.kZero);
   }
 
   public void resetBlue() {

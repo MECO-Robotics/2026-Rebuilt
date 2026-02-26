@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
@@ -289,6 +288,12 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
 
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.joystickAimToHub(
+                drive, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+
     // // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
@@ -324,13 +329,16 @@ public class RobotContainer {
         .whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller))
         .whileFalse(IntakeCommands.stowIntake(intakeRack, intakeRoller));
 
-    if (controller.pov(0).getAsBoolean()) {
-      new RunCommand(() -> intakeRack.setVoltage(-6), intakeRack);
-    } else if (controller.pov(180).getAsBoolean()) {
-      new RunCommand(() -> intakeRack.setVoltage(6), intakeRack);
-    } else {
-      new RunCommand(() -> intakeRack.setVoltage(0), intakeRack);
-    }
+    controller
+        .pov(0)
+        .whileTrue(
+            Commands.runEnd(
+                () -> intakeRack.setVoltage(-6), () -> intakeRack.setVoltage(0), intakeRack));
+    controller
+        .pov(180)
+        .whileTrue(
+            Commands.runEnd(
+                () -> intakeRack.setVoltage(6), () -> intakeRack.setVoltage(0), intakeRack));
   }
 
   /**

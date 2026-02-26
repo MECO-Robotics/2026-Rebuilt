@@ -132,7 +132,7 @@ public class Module {
 
   /** Returns the module velocity in rotations/sec (Phoenix native units). */
   public double getFFCharacterizationVelocity() {
-    return driveInputs.positionRotations;
+    return driveInputs.velocityRotationsPerSecond;
   }
 
   public void setGains(DriveMotorGains driveGains, AzimuthMotorGains azimuthGains) {

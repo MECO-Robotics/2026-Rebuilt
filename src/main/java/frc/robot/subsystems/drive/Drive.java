@@ -55,6 +55,9 @@ public class Drive extends SubsystemBase {
   private final SysIdRoutine sysId;
   private final Alert gyroDisconnectedAlert =
       new Alert("Drive", "Disconnected gyro, using kinematics as fallback.", AlertType.kError);
+  private final Alert gyroSampleMismatchAlert =
+      new Alert(
+          "Drive", "Gyro odometry sample mismatch, using kinematics fallback.", AlertType.kWarning);
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(getModuleTranslations());
   private Rotation2d rawGyroRotation = new Rotation2d();
@@ -65,6 +68,8 @@ public class Drive extends SubsystemBase {
         new SwerveModulePosition(),
         new SwerveModulePosition()
       };
+  private final SwerveModulePosition[] modulePositionsBuffer = new SwerveModulePosition[4];
+  private final SwerveModulePosition[] moduleDeltasBuffer = new SwerveModulePosition[4];
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
@@ -128,6 +133,10 @@ public class Drive extends SubsystemBase {
     modules[1] = frModuleIO;
     modules[2] = blModuleIO;
     modules[3] = brModuleIO;
+    for (int i = 0; i < 4; i++) {
+      modulePositionsBuffer[i] = new SwerveModulePosition();
+      moduleDeltasBuffer[i] = new SwerveModulePosition();
+    }
 
     setpointGenerator =
         new SwerveSetpointGenerator(
@@ -242,40 +251,44 @@ public class Drive extends SubsystemBase {
     double[] sampleTimestamps =
         modules[0].getOdometryTimestamps(); // All signals are sampled together
     int sampleCount = sampleTimestamps.length;
+    boolean hasGyroSampleMismatch = false;
+    SwerveModulePosition[] module0Positions = modules[0].getOdometryPositions();
+    SwerveModulePosition[] module1Positions = modules[1].getOdometryPositions();
+    SwerveModulePosition[] module2Positions = modules[2].getOdometryPositions();
+    SwerveModulePosition[] module3Positions = modules[3].getOdometryPositions();
     for (int i = 0; i < sampleCount; i++) {
       // Read wheel positions and deltas from each module
-      SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-      SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
+      modulePositionsBuffer[0] = module0Positions[i];
+      modulePositionsBuffer[1] = module1Positions[i];
+      modulePositionsBuffer[2] = module2Positions[i];
+      modulePositionsBuffer[3] = module3Positions[i];
       for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
-        modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
-        moduleDeltas[moduleIndex] =
+        moduleDeltasBuffer[moduleIndex] =
             new SwerveModulePosition(
-                modulePositions[moduleIndex].distanceMeters
+                modulePositionsBuffer[moduleIndex].distanceMeters
                     - lastModulePositions[moduleIndex].distanceMeters,
-                modulePositions[moduleIndex].angle);
-        lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
+                modulePositionsBuffer[moduleIndex].angle);
+        lastModulePositions[moduleIndex] = modulePositionsBuffer[moduleIndex];
       }
 
       // Update gyro angle
-      if (gyroInputs.connected) {
+      if (gyroInputs.connected && i < gyroInputs.odometryYawPositions.length) {
         // Use the real gyro angle
-        try {
-          rawGyroRotation = gyroInputs.odometryYawPositions[i];
-        } catch (Exception e) {
-
-        }
+        rawGyroRotation = gyroInputs.odometryYawPositions[i];
       } else {
+        hasGyroSampleMismatch |= gyroInputs.connected;
         // Use the angle delta from the kinematics and module deltas
-        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+        Twist2d twist = kinematics.toTwist2d(moduleDeltasBuffer);
         rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }
 
       // Apply update
-      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositionsBuffer);
     }
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+    gyroSampleMismatchAlert.set(hasGyroSampleMismatch && Constants.currentMode != Mode.SIM);
 
     LoggedTunableNumber.ifChanged(
         hashCode(),
