@@ -203,8 +203,7 @@ public class DriveCommands {
       Drive drive,
       PositionJoint hood,
       DoubleSupplier xSupplier,
-      DoubleSupplier ySupplier,
-      DoubleSupplier omegaSupplier) {
+      DoubleSupplier ySupplier) {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
