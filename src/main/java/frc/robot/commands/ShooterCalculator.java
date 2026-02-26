@@ -6,7 +6,6 @@ import java.util.function.DoubleSupplier;
 
 /** Continuously sets a hood joint position from a distance-to-angle heuristic. */
 public class ShooterCalculator extends Command {
-
   private final PositionJoint subsystem;
   private final DoubleSupplier distanceSupplier;
 
@@ -30,8 +29,8 @@ public class ShooterCalculator extends Command {
   }
 
   private double calculateHoodAngle(double distance) {
-    // placeholder equation
-    return 5.67 * Math.pow(1.0613, distance);
+    // TODO: Tune change equation for actual robot
+    return 0.1 * Math.pow(1, distance);
   }
 
   @Override

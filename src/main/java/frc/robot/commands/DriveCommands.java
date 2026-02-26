@@ -15,10 +15,10 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.FieldConstants.Hub;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -204,10 +204,10 @@ public class DriveCommands {
   // TODO: verify that distance to angle here is correct
   public static Command joystickAimtoHub(
       Drive drive,
+      PositionJoint hood,
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
-      DoubleSupplier omegaSupplier,
-      CommandXboxController xboxController) {
+      DoubleSupplier omegaSupplier) {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
@@ -218,42 +218,52 @@ public class DriveCommands {
                 ANGLE_MAX_VELOCITY.get(), ANGLE_MAX_ACCELERATION.get()));
     angleController.enableContinuousInput(-Math.PI, Math.PI);
 
-    return Commands.run(
-            () -> {
-              // Get linear velocity
-              Translation2d linearVelocity =
-                  getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+    Command driveCommand =
+        Commands.run(
+                () -> {
+                  // Get linear velocity
+                  Translation2d linearVelocity =
+                      getLinearVelocityFromJoysticks(
+                          xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
-              double omega;
+                  double omega;
 
-              omega =
-                  angleController.calculate(
-                      drive.getRotation().getRadians(),
-                      flipRotation2dAlliance(
-                              Hub.hubPosition().minus(drive.getPose().getTranslation()).getAngle())
-                          .getRadians());
+                  omega =
+                      angleController.calculate(
+                          drive.getRotation().getRadians(),
+                          flipRotation2dAlliance(
+                                  Hub.hubPosition()
+                                      .minus(drive.getPose().getTranslation())
+                                      .getAngle())
+                              .getRadians());
 
-              // Convert to field relative speeds & send command
-              ChassisSpeeds speeds =
-                  new ChassisSpeeds(
-                      linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
-                      linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                      omega);
-              boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
-              speeds =
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      isFlipped
-                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation());
+                  // Convert to field relative speeds & send command
+                  ChassisSpeeds speeds =
+                      new ChassisSpeeds(
+                          linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                          linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                          omega);
+                  boolean isFlipped =
+                      DriverStation.getAlliance().isPresent()
+                          && DriverStation.getAlliance().get() == Alliance.Red;
+                  speeds =
+                      ChassisSpeeds.fromFieldRelativeSpeeds(
+                          speeds,
+                          isFlipped
+                              ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                              : drive.getRotation());
 
-              drive.runVelocity(speeds);
-            },
-            drive)
-        // Reset PID controller when command starts
-        .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+                  drive.runVelocity(speeds);
+                },
+                drive)
+            // Reset PID controller when command starts
+            .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+
+    Command shooterCalculatorCommand =
+        new ShooterCalculator(
+            hood, () -> drive.getPose().getTranslation().getDistance(Hub.hubPosition()));
+
+    return Commands.parallel(driveCommand, shooterCalculatorCommand);
   }
 
   /**
