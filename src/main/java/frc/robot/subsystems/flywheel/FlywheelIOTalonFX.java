@@ -85,7 +85,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
         new TalonFXConfiguration()
             .withMotorOutput(
                 new MotorOutputConfigs()
-                    .withNeutralMode(NeutralModeValue.Brake)
+                    .withNeutralMode(NeutralModeValue.Coast)
                     .withInverted(
                         config.reversed()[0]
                             ? InvertedValue.Clockwise_Positive
