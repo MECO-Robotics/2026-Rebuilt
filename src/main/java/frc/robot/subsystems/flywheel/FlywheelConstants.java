@@ -49,7 +49,7 @@ public class FlywheelConstants {
   // Intake Constants
   // -----------
   public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {22}, new boolean[] {false}, 1, 40, "");
+      new FlywheelHardwareConfig(new int[] {22}, new boolean[] {false}, 1.5, 40, "");
   public static final FlywheelGains INTAKE_ROLLER_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 
@@ -68,7 +68,7 @@ public class FlywheelConstants {
   // ------------
   public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG =
       new FlywheelHardwareConfig(
-          new int[] {35, 34}, new boolean[] {false, true}, 1, 40, "MECO CANIvore");
+          new int[] {34, 35}, new boolean[] {true, false}, 1, 40, "MECO CANIvore");
   public static final FlywheelGains FLYWHEEL_ROLLER_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 }

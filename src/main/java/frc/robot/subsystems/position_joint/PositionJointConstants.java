@@ -98,7 +98,7 @@ public class PositionJointConstants {
       new PositionJointHardwareConfig(
           new int[] {21},
           new boolean[] {true},
-          85.33333 * 2 * Math.PI,
+          4.3125,
           40,
           GravityType.COSINE,
           EncoderType.INTERNAL,
@@ -115,7 +115,7 @@ public class PositionJointConstants {
       new PositionJointHardwareConfig(
           new int[] {33},
           new boolean[] {false},
-          85.33333 * 2 * Math.PI,
+          21,
           40,
           GravityType.COSINE,
           EncoderType.INTERNAL,
