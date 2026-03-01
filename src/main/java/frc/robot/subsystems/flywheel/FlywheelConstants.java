@@ -35,7 +35,7 @@ public class FlywheelConstants {
 
   /** Reference gains used as a template when adding new flywheels. */
   public static final FlywheelGains EXAMPLE_GAINS =
-      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+      new FlywheelGains(0.2, 0.0, 0.0, 0.35, 0.065, 0.0, 1.0, 1.0);
 
   // -----------
   // Conveyor Constants
@@ -68,7 +68,7 @@ public class FlywheelConstants {
   // ------------
   public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG =
       new FlywheelHardwareConfig(
-          new int[] {34, 35}, new boolean[] {true, false}, 1, 40, "MECO CANIvore");
+          new int[] {34, 35}, new boolean[] {false, true}, 22.0 / 14 * 60, 40, "MECO CANIvore");
   public static final FlywheelGains FLYWHEEL_ROLLER_GAINS =
-      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+      new FlywheelGains(0.2, 0.0, 0.0, 0.35, 0.2, 0.0, 1.0, 1.0);
 }

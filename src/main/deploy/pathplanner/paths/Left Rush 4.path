@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.719031690140846,
+        "y": 7.3883450704225355
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.5054401408450713,
+        "y": 6.318468309859155
+      },
+      "isLocked": false,
+      "linkedName": "Left Rush 3 End"
+    },
+    {
+      "anchor": {
+        "x": 3.3198239436619725,
+        "y": 4.689700704225352
+      },
+      "prevControl": {
+        "x": 2.5373767605633812,
+        "y": 5.9192605633802815
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 50.419,
+    "maxAcceleration": 5.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -34.50852298766839
+  },
+  "reversed": false,
+  "folder": "Left Rush",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -0.8680514497455578
+  },
+  "useDefaultConstraints": true
+}

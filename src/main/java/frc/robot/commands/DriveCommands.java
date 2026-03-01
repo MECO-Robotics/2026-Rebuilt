@@ -200,10 +200,7 @@ public class DriveCommands {
 
   // TODO: verify that distance to angle here is correct
   public static Command joystickAimtoHub(
-      Drive drive,
-      PositionJoint hood,
-      DoubleSupplier xSupplier,
-      DoubleSupplier ySupplier) {
+      Drive drive, PositionJoint hood, DoubleSupplier xSupplier, DoubleSupplier ySupplier) {
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
