@@ -17,8 +17,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
-import frc.robot.commands.ShootCommands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
+import frc.robot.commands.shooter.ShooterCalculator;
+import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.Module;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
@@ -318,8 +319,9 @@ public class RobotContainer {
     controller
         .y()
         .whileTrue(
-            DriveCommands.joystickAimtoHub(
-                drive, hood, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+            DriveCommands.joystickAimToHub(
+                    drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
+                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
 
     // // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -348,8 +350,8 @@ public class RobotContainer {
 
     controller
         .rightBumper()
-        .whileTrue(ShootCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
-        .whileFalse(ShootCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+        .whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
+        .whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
     controller
         .leftBumper()
