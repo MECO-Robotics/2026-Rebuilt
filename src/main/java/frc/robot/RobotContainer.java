@@ -43,6 +43,7 @@ import frc.robot.subsystems.position_joint.PositionJointConstants;
 import frc.robot.subsystems.position_joint.PositionJointIOReplay;
 import frc.robot.subsystems.position_joint.PositionJointIOSim;
 import frc.robot.subsystems.position_joint.PositionJointIOSparkMax;
+import frc.robot.util.visualization.RobotRemyVisualizer;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -61,6 +62,7 @@ public class RobotContainer {
   private final Flywheel intakeRoller;
   private final PositionJoint intakeRack;
   private final PositionJoint hood;
+  private final RobotRemyVisualizer robotRemyVisualizer;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -133,7 +135,7 @@ public class RobotContainer {
         intakeRack =
             new PositionJoint(
                 new PositionJointIOSparkMax(
-                    "IntakeRoller", PositionJointConstants.INTAKE_RACK_CONFIG),
+                    "IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
                 PositionJointConstants.INTAKE_RACK_GAINS);
         hood =
             new PositionJoint(
@@ -192,7 +194,7 @@ public class RobotContainer {
 
         intakeRack =
             new PositionJoint(
-                new PositionJointIOSim("IntakeRoller", PositionJointConstants.INTAKE_RACK_CONFIG),
+                new PositionJointIOSim("IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
                 PositionJointConstants.INTAKE_RACK_GAINS);
         hood =
             new PositionJoint(
@@ -243,14 +245,21 @@ public class RobotContainer {
 
         intakeRack =
             new PositionJoint(
-                new PositionJointIOReplay("IntakeRoller"),
-                PositionJointConstants.INTAKE_RACK_GAINS);
+                new PositionJointIOReplay("IntakeRack"), PositionJointConstants.INTAKE_RACK_GAINS);
 
         hood =
             new PositionJoint(new PositionJointIOReplay("Hood"), PositionJointConstants.HOOD_GAINS);
 
         break;
     }
+
+    robotRemyVisualizer =
+        new RobotRemyVisualizer(
+            drive::getPose,
+            intakeRack::getPosition,
+            hood::getPosition,
+            conveyor::getPosition,
+            shooterFlywheel::getPosition);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -366,5 +375,10 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  /** Logs robot and component transforms for the custom Robot_Remy asset. */
+  public void updateVisualization() {
+    robotRemyVisualizer.periodic();
   }
 }

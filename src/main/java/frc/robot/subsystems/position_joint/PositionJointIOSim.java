@@ -36,6 +36,8 @@ public class PositionJointIOSim implements PositionJointIO {
   private double positionSetpoint = 0.0;
   private double velocitySetpoint = 0.0;
   private double inputVoltage = 0.0;
+  private double voltageSetpoint = 0.0;
+  private boolean closedLoop = true;
 
   /**
    * Creates a simple DC-motor simulation for a position-controlled joint.
@@ -71,13 +73,14 @@ public class PositionJointIOSim implements PositionJointIO {
   @Override
   public void updateInputs(PositionJointIOInputs inputs) {
     inputVoltage =
-        controller.calculate(sim.getAngularPosition().in(Rotations), positionSetpoint)
-            + feedforward.calculate(
-                sim.getAngularPositionRotations(),
-                sim.getAngularVelocity().in(RotationsPerSecond),
-                velocitySetpoint,
-                0.02);
-    ;
+        closedLoop
+            ? controller.calculate(sim.getAngularPosition().in(Rotations), positionSetpoint)
+                + feedforward.calculate(
+                    sim.getAngularPositionRotations(),
+                    sim.getAngularVelocity().in(RotationsPerSecond),
+                    velocitySetpoint,
+                    0.02)
+            : voltageSetpoint;
     sim.setInputVoltage(inputVoltage);
     sim.update(0.02);
 
@@ -107,8 +110,15 @@ public class PositionJointIOSim implements PositionJointIO {
 
   @Override
   public void setPosition(double position, double velocity) {
+    closedLoop = true;
     positionSetpoint = position;
     velocitySetpoint = velocity;
+  }
+
+  @Override
+  public void setVoltage(double voltage) {
+    closedLoop = false;
+    voltageSetpoint = voltage;
   }
 
   @Override
