@@ -264,7 +264,7 @@ public class RobotContainer {
             hood::getPosition,
             shooterFlywheel::getPosition,
             intakeRack::getPosition,
-            ()->0);
+            () -> 0);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());

@@ -25,8 +25,7 @@ public class RobotRemyVisualizer {
 
   public static final Angle IntakeRackAngle = Degrees.of(7.500000);
 
-  public static final LoggedTunableNumber hood =
-      new LoggedTunableNumber("HoodPosition/Sim", 0);
+  public static final LoggedTunableNumber hood = new LoggedTunableNumber("HoodPosition/Sim", 0);
 
   public RobotRemyVisualizer(
       Supplier<Pose2d> robotPoseSupplier,
@@ -70,7 +69,10 @@ public class RobotRemyVisualizer {
               new Rotation3d(0.0, 0.0, 0.0)),
           // 3: hopper
           new Pose3d(
-              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)), 0.0, 0.0, new Rotation3d(0.0, 0.0, 0.0)),
+              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)),
+              0.0,
+              0.0,
+              new Rotation3d(0.0, 0.0, 0.0)),
           // 4: climber
           new Pose3d(
               0.0, 0.0, 0.0, new Rotation3d(toRadians(climberRotations.getAsDouble()), 0.0, 0.0))
