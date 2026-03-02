@@ -47,8 +47,8 @@ import frc.robot.subsystems.position_joint.PositionJointConstants;
 import frc.robot.subsystems.position_joint.PositionJointIOReplay;
 import frc.robot.subsystems.position_joint.PositionJointIOSim;
 import frc.robot.subsystems.position_joint.PositionJointIOSparkMax;
-import frc.robot.util.visualization.RobotRemyVisualizer;
 import frc.robot.util.HubShiftUtil;
+import frc.robot.util.visualization.RobotRemyVisualizer;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -264,9 +264,7 @@ public class RobotContainer {
             hood::getPosition,
             shooterFlywheel::getPosition,
             intakeRack::getPosition,
-            intakeRoller::getPosition,
-            conveyor::getPosition,
-            () -> 0.0);
+            ()->0);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -384,8 +382,7 @@ public class RobotContainer {
     int minutes = (int) matchTime / 60;
     int seconds = (int) matchTime % 60;
     int tenths = (int) ((matchTime * 10) % 10);
-    SmartDashboard.putString(
-        "Match Time", String.format("%02d:%02d.%d", minutes, seconds, tenths));
+    SmartDashboard.putString("Match Time", String.format("%02d:%02d.%d", minutes, seconds, tenths));
 
     // Update from HubShiftUtil
     SmartDashboard.putString(

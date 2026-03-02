@@ -2,10 +2,14 @@
   "name": "Remy",
   "sourceUrl": "",
   "isFTC": false,
-  "disableSimplification": false,
+  "disableSimplification": true,
   "rotations": [
     {
       "axis": "x",
+      "degrees": 90
+    },
+    {
+      "axis": "z",
       "degrees": 90
     }
   ],
@@ -22,6 +26,10 @@
         {
           "axis": "x",
           "degrees": 90
+        },
+        {
+          "axis": "z",
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -35,6 +43,10 @@
       "zeroedRotations": [
         {
           "axis": "x",
+          "degrees": 90
+        },
+        {
+          "axis": "z",
           "degrees": 90
         }
       ],
@@ -50,6 +62,10 @@
         {
           "axis": "x",
           "degrees": 90
+        },
+        {
+          "axis": "z",
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -64,6 +80,10 @@
         {
           "axis": "x",
           "degrees": 90
+        },
+        {
+          "axis": "z",
+          "degrees": 90
         }
       ],
       "zeroedPosition": [
@@ -77,6 +97,10 @@
       "zeroedRotations": [
         {
           "axis": "x",
+          "degrees": 90
+        },
+        {
+          "axis": "z",
           "degrees": 90
         }
       ],
