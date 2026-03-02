@@ -1,17 +1,34 @@
 {
   "name": "Remy",
+  "sourceUrl": "",
   "isFTC": false,
   "disableSimplification": true,
-  "rotations": [],
-  "position": [],
-  "cameras": [
+  "rotations": [
     {
-      "name": "Limelight",
-      "rotations": [],
-      "position": [],
-      "resolution": [],
-      "fov": "10"
+      "axis": "x",
+      "degrees": 90
     }
   ],
-  "components": []
+  "position": [
+    0,
+    0,
+    0
+  ],
+  "cameras": [],
+  "components": [
+    {
+      "name": "hood",
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
 }

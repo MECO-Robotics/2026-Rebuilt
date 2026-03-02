@@ -110,12 +110,12 @@ public class PositionJointConstants {
   // Hood
   // -----------
   public static final PositionJointGains HOOD_GAINS =
-      new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
+      new PositionJointGains(30, 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 2, 0.0, 0.064, 0.2, 0.0);
   public static final PositionJointHardwareConfig HOOD_CONFIG =
       new PositionJointHardwareConfig(
           new int[] {33},
           new boolean[] {false},
-          21,
+          (21 / 1),
           40,
           GravityType.COSINE,
           EncoderType.INTERNAL,

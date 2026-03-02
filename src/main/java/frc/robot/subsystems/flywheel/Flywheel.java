@@ -119,6 +119,11 @@ public class Flywheel extends SubsystemBase {
     return inputs.velocity;
   }
 
+  /** Returns current measured mechanism position in rotations. */
+  public double getPosition() {
+    return inputs.position;
+  }
+
   /** Returns the last requested velocity setpoint from the IO layer. */
   public double getVelocitySetpoint() {
     return inputs.desiredVelocity;

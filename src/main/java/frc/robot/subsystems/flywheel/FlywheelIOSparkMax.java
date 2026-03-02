@@ -125,6 +125,7 @@ public class FlywheelIOSparkMax implements FlywheelIO {
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
     inputs.velocity = motors[0].getEncoder().getVelocity();
+    inputs.position = motors[0].getEncoder().getPosition();
 
     inputs.desiredVelocity = velocitySetpoint;
 

@@ -36,6 +36,8 @@ Edit `FlywheelConstants` for each mechanism:
   - `kMaxAccel`: profile accel limit
   - `kTolerance`: at-speed tolerance
 
+**Flywheel angular velocity setpoints are in RPS (rotations per second).**
+
 Example pattern:
 
 ```java
@@ -57,7 +59,7 @@ Edit `PositionJointConstants` for each joint:
   - `gravity`: `CONSTANT`, `COSINE`, or `SINE` (SINE not supported on TalonFX path)
   - `encoderType`: `INTERNAL`, `EXTERNAL_CANCODER`, `EXTERNAL_CANCODER_PRO`, `EXTERNAL_DIO`, `EXTERNAL_SPARK`
   - `encoderID`: CAN/DIO encoder ID if external
-  - `encoderOffset`: absolute encoder offset (`Rotation2d`) Use a hardware client and set the 0 position to be either horizontal (cosine) or vertical (sine gravity)
+  - `encoderOffset`: absolute encoder offset (`Rotation2d`). Use a hardware client and set the 0 position to be either horizontal (cosine) or vertical (sine gravity)
   - `canBus`: CAN bus name used by CTRE devices
 - `PositionJointGains`
   - feedback: `kP`, `kI`, `kD`
@@ -92,9 +94,9 @@ Note:
 - The current limit is set to 40 amps
 - The gravity model is set to COSINE
 - The encoder type is set to internal (motor encoder)
-- The encoder id is set to zeron (Unused for internal encoder)
+- The encoder ID is set to zero (unused for an internal encoder)
 - The offset is set to .1234 Rotations (Found in REV Hardware Client for horizontal position parallel to the ground)
-- The CanBus is set to default (Rio)
+- The CAN bus is set to default (`rio`)
 
 ## Wire Constants Into RobotContainer
 
@@ -114,11 +116,11 @@ topIndexer =
 
 Use `...IOTalonFX`, `...IOSparkMax`, `...IOSim`, or `...IOReplay` depending on mode/hardware.
 
-This example code creates an intake rack position joint for a SparkMax (REV) and a Flywheel TalonFx (CTRE).
+This example code creates an intake rack position joint for a SparkMax (REV) and a Flywheel TalonFX (CTRE).
 
 ## Command Usage
 
-Compose commands using WPILIB standard composing
+Compose commands using WPILib command composition.
 
 - Flywheel:
   - `new FlywheelVelocityCommand(<subsystem>, <doubleSupplier>)`
@@ -134,13 +136,13 @@ Or use command factories already in the project:
 - `PositionJoint.setPosition(<subsystem>, <doubleSupplier>)`
 
 ```java
-controller.a().whileTrue(Flywheel.setVelocity(shooter, vision::getRPM));
+controller.a().whileTrue(Flywheel.setVelocity(shooter, vision::getRPS));
 controller.b().whileFalse(new PositionJointPositionCommand(rack, ()->10));
 ```
 
 Note:
 - In the first line, the a button on the controller is used to set a velocity setpoint command
-- The setpoint RPM is provided by the getRPM method
+- The setpoint RPS is provided by the `getRPS` method
 - The first line schedules the command when the button is held and deschedules when it is released.
 - In the second line, the b button on the controller is used as a trigger to set a position setpoint command
 - The setpoint position is provided by a lambda function as the input supplier: You can set the gear ratio constant for the rack subsystem config to make the input 10 = 10 inches

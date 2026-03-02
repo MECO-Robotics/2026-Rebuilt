@@ -20,8 +20,9 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
-import frc.robot.commands.ShootCommands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
+import frc.robot.commands.shooter.ShooterCalculator;
+import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.Module;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
@@ -46,6 +47,7 @@ import frc.robot.subsystems.position_joint.PositionJointConstants;
 import frc.robot.subsystems.position_joint.PositionJointIOReplay;
 import frc.robot.subsystems.position_joint.PositionJointIOSim;
 import frc.robot.subsystems.position_joint.PositionJointIOSparkMax;
+import frc.robot.util.visualization.RobotRemyVisualizer;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -65,6 +67,7 @@ public class RobotContainer {
   private final Flywheel intakeRoller;
   private final PositionJoint intakeRack;
   private final PositionJoint hood;
+  private final RobotRemyVisualizer robotRemyVisualizer;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -137,7 +140,7 @@ public class RobotContainer {
         intakeRack =
             new PositionJoint(
                 new PositionJointIOSparkMax(
-                    "IntakeRoller", PositionJointConstants.INTAKE_RACK_CONFIG),
+                    "IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
                 PositionJointConstants.INTAKE_RACK_GAINS);
         hood =
             new PositionJoint(
@@ -196,7 +199,7 @@ public class RobotContainer {
 
         intakeRack =
             new PositionJoint(
-                new PositionJointIOSim("IntakeRoller", PositionJointConstants.INTAKE_RACK_CONFIG),
+                new PositionJointIOSim("IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
                 PositionJointConstants.INTAKE_RACK_GAINS);
         hood =
             new PositionJoint(
@@ -247,14 +250,21 @@ public class RobotContainer {
 
         intakeRack =
             new PositionJoint(
-                new PositionJointIOReplay("IntakeRoller"),
-                PositionJointConstants.INTAKE_RACK_GAINS);
+                new PositionJointIOReplay("IntakeRack"), PositionJointConstants.INTAKE_RACK_GAINS);
 
         hood =
             new PositionJoint(new PositionJointIOReplay("Hood"), PositionJointConstants.HOOD_GAINS);
 
         break;
     }
+
+    robotRemyVisualizer =
+        new RobotRemyVisualizer(
+            drive::getPose,
+            intakeRack::getPosition,
+            hood::getPosition,
+            conveyor::getPosition,
+            shooterFlywheel::getPosition);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -313,8 +323,9 @@ public class RobotContainer {
     controller
         .y()
         .whileTrue(
-            DriveCommands.joystickAimtoHub(
-                drive, hood, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+            DriveCommands.joystickAimToHub(
+                    drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
+                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
 
     // // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -343,8 +354,8 @@ public class RobotContainer {
 
     controller
         .rightBumper()
-        .whileTrue(ShootCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
-        .whileFalse(ShootCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+        .whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
+        .whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
     controller
         .leftBumper()
@@ -402,5 +413,10 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  /** Logs robot and component transforms for the custom Robot_Remy asset. */
+  public void updateVisualization() {
+    robotRemyVisualizer.periodic();
   }
 }

@@ -32,6 +32,8 @@ public class FlywheelIOSim implements FlywheelIO {
   private final double[] motorCurrents;
 
   private double velocitySetpoint = 0;
+  private double voltageSetpoint = 0;
+  private boolean closedLoop = true;
 
   /**
    * Creates a DC motor simulation for a flywheel mechanism.
@@ -67,12 +69,15 @@ public class FlywheelIOSim implements FlywheelIO {
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
     double inputVoltage =
-        controller.calculate(sim.getAngularVelocityRPM(), velocitySetpoint)
-            + feedforward.calculateWithVelocities(sim.getAngularVelocityRPM(), velocitySetpoint);
+        closedLoop
+            ? controller.calculate(sim.getAngularVelocityRPM(), velocitySetpoint)
+                + feedforward.calculateWithVelocities(sim.getAngularVelocityRPM(), velocitySetpoint)
+            : voltageSetpoint;
     sim.setInputVoltage(inputVoltage);
     sim.update(0.02);
 
     inputs.velocity = sim.getAngularVelocityRPM();
+    inputs.position = sim.getAngularPositionRotations();
     inputs.desiredVelocity = velocitySetpoint;
 
     for (int i = 0; i < config.canIds().length; i++) {
@@ -94,7 +99,14 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocity) {
+    closedLoop = true;
     velocitySetpoint = velocity;
+  }
+
+  @Override
+  public void setVoltage(double voltage) {
+    closedLoop = false;
+    voltageSetpoint = voltage;
   }
 
   @Override
