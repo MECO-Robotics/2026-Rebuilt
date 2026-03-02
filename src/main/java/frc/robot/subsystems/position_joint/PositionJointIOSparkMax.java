@@ -102,6 +102,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
                       .positionConversionFactor(1.0 / config.gearRatio())
                       .velocityConversionFactor(1.0 / (60.0 * config.gearRatio())))
               .inverted(config.reversed()[0])
+              .smartCurrentLimit(config.currentLimit())
               .idleMode(IdleMode.kBrake);
 
     } else {
