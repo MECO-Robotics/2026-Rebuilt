@@ -49,7 +49,9 @@ public class RobotRemyVisualizer {
               0.0,
               0.0,
               new Rotation3d(
-                  toRadians(flywheelRotations.getAsDouble()), toRadians(hoodRotations.getAsDouble()), 0.0)),
+                  toRadians(flywheelRotations.getAsDouble()),
+                  toRadians(hoodRotations.getAsDouble()),
+                  0.0)),
           // 1: intake rack
           new Pose3d(
               0.0,
@@ -69,7 +71,11 @@ public class RobotRemyVisualizer {
               0.0,
               new Rotation3d(toRadians(conveyorRotations.getAsDouble()), 0.0, 0.0)),
           // 4: climber
-          new Pose3d(0.0, 0.0, 0.0, new Rotation3d(toRadians(climberRotations.getAsDouble()), 0.0, 0.0))
+          new Pose3d(
+              0.0,
+              0.0,
+              0.0,
+              new Rotation3d(toRadians(climberRotations.getAsDouble()), 0.0, 0.0))
         });
   }
 

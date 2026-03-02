@@ -10,15 +10,19 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
-import frc.robot.commands.ShootCommands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
+import frc.robot.commands.shooter.ShooterCalculator;
+import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.Module;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
@@ -44,6 +48,7 @@ import frc.robot.subsystems.position_joint.PositionJointIOReplay;
 import frc.robot.subsystems.position_joint.PositionJointIOSim;
 import frc.robot.subsystems.position_joint.PositionJointIOSparkMax;
 import frc.robot.util.visualization.RobotRemyVisualizer;
+import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -320,8 +325,9 @@ public class RobotContainer {
     controller
         .y()
         .whileTrue(
-            DriveCommands.joystickAimtoHub(
-                drive, hood, () -> -controller.getLeftY(), () -> -controller.getLeftX()));
+            DriveCommands.joystickAimToHub(
+                    drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
+                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
 
     // // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -350,8 +356,8 @@ public class RobotContainer {
 
     controller
         .rightBumper()
-        .whileTrue(ShootCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
-        .whileFalse(ShootCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+        .whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
+        .whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
     controller
         .leftBumper()
@@ -368,6 +374,38 @@ public class RobotContainer {
         .whileTrue(
             Commands.runEnd(
                 () -> intakeRack.setVoltage(6), () -> intakeRack.setVoltage(0), intakeRack));
+  }
+
+  public void updateDashboardOutputs() {
+    HubShiftUtil.ShiftInfo shiftInfo = HubShiftUtil.getShiftedShiftInfo();
+
+    // Publish match time
+    double matchTime = Math.max(0.0, shiftInfo.matchTime());
+    int minutes = (int) matchTime / 60;
+    int seconds = (int) matchTime % 60;
+    int tenths = (int) ((matchTime * 10) % 10);
+    SmartDashboard.putString(
+        "Match Time", String.format("%02d:%02d.%d", minutes, seconds, tenths));
+
+    // Update from HubShiftUtil
+    SmartDashboard.putString(
+        "Shifts/Remaining Shift Time",
+        String.format("%.1f", Math.max(shiftInfo.remainingTime(), 0.0)));
+    SmartDashboard.putBoolean("Shifts/Shift Active", shiftInfo.active());
+    SmartDashboard.putString(
+        "Shifts/Game State",
+        DriverStation.isAutonomous() ? "Autonomous" : shiftInfo.currentShift().toString());
+    SmartDashboard.putBoolean(
+        "Shifts/Active First?",
+        DriverStation.getAlliance().orElse(Alliance.Blue) == HubShiftUtil.getFirstActiveAlliance());
+
+    SmartDashboard.putString("Shifts/Match Time Color", shiftInfo.matchTimeColor());
+    SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
+
+    // Controller disconnected alerts
+    // primaryDisconnected.set(!DriverStation.isJoystickConnected(primary.getHID().getPort()));
+    // secondaryDisconnected.set(!DriverStation.isJoystickConnected(secondary.getHID().getPort()));
+    // overrideDisconnected.set(!overrides.isConnected());
   }
 
   /**
