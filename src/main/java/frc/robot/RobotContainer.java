@@ -256,10 +256,12 @@ public class RobotContainer {
     robotRemyVisualizer =
         new RobotRemyVisualizer(
             drive::getPose,
-            intakeRack::getPosition,
             hood::getPosition,
+            shooterFlywheel::getPosition,
+            intakeRack::getPosition,
+            intakeRoller::getPosition,
             conveyor::getPosition,
-            shooterFlywheel::getPosition);
+            () -> 0.0);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());

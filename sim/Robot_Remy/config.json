@@ -2,7 +2,7 @@
   "name": "Remy",
   "sourceUrl": "",
   "isFTC": false,
-  "disableSimplification": true,
+  "disableSimplification": false,
   "rotations": [
     {
       "axis": "x",
@@ -17,7 +17,63 @@
   "cameras": [],
   "components": [
     {
-      "name": "hood",
+      "name": "0 flywheel & hood",
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "1 intake rack",
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "2 intake kicker bar",
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "3 hopper",
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "4 climber",
       "zeroedRotations": [
         {
           "axis": "x",
