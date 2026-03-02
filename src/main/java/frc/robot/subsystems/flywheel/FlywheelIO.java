@@ -1,6 +1,9 @@
 package frc.robot.subsystems.flywheel;
 
+import frc.robot.Constants;
 import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
+import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for a velocity-controlled flywheel-style mechanism. */
@@ -43,6 +46,21 @@ public interface FlywheelIO {
 
   /** Applies controller/feedforward gains. */
   public default void setGains(FlywheelGains gains) {}
+
+  /**
+   * Creates a mode-appropriate flywheel IO.
+   *
+   * <p>Returns the supplied real implementation on real hardware, simulated IO in sim, and replay
+   * IO during log replay.
+   */
+  public static FlywheelIO fromMode(
+      String name, FlywheelHardwareConfig config, Supplier<FlywheelIO> realFactory) {
+    return switch (Constants.currentMode) {
+      case REAL -> realFactory.get();
+      case SIM -> new FlywheelIOSim(name, config);
+      default -> new FlywheelIOReplay(name);
+    };
+  }
 
   /** Returns a unique telemetry/logging name for this flywheel. */
   public String getName();

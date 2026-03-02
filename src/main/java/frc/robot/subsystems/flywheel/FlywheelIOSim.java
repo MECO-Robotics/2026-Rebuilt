@@ -60,7 +60,9 @@ public class FlywheelIOSim implements FlywheelIO {
 
     sim =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(gearBox, 0.025, config.gearRatio()), gearBox);
+            LinearSystemId.createDCMotorSystem(
+                gearBox, config.momentOfInertiaKgMetersSquared(), config.gearRatio()),
+            gearBox);
 
     controller = new PIDController(0, 0, 0);
     feedforward = new TunableSimpleMotorFeedforward(0, 0, 0);

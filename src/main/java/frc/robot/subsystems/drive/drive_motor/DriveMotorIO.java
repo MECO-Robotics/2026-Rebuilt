@@ -1,6 +1,9 @@
 package frc.robot.subsystems.drive.drive_motor;
 
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for a swerve module drive motor. */
@@ -49,6 +52,21 @@ public interface DriveMotorIO {
 
   /** Applies controller/feedforward gains. */
   public default void setGains(DriveMotorGains gains) {}
+
+  /**
+   * Creates a mode-appropriate drive motor IO.
+   *
+   * <p>Returns the supplied real implementation on real hardware, simulated IO in sim, and replay
+   * IO during log replay.
+   */
+  public static DriveMotorIO fromMode(
+      String name, DriveMotorHardwareConfig config, Supplier<DriveMotorIO> realFactory) {
+    return switch (Constants.currentMode) {
+      case REAL -> realFactory.get();
+      case SIM -> new DriveMotorIOSim(name, config);
+      default -> new DriveMotorIOReplay(name);
+    };
+  }
 
   /** Returns a unique telemetry/logging name for this drive motor. */
   public String getName();

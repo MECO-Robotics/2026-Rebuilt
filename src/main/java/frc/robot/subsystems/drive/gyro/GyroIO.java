@@ -8,6 +8,8 @@
 package frc.robot.subsystems.drive.gyro;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.Constants;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for drivetrain yaw sensing. */
@@ -29,4 +31,13 @@ public interface GyroIO {
 
   /** Refreshes all sensor inputs. */
   public default void updateInputs(GyroIOInputs inputs) {}
+
+  /**
+   * Creates a mode-appropriate gyro IO.
+   *
+   * <p>Returns the supplied real implementation on real hardware and no-op IO for sim/replay.
+   */
+  public static GyroIO fromMode(Supplier<GyroIO> realFactory) {
+    return Constants.currentMode == Constants.Mode.REAL ? realFactory.get() : new GyroIO() {};
+  }
 }

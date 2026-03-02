@@ -86,6 +86,9 @@ public class PositionJoint extends SubsystemBase {
     goal = new TrapezoidProfile.State(gains.kDefaultSetpoint(), 0);
     setpoint = goal;
 
+    // Load the configured gains immediately so sim IO PID/FF are initialized at startup.
+    positionJoint.setGains(gains);
+
     SmartDashboard.putData(name, this);
   }
 

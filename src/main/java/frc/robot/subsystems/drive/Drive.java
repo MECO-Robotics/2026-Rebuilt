@@ -160,6 +160,11 @@ public class Drive extends SubsystemBase {
     azimuthkV = new LoggedTunableNumber("Drive/AzimuthMotors/Gains/kV", azimuthGains.kV());
     azimuthkA = new LoggedTunableNumber("Drive/AzimuthMotors/Gains/kA", azimuthGains.kA());
 
+    // Load the configured gains immediately so sim IO PID/FF are initialized at startup.
+    for (int i = 0; i < 4; i++) {
+      modules[i].setGains(driveGains, azimuthGains);
+    }
+
     kMaxDriveVelocity =
         new LoggedTunableNumber(
             "Drive/ModuleLimits/kMaxDriveVelocityMetersPerSec",

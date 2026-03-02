@@ -64,7 +64,9 @@ public class PositionJointIOSim implements PositionJointIO {
 
     sim =
         new DCMotorSim(
-            LinearSystemId.createDCMotorSystem(gearBox, 0.01, config.gearRatio()), gearBox);
+            LinearSystemId.createDCMotorSystem(
+                gearBox, config.momentOfInertiaKgMetersSquared(), config.gearRatio()),
+            gearBox);
 
     controller = new PIDController(0, 0, 0);
     feedforward = new TunableElevatorFeedforward(0.0, 0.0, 0.0, 0.0);

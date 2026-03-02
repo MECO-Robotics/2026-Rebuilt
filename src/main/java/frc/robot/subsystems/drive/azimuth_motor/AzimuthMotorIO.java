@@ -1,7 +1,10 @@
 package frc.robot.subsystems.drive.azimuth_motor;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.Constants;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for a swerve module azimuth/steering motor. */
@@ -55,6 +58,21 @@ public interface AzimuthMotorIO {
 
   /** Applies controller/feedforward gains. */
   public default void setGains(AzimuthMotorGains gains) {}
+
+  /**
+   * Creates a mode-appropriate azimuth motor IO.
+   *
+   * <p>Returns the supplied real implementation on real hardware, simulated IO in sim, and replay
+   * IO during log replay.
+   */
+  public static AzimuthMotorIO fromMode(
+      String name, AzimuthMotorHardwareConfig config, Supplier<AzimuthMotorIO> realFactory) {
+    return switch (Constants.currentMode) {
+      case REAL -> realFactory.get();
+      case SIM -> new AzimuthMotorIOSim(name, config);
+      default -> new AzimuthMotorIOReplay(name);
+    };
+  }
 
   /** Returns a unique telemetry/logging name for this azimuth motor. */
   public String getName();

@@ -23,15 +23,22 @@ public class FlywheelConstants {
    *     relative to the first motor.
    * @param gearRatio The gear ratio between the motor and the flywheel (output speed / motor
    *     speed).
+   * @param momentOfInertiaKgMetersSquared Flywheel mechanism moment of inertia in kg*m^2 for sim
+   *     modeling.
    * @param currentLimit The current limit for the motors in amps.
    * @param canBus The CAN bus the motors are on, or an empty string for the rio bus.
    */
   public record FlywheelHardwareConfig(
-      int[] canIds, boolean[] reversed, double gearRatio, int currentLimit, String canBus) {}
+      int[] canIds,
+      boolean[] reversed,
+      double gearRatio,
+      double momentOfInertiaKgMetersSquared,
+      int currentLimit,
+      String canBus) {}
 
   /** Reference hardware config used as a template when adding new flywheels. */
   public static final FlywheelHardwareConfig EXAMPLE_CONFIG =
-      new FlywheelHardwareConfig(new int[] {1}, new boolean[] {true}, 2.0, 40, "");
+      new FlywheelHardwareConfig(new int[] {1}, new boolean[] {true}, 2.0, 0.025, 40, "");
 
   /** Reference gains used as a template when adding new flywheels. */
   public static final FlywheelGains EXAMPLE_GAINS =
@@ -41,7 +48,7 @@ public class FlywheelConstants {
   // Conveyor Constants
   // -----------
   public static final FlywheelHardwareConfig CONVEYOR_CONFIG =
-      new FlywheelHardwareConfig(new int[] {23}, new boolean[] {false}, 1, 40, "");
+      new FlywheelHardwareConfig(new int[] {23}, new boolean[] {false}, 1, 0.025, 40, "");
   public static final FlywheelGains CONVEYOR_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 
@@ -49,7 +56,7 @@ public class FlywheelConstants {
   // Intake Constants
   // -----------
   public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {22}, new boolean[] {false}, 1.5, 40, "");
+      new FlywheelHardwareConfig(new int[] {22}, new boolean[] {false}, 1.5, 0.025, 40, "");
   public static final FlywheelGains INTAKE_ROLLER_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 
@@ -57,9 +64,9 @@ public class FlywheelConstants {
   // Indexer Constants
   // ------------
   public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 40, "");
+      new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 0.025, 40, "");
   public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {31}, new boolean[] {false}, 1, 40, "");
+      new FlywheelHardwareConfig(new int[] {31}, new boolean[] {false}, 1, 0.025, 40, "");
   public static final FlywheelGains INDEXER_ROLLER_GAINS =
       new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
 
@@ -68,7 +75,7 @@ public class FlywheelConstants {
   // ------------
   public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG =
       new FlywheelHardwareConfig(
-          new int[] {34, 35}, new boolean[] {false, true}, 22.0 / 14, 40, "MECO CANIvore");
+          new int[] {34, 35}, new boolean[] {false, true}, 22.0 / 14, 0.025, 40, "MECO CANIvore");
   public static final FlywheelGains FLYWHEEL_ROLLER_GAINS =
       new FlywheelGains(0.3, 0.0, 0.0, 25, 0.2, 0.0, 2.5, 1.0);
 }

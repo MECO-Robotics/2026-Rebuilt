@@ -28,6 +28,7 @@ Edit `FlywheelConstants` for each mechanism:
   - `canIds`: motor IDs, index `0` is leader
   - `reversed`: inversion for leader/followers
   - `gearRatio`: motor rotations per mechanism rotation
+  - `momentOfInertiaKgMetersSquared`: mechanism MOI used by `FlywheelIOSim` (`kg*m^2`)
   - `currentLimit`: motor current limit
   - `canBus`: CANivore name or `""`/rio bus as used in your project
 - `FlywheelGains`
@@ -42,7 +43,7 @@ Example pattern:
 
 ```java
 public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG =
-    new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 40, "");
+    new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 0.025, 40, "");
 public static final FlywheelGains INDEXER_ROLLER_GAINS =
     new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
 ```
@@ -55,6 +56,7 @@ Edit `PositionJointConstants` for each joint:
   - `canIds`: motor IDs, index `0` is leader
   - `reversed`: inversion config, first bool is for clockwise positive and the rest are leader-relative
   - `gearRatio`: motor rotations per mechanism unit
+  - `momentOfInertiaKgMetersSquared`: mechanism MOI used by `PositionJointIOSim` (`kg*m^2`)
   - `currentLimit`: motor current limit
   - `gravity`: `CONSTANT`, `COSINE`, or `SINE` (SINE not supported on TalonFX path)
   - `encoderType`: `INTERNAL`, `EXTERNAL_CANCODER`, `EXTERNAL_CANCODER_PRO`, `EXTERNAL_DIO`, `EXTERNAL_SPARK`
@@ -76,6 +78,7 @@ public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG =
         new int[] {21, 22},
         new boolean[] {true, true},
         80/12,
+        0.01,
         40,
         GravityType.COSINE,
         EncoderType.INTERNAL,

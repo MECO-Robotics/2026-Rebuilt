@@ -50,6 +50,8 @@ public class PositionJointConstants {
    * @param gearRatio The gear ratio between the motor and the joint output (output speed / motor
    *     speed). For rotation joints, this gear ratio should be multiplied by 2 * Math.PI to convert
    *     from rotations to radians.
+   * @param momentOfInertiaKgMetersSquared Joint mechanism moment of inertia in kg*m^2 for sim
+   *     modeling.
    * @param currentLimit The current limit for the motors in amps.
    * @param gravity The gravity model used for feedforward and compensation.
    * @param encoderType The type of encoder used for position feedback.
@@ -65,6 +67,7 @@ public class PositionJointConstants {
       int[] canIds,
       boolean[] reversed,
       double gearRatio,
+      double momentOfInertiaKgMetersSquared,
       double currentLimit,
       GravityType gravity,
       EncoderType encoderType,
@@ -82,6 +85,7 @@ public class PositionJointConstants {
           new int[] {10},
           new boolean[] {true},
           85.33333 * 2 * Math.PI,
+          0.01,
           40,
           GravityType.COSINE,
           EncoderType.EXTERNAL_CANCODER,
@@ -99,6 +103,7 @@ public class PositionJointConstants {
           new int[] {21},
           new boolean[] {true},
           4.3125,
+          0.01,
           40,
           GravityType.COSINE,
           EncoderType.INTERNAL,
@@ -116,6 +121,7 @@ public class PositionJointConstants {
           new int[] {33},
           new boolean[] {false},
           (21 / 1),
+          0.01,
           40,
           GravityType.COSINE,
           EncoderType.INTERNAL,

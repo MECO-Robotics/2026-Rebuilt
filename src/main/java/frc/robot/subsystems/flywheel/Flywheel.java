@@ -67,6 +67,9 @@ public class Flywheel extends SubsystemBase {
     kSetpoint = new LoggedTunableNumber(name + "/Gains/kSetpoint", 0.0);
 
     profile = new LinearProfile(gains.kMaxAccel(), 0.02);
+
+    // Load the configured gains immediately so sim IO PID/FF are initialized at startup.
+    flywheel.setGains(gains);
   }
 
   @Override

@@ -1,6 +1,9 @@
 package frc.robot.subsystems.position_joint;
 
+import frc.robot.Constants;
 import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointGains;
+import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointHardwareConfig;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for a closed-loop position-controlled joint. */
@@ -57,6 +60,21 @@ public interface PositionJointIO {
 
   /** Resets mechanism position to the implementation-defined zero. */
   public default void resetPosition() {}
+
+  /**
+   * Creates a mode-appropriate position joint IO.
+   *
+   * <p>Returns the supplied real implementation on real hardware, simulated IO in sim, and replay
+   * IO during log replay.
+   */
+  public static PositionJointIO fromMode(
+      String name, PositionJointHardwareConfig config, Supplier<PositionJointIO> realFactory) {
+    return switch (Constants.currentMode) {
+      case REAL -> realFactory.get();
+      case SIM -> new PositionJointIOSim(name, config);
+      default -> new PositionJointIOReplay(name);
+    };
+  }
 
   /** Returns a unique telemetry/logging name for this joint. */
   public String getName();

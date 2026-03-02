@@ -26,26 +26,22 @@ import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.Module;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOReplay;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOSim;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOTalonFX;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorIOReplay;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorIOSim;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIOTalonFX;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelConstants;
-import frc.robot.subsystems.flywheel.FlywheelIOReplay;
-import frc.robot.subsystems.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
 import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointConstants;
-import frc.robot.subsystems.position_joint.PositionJointIOReplay;
-import frc.robot.subsystems.position_joint.PositionJointIOSim;
+import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.position_joint.PositionJointIOSparkMax;
 import frc.robot.util.HubShiftUtil;
 import frc.robot.util.visualization.RobotRemyVisualizer;
@@ -77,186 +73,144 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    switch (Constants.currentMode) {
-      case REAL:
-        // Real robot, instantiate hardware IO implementations
+    var driveGains =
+        Constants.currentMode == Constants.Mode.REAL
+            ? DriveMotorConstants.EXAMPLE_GAINS
+            : Constants.currentMode == Constants.Mode.SIM
+                ? DriveMotorConstants.EXAMPLE_GAINS_SIM
+                : null;
+    var azimuthGains =
+        Constants.currentMode == Constants.Mode.REAL
+            ? AzimuthMotorConstants.EXAMPLE_GAINS
+            : Constants.currentMode == Constants.Mode.SIM
+                ? AzimuthMotorConstants.EXAMPLE_GAINS_SIM
+                : null;
 
-        // If using REV hardware, set up the Spark Odometry Thread, if using CTRE
-        // hardware, set up
-        // the Phoenix Odometry Thread, if using a combination of the two, set up both
-        drive =
-            new Drive(
-                new GyroIOPigeon2(13, DriveMotorConstants.canBusName),
-                new Module(
-                    new DriveMotorIOTalonFX(
-                        "FrontLeftDrive", DriveMotorConstants.FRONT_LEFT_CONFIG),
-                    new AzimuthMotorIOTalonFX(
-                        "FrontLeftSteer", AzimuthMotorConstants.FRONT_LEFT_CONFIG)),
-                new Module(
-                    new DriveMotorIOTalonFX(
-                        "FrontRightDrive", DriveMotorConstants.FRONT_RIGHT_CONFIG),
-                    new AzimuthMotorIOTalonFX(
-                        "FrontRightSteer", AzimuthMotorConstants.FRONT_RIGHT_CONFIG)),
-                new Module(
-                    new DriveMotorIOTalonFX("BackLeftDrive", DriveMotorConstants.BACK_LEFT_CONFIG),
-                    new AzimuthMotorIOTalonFX(
-                        "BackLeftSteer", AzimuthMotorConstants.BACK_LEFT_CONFIG)),
-                new Module(
-                    new DriveMotorIOTalonFX(
-                        "BackRightDrive", DriveMotorConstants.BACK_RIGHT_CONFIG),
-                    new AzimuthMotorIOTalonFX(
-                        "BackRightSteer", AzimuthMotorConstants.BACK_RIGHT_CONFIG)),
-                DriveMotorConstants.EXAMPLE_GAINS,
-                AzimuthMotorConstants.EXAMPLE_GAINS,
-                PhoenixOdometryThread.getInstance(),
-                null);
+    drive =
+        new Drive(
+            GyroIO.fromMode(() -> new GyroIOPigeon2(13, DriveMotorConstants.canBusName)),
+            new Module(
+                DriveMotorIO.fromMode(
+                    "FrontLeftDrive",
+                    DriveMotorConstants.FRONT_LEFT_CONFIG,
+                    () ->
+                        new DriveMotorIOTalonFX(
+                            "FrontLeftDrive", DriveMotorConstants.FRONT_LEFT_CONFIG)),
+                AzimuthMotorIO.fromMode(
+                    "FrontLeftSteer",
+                    AzimuthMotorConstants.FRONT_LEFT_CONFIG,
+                    () ->
+                        new AzimuthMotorIOTalonFX(
+                            "FrontLeftSteer", AzimuthMotorConstants.FRONT_LEFT_CONFIG))),
+            new Module(
+                DriveMotorIO.fromMode(
+                    "FrontRightDrive",
+                    DriveMotorConstants.FRONT_RIGHT_CONFIG,
+                    () ->
+                        new DriveMotorIOTalonFX(
+                            "FrontRightDrive", DriveMotorConstants.FRONT_RIGHT_CONFIG)),
+                AzimuthMotorIO.fromMode(
+                    "FrontRightSteer",
+                    AzimuthMotorConstants.FRONT_RIGHT_CONFIG,
+                    () ->
+                        new AzimuthMotorIOTalonFX(
+                            "FrontRightSteer", AzimuthMotorConstants.FRONT_RIGHT_CONFIG))),
+            new Module(
+                DriveMotorIO.fromMode(
+                    "BackLeftDrive",
+                    DriveMotorConstants.BACK_LEFT_CONFIG,
+                    () ->
+                        new DriveMotorIOTalonFX(
+                            "BackLeftDrive", DriveMotorConstants.BACK_LEFT_CONFIG)),
+                AzimuthMotorIO.fromMode(
+                    "BackLeftSteer",
+                    AzimuthMotorConstants.BACK_LEFT_CONFIG,
+                    () ->
+                        new AzimuthMotorIOTalonFX(
+                            "BackLeftSteer", AzimuthMotorConstants.BACK_LEFT_CONFIG))),
+            new Module(
+                DriveMotorIO.fromMode(
+                    "BackRightDrive",
+                    DriveMotorConstants.BACK_RIGHT_CONFIG,
+                    () ->
+                        new DriveMotorIOTalonFX(
+                            "BackRightDrive", DriveMotorConstants.BACK_RIGHT_CONFIG)),
+                AzimuthMotorIO.fromMode(
+                    "BackRightSteer",
+                    AzimuthMotorConstants.BACK_RIGHT_CONFIG,
+                    () ->
+                        new AzimuthMotorIOTalonFX(
+                            "BackRightSteer", AzimuthMotorConstants.BACK_RIGHT_CONFIG))),
+            driveGains,
+            azimuthGains,
+            Constants.currentMode == Constants.Mode.REAL
+                ? PhoenixOdometryThread.getInstance()
+                : null,
+            null);
 
-        topIndexer =
-            new Flywheel(
-                new FlywheelIOSparkMax("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
-                FlywheelConstants.INDEXER_ROLLER_GAINS);
+    topIndexer =
+        new Flywheel(
+            FlywheelIO.fromMode(
+                "TopIndexer",
+                FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG,
+                () ->
+                    new FlywheelIOSparkMax(
+                        "TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG)),
+            FlywheelConstants.INDEXER_ROLLER_GAINS);
 
-        bottomIndexer =
-            new Flywheel(
-                new FlywheelIOSparkMax(
-                    "BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
-                FlywheelConstants.INDEXER_ROLLER_GAINS);
+    bottomIndexer =
+        new Flywheel(
+            FlywheelIO.fromMode(
+                "BottomIndexer",
+                FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG,
+                () ->
+                    new FlywheelIOSparkMax(
+                        "BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG)),
+            FlywheelConstants.INDEXER_ROLLER_GAINS);
 
-        conveyor =
-            new Flywheel(
-                new FlywheelIOSparkMax("Conveyor", FlywheelConstants.CONVEYOR_CONFIG),
-                FlywheelConstants.CONVEYOR_GAINS);
+    conveyor =
+        new Flywheel(
+            FlywheelIO.fromMode(
+                "Conveyor",
+                FlywheelConstants.CONVEYOR_CONFIG,
+                () -> new FlywheelIOSparkMax("Conveyor", FlywheelConstants.CONVEYOR_CONFIG)),
+            FlywheelConstants.CONVEYOR_GAINS);
 
-        shooterFlywheel =
-            new Flywheel(
-                new FlywheelIOTalonFX("ShooterFlywheel", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
-                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+    shooterFlywheel =
+        new Flywheel(
+            FlywheelIO.fromMode(
+                "ShooterFlywheel",
+                FlywheelConstants.FLYWHEEL_ROLLER_CONFIG,
+                () ->
+                    new FlywheelIOTalonFX(
+                        "ShooterFlywheel", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG)),
+            FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
 
-        intakeRoller =
-            new Flywheel(
-                new FlywheelIOSparkMax("IntakeRoller", FlywheelConstants.INTAKE_ROLLER_CONFIG),
-                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+    intakeRoller =
+        new Flywheel(
+            FlywheelIO.fromMode(
+                "IntakeRoller",
+                FlywheelConstants.INTAKE_ROLLER_CONFIG,
+                () ->
+                    new FlywheelIOSparkMax("IntakeRoller", FlywheelConstants.INTAKE_ROLLER_CONFIG)),
+            FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
 
-        intakeRack =
-            new PositionJoint(
-                new PositionJointIOSparkMax(
-                    "IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
-                PositionJointConstants.INTAKE_RACK_GAINS);
-        hood =
-            new PositionJoint(
-                new PositionJointIOSparkMax("Hood", PositionJointConstants.HOOD_CONFIG),
-                PositionJointConstants.HOOD_GAINS);
-
-        break;
-
-      case SIM:
-        // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new Module(
-                    new DriveMotorIOSim("FrontLeftDrive", DriveMotorConstants.FRONT_LEFT_CONFIG),
-                    new AzimuthMotorIOSim("FrontLeftAz", AzimuthMotorConstants.FRONT_LEFT_CONFIG)),
-                new Module(
-                    new DriveMotorIOSim("FrontRightDrive", DriveMotorConstants.FRONT_RIGHT_CONFIG),
-                    new AzimuthMotorIOSim(
-                        "FrontRightAz", AzimuthMotorConstants.FRONT_RIGHT_CONFIG)),
-                new Module(
-                    new DriveMotorIOSim("BackLeftDrive", DriveMotorConstants.BACK_LEFT_CONFIG),
-                    new AzimuthMotorIOSim("BackLeftAz", AzimuthMotorConstants.BACK_LEFT_CONFIG)),
-                new Module(
-                    new DriveMotorIOSim("BackRightDrive", DriveMotorConstants.BACK_RIGHT_CONFIG),
-                    new AzimuthMotorIOSim("BackRightAz", AzimuthMotorConstants.BACK_RIGHT_CONFIG)),
-                DriveMotorConstants.EXAMPLE_GAINS_SIM,
-                AzimuthMotorConstants.EXAMPLE_GAINS_SIM,
-                null,
-                null);
-
-        topIndexer =
-            new Flywheel(
-                new FlywheelIOSim("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
-                FlywheelConstants.INDEXER_ROLLER_GAINS);
-
-        bottomIndexer =
-            new Flywheel(
-                new FlywheelIOSim("BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
-                FlywheelConstants.INDEXER_ROLLER_GAINS);
-
-        conveyor =
-            new Flywheel(
-                new FlywheelIOSim("Conveyor", FlywheelConstants.CONVEYOR_CONFIG),
-                FlywheelConstants.CONVEYOR_GAINS);
-
-        shooterFlywheel =
-            new Flywheel(
-                new FlywheelIOSim("ShooterFlywheel", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
-                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
-
-        intakeRoller =
-            new Flywheel(
-                new FlywheelIOSim("IntakeRoller", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
-                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
-
-        intakeRack =
-            new PositionJoint(
-                new PositionJointIOSim("IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
-                PositionJointConstants.INTAKE_RACK_GAINS);
-        hood =
-            new PositionJoint(
-                new PositionJointIOSim("Hood", PositionJointConstants.HOOD_CONFIG),
-                PositionJointConstants.HOOD_GAINS);
-
-        break;
-
-      default:
-        // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new Module(
-                    new DriveMotorIOReplay("FrontLeftDrive"),
-                    new AzimuthMotorIOReplay("FrontLeftAz")),
-                new Module(
-                    new DriveMotorIOReplay("FrontRightDrive"),
-                    new AzimuthMotorIOReplay("FrontRightAz")),
-                new Module(
-                    new DriveMotorIOReplay("BackLeftDrive"),
-                    new AzimuthMotorIOReplay("BackLeftAz")),
-                new Module(
-                    new DriveMotorIOReplay("BackRightDrive"),
-                    new AzimuthMotorIOReplay("BackRightAz")),
-                null,
-                null,
-                null,
-                null);
-
-        topIndexer =
-            new Flywheel(
-                new FlywheelIOReplay("TopIndexer"), FlywheelConstants.INDEXER_ROLLER_GAINS);
-
-        bottomIndexer =
-            new Flywheel(
-                new FlywheelIOReplay("BottomIndexer"), FlywheelConstants.INDEXER_ROLLER_GAINS);
-
-        conveyor = new Flywheel(new FlywheelIOReplay("Conveyor"), FlywheelConstants.CONVEYOR_GAINS);
-
-        shooterFlywheel =
-            new Flywheel(
-                new FlywheelIOReplay("ShooterFlywheel"), FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
-
-        intakeRoller =
-            new Flywheel(
-                new FlywheelIOReplay("IntakeRoller"), FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
-
-        intakeRack =
-            new PositionJoint(
-                new PositionJointIOReplay("IntakeRack"), PositionJointConstants.INTAKE_RACK_GAINS);
-
-        hood =
-            new PositionJoint(new PositionJointIOReplay("Hood"), PositionJointConstants.HOOD_GAINS);
-
-        break;
-    }
+    intakeRack =
+        new PositionJoint(
+            PositionJointIO.fromMode(
+                "IntakeRack",
+                PositionJointConstants.INTAKE_RACK_CONFIG,
+                () ->
+                    new PositionJointIOSparkMax(
+                        "IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG)),
+            PositionJointConstants.INTAKE_RACK_GAINS);
+    hood =
+        new PositionJoint(
+            PositionJointIO.fromMode(
+                "Hood",
+                PositionJointConstants.HOOD_CONFIG,
+                () -> new PositionJointIOSparkMax("Hood", PositionJointConstants.HOOD_CONFIG)),
+            PositionJointConstants.HOOD_GAINS);
 
     robotRemyVisualizer =
         new RobotRemyVisualizer(
