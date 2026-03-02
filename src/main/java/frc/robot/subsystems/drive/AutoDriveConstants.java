@@ -3,6 +3,7 @@ package frc.robot.subsystems.drive;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 
+/** Placeholder constants for higher-level autonomous drive targeting. */
 public class AutoDriveConstants {
 
   // If we want to implement the option of auto driving,

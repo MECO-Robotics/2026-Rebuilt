@@ -12,6 +12,7 @@ import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointH
 import frc.robot.util.feedforwards.PositionJointFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 
+/** Physics-simulation implementation of {@link PositionJointIO}. */
 public class PositionJointIOSim implements PositionJointIO {
   private final String name;
 
@@ -35,19 +36,29 @@ public class PositionJointIOSim implements PositionJointIO {
   private double positionSetpoint = 0.0;
   private double velocitySetpoint = 0.0;
   private double inputVoltage = 0.0;
+  private double voltageSetpoint = 0.0;
+  private boolean closedLoop = true;
 
+  /**
+   * Creates a simple DC-motor simulation for a position-controlled joint.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware constants used to shape the simulation model
+   */
   public PositionJointIOSim(String name, PositionJointHardwareConfig config) {
     this.name = name;
 
     this.config = config;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
+
+    motorsConnected = new boolean[numMotors];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
 
     gearBox = DCMotor.getKrakenX60Foc(config.canIds().length);
 
@@ -62,13 +73,14 @@ public class PositionJointIOSim implements PositionJointIO {
   @Override
   public void updateInputs(PositionJointIOInputs inputs) {
     inputVoltage =
-        controller.calculate(sim.getAngularPosition().in(Rotations), positionSetpoint)
-            + feedforward.calculate(
-                sim.getAngularPositionRotations(),
-                sim.getAngularVelocity().in(RotationsPerSecond),
-                velocitySetpoint,
-                0.02);
-    ;
+        closedLoop
+            ? controller.calculate(sim.getAngularPosition().in(Rotations), positionSetpoint)
+                + feedforward.calculate(
+                    sim.getAngularPositionRotations(),
+                    sim.getAngularVelocity().in(RotationsPerSecond),
+                    velocitySetpoint,
+                    0.02)
+            : voltageSetpoint;
     sim.setInputVoltage(inputVoltage);
     sim.update(0.02);
 
@@ -98,8 +110,15 @@ public class PositionJointIOSim implements PositionJointIO {
 
   @Override
   public void setPosition(double position, double velocity) {
+    closedLoop = true;
     positionSetpoint = position;
     velocitySetpoint = velocity;
+  }
+
+  @Override
+  public void setVoltage(double voltage) {
+    closedLoop = false;
+    voltageSetpoint = voltage;
   }
 
   @Override
@@ -110,6 +129,7 @@ public class PositionJointIOSim implements PositionJointIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this joint's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

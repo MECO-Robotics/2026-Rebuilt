@@ -1,110 +1,154 @@
-# Ninjineers 2025 Base Robot Code
+# MECO 2026 Rebuilt Robot Code
 
-FRC Robot Code has gotten significantly more advanced in recent years with brushless motors, external CAN sensors, vision, and more complicated odometry. Ninjineers has realized that these advancements are not possible over the course of a single season so we created this base code to allow teams to focus on the emergent behavior of their robot instead of getting bogged down in the weeds of motor control. In developing this template we tried to create sensible defaults for TalonFX's and Spark Max's for motor control, and integrated Mechanical Advantage's Drivetrain and Vision projects (with modification to enable more modular configuration). These defaults work for us but you are free to create your own [IO layers](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces) or bespoke Subsystems. We would love it if you create a pull request to share your code with other teams.
+This is the 2026 Rebuilt robot code used by MECO Robotics, built around reusable IO-based subsystems and AdvantageKit logging.
 
-## Getting Started
+## 2026 Setup Checklist
 
-1. Create a fork of this repo, this will allow you to pull the latest changes in this repo directly from the Github UI.
-2. Pull your fork
-3. Split up your robot into different subsystems (Check out the [Subsystems](#subsystems) section)
+1. Clone/fork 2026 Base Project repository.
+2. Set your real hardware IDs and mechanism values in:
+   - `src/main/java/frc/robot/subsystems/position_joint/PositionJointConstants.java`
+   - `src/main/java/frc/robot/subsystems/flywheel/FlywheelConstants.java`
+3. Instantiate the subsystems in `src/main/java/frc/robot/RobotContainer.java`.
+4. Bind commands in `configureButtonBindings()`.
+5. Tune gains on robot using AdvantageScope/logged tunables.
+6. Save gains manually in Constants files from step 2.
 
+## Subsystem Model
 
-## Subsystems
+- `Flywheel`: velocity/voltage control for one motor group with one velocity setpoint.
+- `PositionJoint`: position/voltage control for pivots/elevators with profiling and feedforward.
 
-We split our robot into many small subsystems to allow for heavy reuse of subsystems (this is why we have only two motor control subsystems).
+If one physical assembly needs independent setpoints, split it into multiple subsystems (example: left and right shooter wheels as two flywheels).
 
-* Flywheel
+## Fill Out Flywheel Constants
 
-  Flywheel is the more basic of the two subsystems and allows for controlling the velocity or voltage of a single motor or a group of motors. The biggest constraint with a Flywheel subsystem is it can only have one velocity setpoint or velocity measurement. This means that every motor will be spinning together (probably in the same gearbox).
+Edit `FlywheelConstants` for each mechanism:
 
-* PositionJoint
+- `FlywheelHardwareConfig`
+  - `canIds`: motor IDs, index `0` is leader
+  - `reversed`: inversion for leader/followers
+  - `gearRatio`: motor rotations per mechanism rotation
+  - `currentLimit`: motor current limit
+  - `canBus`: CANivore name or `""`/rio bus as used in your project
+- `FlywheelGains`
+  - `kP`, `kI`, `kD`: feedback
+  - `kS`, `kV`, `kA`: feedforward
+  - `kMaxAccel`: profile accel limit
+  - `kTolerance`: at-speed tolerance
 
-  PositionJoints are more complicated as they can represent a Pivot or Elevator. A PositionJoint supports Position and Voltage control modes. Just like the Flywheel a single PositionJoint can also only have one position setpoint and position output but can have multiple motors.
+**Flywheel angular velocity setpoints are in RPS (rotations per second).**
 
-### Splitting a Subsystem
+Example pattern:
 
-Many of what we want to think of as a single robot Subsystems will need to be represented as multiple Subsystems in code. For example: a shooter from Crescendo might have a set of left wheels and a set of right wheels that spin at different velocities to create spin. This should be represented as two Flywheels (one for the right and one for left). The differential velocity is a more complicated emergent behavior that should be controlled at the command level not the subsystem level.
+```java
+public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG =
+    new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 40, "");
+public static final FlywheelGains INDEXER_ROLLER_GAINS =
+    new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+```
 
-## Flywheel Constants
+## Fill Out PositionJoint Constants
 
-Flywheels have mechanism gains and motor configs:
+Edit `PositionJointConstants` for each joint:
 
-* Motor Configs:
+- `PositionJointHardwareConfig`
+  - `canIds`: motor IDs, index `0` is leader
+  - `reversed`: inversion config, first bool is for clockwise positive and the rest are leader-relative
+  - `gearRatio`: motor rotations per mechanism unit
+  - `currentLimit`: motor current limit
+  - `gravity`: `CONSTANT`, `COSINE`, or `SINE` (SINE not supported on TalonFX path)
+  - `encoderType`: `INTERNAL`, `EXTERNAL_CANCODER`, `EXTERNAL_CANCODER_PRO`, `EXTERNAL_DIO`, `EXTERNAL_SPARK`
+  - `encoderID`: CAN/DIO encoder ID if external
+  - `encoderOffset`: absolute encoder offset (`Rotation2d`). Use a hardware client and set the 0 position to be either horizontal (cosine) or vertical (sine gravity)
+  - `canBus`: CAN bus name used by CTRE devices
+- `PositionJointGains`
+  - feedback: `kP`, `kI`, `kD`
+  - feedforward: `kS`, `kG`, `kV`, `kA`
+  - profile: `kMaxVelo`, `kMaxAccel`
+  - bounds: `kMinPosition`, `kMaxPosition`
+  - tolerance/default: `kTolerance`, `kDefaultSetpoint`
 
-  * canIds: List of canIDs for motors in group. First canID will be master
+Example pattern:
 
-  * reversed: Reverse config for each motor: first boolean will reverse the master motor, the next booleans will reverse the follower motors relative to the master motor
+```java
+public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG =
+    new PositionJointHardwareConfig(
+        new int[] {21, 22},
+        new boolean[] {true, true},
+        80/12,
+        40,
+        GravityType.COSINE,
+        EncoderType.INTERNAL,
+        0,
+        Rotation2d.fromRotations(.),
+        "");
+public static final PositionJointGains INTAKE_RACK_GAINS =
+    new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
+```
 
-  * gearRatio: ratio of motor revolutions (rotations) to mechanism revolutions (rotations or radians)
+Note:
+- This config is set to use the motor ids 21 and 22.
+- The first motor inversion is set to true, so the motor is counterclockwise positive
+- The second motor inversion is also set to true, so the second motor will spin opposite of the leader (first) motor
+- The gear ratio is set to 80/12, so that could be a 12t input pinion on a 80t output gear
+- The current limit is set to 40 amps
+- The gravity model is set to COSINE
+- The encoder type is set to internal (motor encoder)
+- The encoder ID is set to zero (unused for an internal encoder)
+- The offset is set to .1234 Rotations (Found in REV Hardware Client for horizontal position parallel to the ground)
+- The CAN bus is set to default (`rio`)
 
-  * canBus: For TalonFX can be name of CANivore or "rio", unused on SparkMax
+## Wire Constants Into RobotContainer
 
-* Gains:
+Instantiate each mechanism with the intended IO backend:
 
-  Feedback:
+```java
+intakeRack =
+    new PositionJoint(
+        new PositionJointIOSparkMax("IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
+        PositionJointConstants.INTAKE_RACK_GAINS);
 
-  * kP: (volts / rotation / second)
+topIndexer =
+    new Flywheel(
+        new FlywheelIOTalonFx("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
+        FlywheelConstants.INDEXER_ROLLER_GAINS);
+```
 
-  * kI: (volts / rotation)
+Use `...IOTalonFX`, `...IOSparkMax`, `...IOSim`, or `...IOReplay` depending on mode/hardware.
 
-  * kD: (volts / rotation / second^2)
+This example code creates an intake rack position joint for a SparkMax (REV) and a Flywheel TalonFX (CTRE).
 
-  Feedforward:
+## Command Usage
 
-  * kS: (volts)
+Compose commands using WPILib command composition.
 
-  * kV: (volts / rotation / second)
+- Flywheel:
+  - `new FlywheelVelocityCommand(<subsystem>, <doubleSupplier>)`
+  - `new FlywheelVoltageCommand(<subsystem>, <doubleSupplier>)`
+- PositionJoint:
+  - `new PositionJointPositionCommand(<subsystem>, <doubleSupplier>)`
+  - `new PositionJointVelocityCommand(<subsystem>, <doubleSupplier>)`
 
-  * kA: (volts / rotation / second^2) (Not recommended to be non 0) (Not used in SparkMax control)
+Or use command factories already in the project:
 
-  Tolerance:
+- `Flywheel.setVelocity(<subsystem>, <doubleSupplier>)`
+- `Flywheel.setVoltage(<subsystem>, <doubleSupplier>)`
+- `PositionJoint.setPosition(<subsystem>, <doubleSupplier>)`
 
-  * kTolerance: Velocity tolerance for mechanism to be considered at setpoint
+```java
+controller.a().whileTrue(Flywheel.setVelocity(shooter, vision::getRPS));
+controller.b().whileFalse(new PositionJointPositionCommand(rack, ()->10));
+```
 
-## PositionJoint Constants
+Note:
+- In the first line, the a button on the controller is used to set a velocity setpoint command
+- The setpoint RPS is provided by the `getRPS` method
+- The first line schedules the command when the button is held and deschedules when it is released.
+- In the second line, the b button on the controller is used as a trigger to set a position setpoint command
+- The setpoint position is provided by a lambda function as the input supplier: You can set the gear ratio constant for the rack subsystem config to make the input 10 = 10 inches
+- The second line schedules the command when the button is released and deschedules when it is pressed.
+## Notes
 
-* HardwareConfig
-  * canIds: List of canIDs for motors in group. First canID will be master
-
-  * reversed: Reverse config for each motor: first boolean will reverse entire group, next booleans are all relative to master motor
-
-  * gearRatio: ratio of motor revolutions (rotations) to mechanism units, e.g. rotations, radians, or meters.
-
-  * currentLimit: current limit of the motor (Amps)
-
-  * gravity: GravityType.CONSTANT for a mechanism where gravity acts in a constant way (e.g. turret or elevator), GravityType.COSINE for pivots with a 0 position horizontal, and GravityType.SINE for pivots with a 0 position vertical (not supported on TalonFX)
-
-  * encoderType: Use EncoderType.INTERNAL to use the motor's internal encoder for relative positioning, EncoderType.EXTERNAL_CANCODER to use a CANCoder for absolute positioning Encoder_Type.EXTERNAL_DIO to use an external encoder connected to the Rio's DIO ports for absolute positioning, and Encoder_Type.EXTERNAL_SPARK to use an external encoder connected to the SPARK MAX motor controller for absolute positioning (not supported for TalonFX).
-
-  * encoderID: The CAN/DIO ID for the external encoder, can be left as 0 or -1 if using EncoderType.INTERNAL or EncoderType.EXTERNAL_SPARK.
-
-  * encoderOffset: The offset of the absolute encoder, in rotations. If using EncoderType.INTERNAL or EncoderType.EXTERNAL_SPARK an empty Rotation (new Rotation2d()) can be used.
-
-  * canBus: For TalonFX can be name of CANivore or "rio", unused on SparkMax
-
-* Gains
-
-  Feedback:
-  * kP: (volts / rotation / second)
-  * kI: (volts / rotation)
-  * kD: (volts / rotation / second^2)
-
-  Feedforward:
-  * kS: (volts)
-  * kV: (volts / rotation / second)
-  * kA: (volts / rotation / second^2) (Not recommended to be non 0) (Not used in SparkMax control)
-  * kG: (volts) Feedforward to compensate for effects of gravity
-
-  Trapezoidal:
-  * kMaxVelo: (rotation / second)
-  * kMaxAccel: (rotation / second^2)
-
-  Positional Bounds:
-  * kMinPosition: (rotation)
-  * kMaxPosition: (rotation)
-
-  Tolerance:
-  * kTolerance: Position tolerance for joint to be considered at setpoint
-
-  Default Setpoint:
-  * kDefaultSetpoint: (rotation) the setpoint the mechanism should go to upon intialization
+- Keep units consistent with your `gearRatio` and mechanism representation.
+- `PositionJoint` limits (`kMinPosition`, `kMaxPosition`) are enforced in software.
+- Talon/Spark deprecation warnings in vendor APIs do not block compilation by themselves.

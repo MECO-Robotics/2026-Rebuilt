@@ -4,37 +4,58 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
 import org.littletonrobotics.junction.AutoLog;
 
+/** Hardware abstraction for a swerve module azimuth/steering motor. */
 public interface AzimuthMotorIO {
+  /** Logged inputs shared by all azimuth-motor implementations. */
   @AutoLog
   public static class AzimuthMotorIOInputs {
+    /** Measured mechanism output position in rotations. */
     public double outputPositionRotations = 0.0;
+    /** Measured rotor position in rotations. */
     public double rotorPositionRotations = 0.0;
+    /** Last requested mechanism position setpoint in rotations. */
     public double desiredPositionRotations = 0.0;
 
+    /** Measured mechanism velocity in rotations/sec. */
     public double velocityRotationsPerSecond = 0.0;
+    /** Last requested mechanism velocity setpoint in rotations/sec. */
     public double desiredVelocityRotationsPerSecond = 0.0;
 
+    /** Connectivity state per motor controller. */
     public boolean[] motorsConnected = {false};
+    /** True when an external encoder is available and healthy. */
     public boolean encoderConnected = false;
 
+    /** Per-motor position telemetry. */
     public double[] motorPositions = {0.0};
+    /** Per-motor velocity telemetry. */
     public double[] motorVelocities = {0.0};
+    /** Per-motor acceleration telemetry (optional, impl-dependent). */
     public double[] motorAccelerations = {0.0};
 
+    /** Per-motor applied voltage telemetry. */
     public double[] motorVoltages = {0.0};
+    /** Per-motor current draw telemetry. */
     public double[] motorCurrents = {0.0};
 
+    /** High-rate sample timestamps for odometry updates. */
     public double[] odometryTimestamps = new double[] {};
+    /** High-rate azimuth positions for odometry updates. */
     public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
   }
 
+  /** Refreshes all sensor and diagnostic inputs. */
   public default void updateInputs(AzimuthMotorIOInputs inputs) {}
 
+  /** Commands closed-loop position and velocity setpoints. */
   public default void setPosition(double position, double velocity) {}
 
+  /** Commands open-loop voltage output. */
   public default void setVoltage(double voltage) {}
 
+  /** Applies controller/feedforward gains. */
   public default void setGains(AzimuthMotorGains gains) {}
 
+  /** Returns a unique telemetry/logging name for this azimuth motor. */
   public String getName();
 }

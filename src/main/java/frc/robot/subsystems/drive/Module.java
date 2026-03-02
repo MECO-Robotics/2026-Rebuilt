@@ -13,6 +13,7 @@ import frc.robot.subsystems.drive.drive_motor.DriveMotorIOInputsAutoLogged;
 import frc.robot.util.OnboardModuleState;
 import org.littletonrobotics.junction.Logger;
 
+/** Wrapper for one swerve module (drive motor + azimuth motor). */
 public class Module {
   private final DriveMotorIO driveMotor;
   private final DriveMotorIOInputsAutoLogged driveInputs = new DriveMotorIOInputsAutoLogged();
@@ -25,6 +26,12 @@ public class Module {
 
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
+  /**
+   * Creates a swerve module wrapper.
+   *
+   * @param driveMotorIO drive motor IO implementation
+   * @param azimuthMotorIO azimuth motor IO implementation
+   */
   public Module(DriveMotorIO driveMotorIO, AzimuthMotorIO azimuthMotorIO) {
     driveMotor = driveMotorIO;
     azimuthMotor = azimuthMotorIO;
@@ -125,7 +132,7 @@ public class Module {
 
   /** Returns the module velocity in rotations/sec (Phoenix native units). */
   public double getFFCharacterizationVelocity() {
-    return driveInputs.positionRotations;
+    return driveInputs.velocityRotationsPerSecond;
   }
 
   public void setGains(DriveMotorGains driveGains, AzimuthMotorGains azimuthGains) {

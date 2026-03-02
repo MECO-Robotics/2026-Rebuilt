@@ -11,13 +11,19 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import org.littletonrobotics.junction.AutoLog;
 
+/** Hardware abstraction for vision cameras and pose-estimation pipelines. */
 public interface VisionIO {
+  /** Logged inputs shared by all vision implementations. */
   @AutoLog
   public static class VisionIOInputs {
+    /** True when the camera/pipeline is connected and publishing data. */
     public boolean connected = false;
+    /** Latest simple target observation (tx/ty) for servo use cases. */
     public TargetObservation latestTargetObservation =
         new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
+    /** Pose observations produced this cycle. */
     public PoseObservation[] poseObservations = new PoseObservation[0];
+    /** Tag IDs observed this cycle. */
     public int[] tagIds = new int[0];
   }
 
@@ -41,5 +47,6 @@ public interface VisionIO {
     QUESTNAV
   }
 
+  /** Refreshes all camera and estimation inputs. */
   public default void updateInputs(VisionIOInputs inputs) {}
 }

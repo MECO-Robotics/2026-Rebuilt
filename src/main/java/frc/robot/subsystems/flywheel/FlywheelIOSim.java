@@ -11,6 +11,7 @@ import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
 import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
+/** Physics-simulation implementation of {@link FlywheelIO}. */
 public class FlywheelIOSim implements FlywheelIO {
   private final String name;
 
@@ -31,21 +32,30 @@ public class FlywheelIOSim implements FlywheelIO {
   private final double[] motorCurrents;
 
   private double velocitySetpoint = 0;
+  private double voltageSetpoint = 0;
+  private boolean closedLoop = true;
 
+  /**
+   * Creates a DC motor simulation for a flywheel mechanism.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware constants used to shape the simulation model
+   */
   public FlywheelIOSim(String name, FlywheelHardwareConfig config) {
     this.name = name;
 
     this.config = config;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorAccelerations = new double[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
 
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorAccelerations = new double[numMotors];
 
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
     gearBox = DCMotor.getKrakenX60Foc(config.canIds().length);
 
     sim =
@@ -59,12 +69,15 @@ public class FlywheelIOSim implements FlywheelIO {
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
     double inputVoltage =
-        controller.calculate(sim.getAngularVelocityRPM(), velocitySetpoint)
-            + feedforward.calculateWithVelocities(sim.getAngularVelocityRPM(), velocitySetpoint);
+        closedLoop
+            ? controller.calculate(sim.getAngularVelocityRPM(), velocitySetpoint)
+                + feedforward.calculateWithVelocities(sim.getAngularVelocityRPM(), velocitySetpoint)
+            : voltageSetpoint;
     sim.setInputVoltage(inputVoltage);
     sim.update(0.02);
 
     inputs.velocity = sim.getAngularVelocityRPM();
+    inputs.position = sim.getAngularPositionRotations();
     inputs.desiredVelocity = velocitySetpoint;
 
     for (int i = 0; i < config.canIds().length; i++) {
@@ -86,7 +99,14 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void setVelocity(double velocity) {
+    closedLoop = true;
     velocitySetpoint = velocity;
+  }
+
+  @Override
+  public void setVoltage(double voltage) {
+    closedLoop = false;
+    voltageSetpoint = voltage;
   }
 
   @Override
@@ -97,6 +117,7 @@ public class FlywheelIOSim implements FlywheelIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this flywheel's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

@@ -26,6 +26,7 @@ import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
 import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
 import java.util.ArrayList;
 
+/** TalonFX-backed implementation of {@link FlywheelIO}. */
 public class FlywheelIOTalonFX implements FlywheelIO {
   private final String name;
 
@@ -58,25 +59,33 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
   private MotorAlignmentValue motorval;
 
+  /**
+   * Creates a TalonFX flywheel IO implementation.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware mapping and mechanism constants
+   */
   public FlywheelIOTalonFX(String name, FlywheelHardwareConfig config) {
     this.name = name;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motors = new TalonFX[config.canIds().length];
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
-    motorAlerts = new Alert[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
+
+    motors = new TalonFX[numMotors];
+    motorsConnected = new boolean[numMotors];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
+    motorAlerts = new Alert[numMotors];
 
     motors[0] = new TalonFX(config.canIds()[0], config.canBus());
     leaderConfig =
         new TalonFXConfiguration()
             .withMotorOutput(
                 new MotorOutputConfigs()
-                    .withNeutralMode(NeutralModeValue.Brake)
+                    .withNeutralMode(NeutralModeValue.Coast)
                     .withInverted(
                         config.reversed()[0]
                             ? InvertedValue.Clockwise_Positive
@@ -106,7 +115,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     for (int i = 1; i < config.canIds().length; i++) {
       motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
       motors[i] = new TalonFX(config.canIds()[i], config.canBus());
-      motors[i].setControl(new Follower(i, motorval));
+      motors[i].setControl(new Follower(config.canIds()[0], motorval));
 
       motorAlerts[i] =
           new Alert(
@@ -183,6 +192,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this flywheel's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

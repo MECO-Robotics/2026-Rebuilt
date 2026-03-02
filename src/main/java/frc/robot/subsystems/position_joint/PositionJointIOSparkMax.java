@@ -30,6 +30,7 @@ import frc.robot.util.feedforwards.TunableArmFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 import java.util.function.DoubleSupplier;
 
+/** SparkMax-backed implementation of {@link PositionJointIO}. */
 public class PositionJointIOSparkMax implements PositionJointIO {
   private final String name;
 
@@ -61,6 +62,14 @@ public class PositionJointIOSparkMax implements PositionJointIO {
   private double positionSetpoint = 0.0;
   private double velocitySetpoint = 0.0;
 
+  /**
+   * Creates a SparkMax position-joint IO implementation.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware configuration and encoder source
+   * @param externalFeedforward additional feedforward term supplied by higher-level code
+   * @param isBrushless true for NEO/brushless mode, false for brushed mode
+   */
   public PositionJointIOSparkMax(
       String name,
       PositionJointHardwareConfig config,
@@ -70,15 +79,17 @@ public class PositionJointIOSparkMax implements PositionJointIO {
     hardwareConfig = config;
     this.externalFeedforward = externalFeedforward;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motors = new SparkMax[config.canIds().length];
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
-    motorAlerts = new Alert[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
+
+    motors = new SparkMax[numMotors];
+    motorsConnected = new boolean[numMotors];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
+    motorAlerts = new Alert[numMotors];
 
     motors[0] =
         new SparkMax(config.canIds()[0], isBrushless ? MotorType.kBrushless : MotorType.kBrushed);
@@ -315,6 +326,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
     }
   }
 
+  /** Returns this joint's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

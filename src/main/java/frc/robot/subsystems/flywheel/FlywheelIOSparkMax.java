@@ -17,6 +17,7 @@ import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
 import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
+/** SparkMax-backed implementation of {@link FlywheelIO}. */
 public class FlywheelIOSparkMax implements FlywheelIO {
   private final String name;
 
@@ -37,22 +38,37 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 
   private double velocitySetpoint = 0.0;
 
+  /**
+   * Creates a SparkMax flywheel IO implementation.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware mapping and mechanism constants
+   */
   public FlywheelIOSparkMax(String name, FlywheelHardwareConfig config) {
     this(name, config, true);
   }
 
+  /**
+   * Creates a SparkMax flywheel IO implementation with selectable motor type.
+   *
+   * @param name subsystem/logging name
+   * @param config hardware mapping and mechanism constants
+   * @param isBrushless true for NEO/brushless mode, false for brushed mode
+   */
   public FlywheelIOSparkMax(String name, FlywheelHardwareConfig config, boolean isBrushless) {
     this.name = name;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+    int numMotors = config.canIds().length;
 
-    motors = new SparkMax[config.canIds().length];
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
-    motorAlerts = new Alert[config.canIds().length];
+    assert numMotors > 0 && (numMotors == config.reversed().length);
+
+    motors = new SparkMax[numMotors];
+    motorsConnected = new boolean[numMotors];
+    motorPositions = new double[numMotors];
+    motorVelocities = new double[numMotors];
+    motorVoltages = new double[numMotors];
+    motorCurrents = new double[numMotors];
+    motorAlerts = new Alert[numMotors];
 
     motors[0] =
         new SparkMax(config.canIds()[0], isBrushless ? MotorType.kBrushless : MotorType.kBrushed);
@@ -109,6 +125,7 @@ public class FlywheelIOSparkMax implements FlywheelIO {
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
     inputs.velocity = motors[0].getEncoder().getVelocity();
+    inputs.position = motors[0].getEncoder().getPosition();
 
     inputs.desiredVelocity = velocitySetpoint;
 
@@ -163,6 +180,7 @@ public class FlywheelIOSparkMax implements FlywheelIO {
     System.out.println(name + " gains set to " + gains);
   }
 
+  /** Returns this flywheel's loggable subsystem name. */
   @Override
   public String getName() {
     return name;

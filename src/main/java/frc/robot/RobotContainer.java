@@ -8,17 +8,21 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
+import frc.robot.commands.IntakeCommands;
+import frc.robot.commands.flywheel.FlywheelVoltageCommand;
+import frc.robot.commands.shooter.ShooterCalculator;
+import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.Module;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
@@ -32,6 +36,19 @@ import frc.robot.subsystems.drive.drive_motor.DriveMotorIOTalonFX;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
+import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.flywheel.FlywheelConstants;
+import frc.robot.subsystems.flywheel.FlywheelIOReplay;
+import frc.robot.subsystems.flywheel.FlywheelIOSim;
+import frc.robot.subsystems.flywheel.FlywheelIOSparkMax;
+import frc.robot.subsystems.flywheel.FlywheelIOTalonFX;
+import frc.robot.subsystems.position_joint.PositionJoint;
+import frc.robot.subsystems.position_joint.PositionJointConstants;
+import frc.robot.subsystems.position_joint.PositionJointIOReplay;
+import frc.robot.subsystems.position_joint.PositionJointIOSim;
+import frc.robot.subsystems.position_joint.PositionJointIOSparkMax;
+import frc.robot.util.HubShiftUtil;
+import frc.robot.util.visualization.RobotRemyVisualizer;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -43,6 +60,14 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private final Flywheel shooterFlywheel;
+  private final Flywheel topIndexer;
+  private final Flywheel bottomIndexer;
+  private final Flywheel conveyor;
+  private final Flywheel intakeRoller;
+  private final PositionJoint intakeRack;
+  private final PositionJoint hood;
+  private final RobotRemyVisualizer robotRemyVisualizer;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -50,18 +75,14 @@ public class RobotContainer {
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  public void addVisionMeasurement(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {}
-
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
 
-        // If using REV hardware, set up the Spark Odometry Thread, if using CTRE hardware, set up
+        // If using REV hardware, set up the Spark Odometry Thread, if using CTRE
+        // hardware, set up
         // the Phoenix Odometry Thread, if using a combination of the two, set up both
         drive =
             new Drive(
@@ -90,6 +111,42 @@ public class RobotContainer {
                 PhoenixOdometryThread.getInstance(),
                 null);
 
+        topIndexer =
+            new Flywheel(
+                new FlywheelIOSparkMax("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
+                FlywheelConstants.INDEXER_ROLLER_GAINS);
+
+        bottomIndexer =
+            new Flywheel(
+                new FlywheelIOSparkMax(
+                    "BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
+                FlywheelConstants.INDEXER_ROLLER_GAINS);
+
+        conveyor =
+            new Flywheel(
+                new FlywheelIOSparkMax("Conveyor", FlywheelConstants.CONVEYOR_CONFIG),
+                FlywheelConstants.CONVEYOR_GAINS);
+
+        shooterFlywheel =
+            new Flywheel(
+                new FlywheelIOTalonFX("ShooterFlywheel", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
+                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRoller =
+            new Flywheel(
+                new FlywheelIOSparkMax("IntakeRoller", FlywheelConstants.INTAKE_ROLLER_CONFIG),
+                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRack =
+            new PositionJoint(
+                new PositionJointIOSparkMax(
+                    "IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
+                PositionJointConstants.INTAKE_RACK_GAINS);
+        hood =
+            new PositionJoint(
+                new PositionJointIOSparkMax("Hood", PositionJointConstants.HOOD_CONFIG),
+                PositionJointConstants.HOOD_GAINS);
+
         break;
 
       case SIM:
@@ -114,6 +171,41 @@ public class RobotContainer {
                 AzimuthMotorConstants.EXAMPLE_GAINS_SIM,
                 null,
                 null);
+
+        topIndexer =
+            new Flywheel(
+                new FlywheelIOSim("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
+                FlywheelConstants.INDEXER_ROLLER_GAINS);
+
+        bottomIndexer =
+            new Flywheel(
+                new FlywheelIOSim("BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
+                FlywheelConstants.INDEXER_ROLLER_GAINS);
+
+        conveyor =
+            new Flywheel(
+                new FlywheelIOSim("Conveyor", FlywheelConstants.CONVEYOR_CONFIG),
+                FlywheelConstants.CONVEYOR_GAINS);
+
+        shooterFlywheel =
+            new Flywheel(
+                new FlywheelIOSim("ShooterFlywheel", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
+                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRoller =
+            new Flywheel(
+                new FlywheelIOSim("IntakeRoller", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
+                FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRack =
+            new PositionJoint(
+                new PositionJointIOSim("IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
+                PositionJointConstants.INTAKE_RACK_GAINS);
+        hood =
+            new PositionJoint(
+                new PositionJointIOSim("Hood", PositionJointConstants.HOOD_CONFIG),
+                PositionJointConstants.HOOD_GAINS);
+
         break;
 
       default:
@@ -137,29 +229,67 @@ public class RobotContainer {
                 null,
                 null,
                 null);
+
+        topIndexer =
+            new Flywheel(
+                new FlywheelIOReplay("TopIndexer"), FlywheelConstants.INDEXER_ROLLER_GAINS);
+
+        bottomIndexer =
+            new Flywheel(
+                new FlywheelIOReplay("BottomIndexer"), FlywheelConstants.INDEXER_ROLLER_GAINS);
+
+        conveyor = new Flywheel(new FlywheelIOReplay("Conveyor"), FlywheelConstants.CONVEYOR_GAINS);
+
+        shooterFlywheel =
+            new Flywheel(
+                new FlywheelIOReplay("ShooterFlywheel"), FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRoller =
+            new Flywheel(
+                new FlywheelIOReplay("IntakeRoller"), FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+
+        intakeRack =
+            new PositionJoint(
+                new PositionJointIOReplay("IntakeRack"), PositionJointConstants.INTAKE_RACK_GAINS);
+
+        hood =
+            new PositionJoint(new PositionJointIOReplay("Hood"), PositionJointConstants.HOOD_GAINS);
+
         break;
     }
+
+    robotRemyVisualizer =
+        new RobotRemyVisualizer(
+            drive::getPose,
+            hood::getPosition,
+            shooterFlywheel::getPosition,
+            intakeRack::getPosition,
+            ()->0);
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // // Set up SysId routines
     /*
-        autoChooser.addOption(
-            "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-        autoChooser.addOption(
-            "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-        autoChooser.addOption(
-            "Drive SysId (Quasistatic Forward)",
-            drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-            "Drive SysId (Quasistatic Reverse)",
-            drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        autoChooser.addOption(
-            "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        autoChooser.addOption(
-            "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    */
+     * autoChooser.addOption(
+     * "Drive Wheel Radius Characterization",
+     * DriveCommands.wheelRadiusCharacterization(drive));
+     * autoChooser.addOption(
+     * "Drive Simple FF Characterization",
+     * DriveCommands.feedforwardCharacterization(drive));
+     * autoChooser.addOption(
+     * "Drive SysId (Quasistatic Forward)",
+     * drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+     * autoChooser.addOption(
+     * "Drive SysId (Quasistatic Reverse)",
+     * drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+     * autoChooser.addOption(
+     * "Drive SysId (Dynamic Forward)",
+     * drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+     * autoChooser.addOption(
+     * "Drive SysId (Dynamic Reverse)",
+     * drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+     */
 
     // Configure the button bindings
     configureButtonBindings();
@@ -182,13 +312,20 @@ public class RobotContainer {
 
     // // Lock to 0° when A button is held
     controller
-        .a()
+        .x()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
                 () -> -controller.getLeftY(),
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
+
+    controller
+        .y()
+        .whileTrue(
+            DriveCommands.joystickAimToHub(
+                    drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
+                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
 
     // // Switch to X pattern when X button is pressed
     // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
@@ -203,6 +340,69 @@ public class RobotContainer {
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
                 .ignoringDisable(true));
+
+    // controller
+    // .a()
+    // .whileTrue(new FlywheelVoltageCommand(shooterFlywheel, SHOOTER_VOLTS.SHOOT))
+    // .whileFalse(new FlywheelVoltageCommand(shooterFlywheel, SHOOTER_VOLTS.SLOW));
+
+    controller
+        .a()
+        .whileTrue(
+            new FlywheelVoltageCommand(
+                shooterFlywheel, () -> controller.getLeftTriggerAxis() * 12));
+
+    controller
+        .rightBumper()
+        .whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
+        .whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+
+    controller
+        .leftBumper()
+        .whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller))
+        .whileFalse(IntakeCommands.stowIntake(intakeRack, intakeRoller));
+
+    controller
+        .pov(0)
+        .whileTrue(
+            Commands.runEnd(
+                () -> intakeRack.setVoltage(-6), () -> intakeRack.setVoltage(0), intakeRack));
+    controller
+        .pov(180)
+        .whileTrue(
+            Commands.runEnd(
+                () -> intakeRack.setVoltage(6), () -> intakeRack.setVoltage(0), intakeRack));
+  }
+
+  public void updateDashboardOutputs() {
+    HubShiftUtil.ShiftInfo shiftInfo = HubShiftUtil.getShiftedShiftInfo();
+
+    // Publish match time
+    double matchTime = Math.max(0.0, shiftInfo.matchTime());
+    int minutes = (int) matchTime / 60;
+    int seconds = (int) matchTime % 60;
+    int tenths = (int) ((matchTime * 10) % 10);
+    SmartDashboard.putString("Match Time", String.format("%02d:%02d.%d", minutes, seconds, tenths));
+
+    // Update from HubShiftUtil
+    SmartDashboard.putString(
+        "Shifts/Remaining Shift Time",
+        String.format("%.1f", Math.max(shiftInfo.remainingTime(), 0.0)));
+    SmartDashboard.putBoolean("Shifts/Shift Active", shiftInfo.active());
+    SmartDashboard.putString(
+        "Shifts/Game State",
+        DriverStation.isAutonomous() ? "Autonomous" : shiftInfo.currentShift().toString());
+    SmartDashboard.putBoolean(
+        "Shifts/Active First?",
+        DriverStation.getAlliance().orElse(Alliance.Blue) == HubShiftUtil.getFirstActiveAlliance());
+
+    SmartDashboard.putString("Shifts/Match Time Color", shiftInfo.matchTimeColor());
+    SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
+
+    // Controller disconnected alerts
+    // primaryDisconnected.set(!DriverStation.isJoystickConnected(primary.getHID().getPort()));
+    // secondaryDisconnected.set(!DriverStation.isJoystickConnected(secondary.getHID().getPort()));
+    // overrideDisconnected.set(!overrides.isConnected());
   }
 
   /**
@@ -212,5 +412,10 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     return autoChooser.get();
+  }
+
+  /** Logs robot and component transforms for the custom Robot_Remy asset. */
+  public void updateVisualization() {
+    robotRemyVisualizer.periodic();
   }
 }

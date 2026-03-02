@@ -4,11 +4,11 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
-import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
+/** Factory methods for coordinated intake-rack and intake-roller command groups. */
 public class IntakeCommands {
 
   /** Intake rotation preset positions. */
@@ -24,18 +24,17 @@ public class IntakeCommands {
   /** Intake roller preset voltages. */
   public final class ROLLER_VOLTS {
     public static final LoggedTunableNumber INTAKE =
-        new LoggedTunableNumber("IntakeVolts/IntakeSpeed", -6);
-    public static final LoggedTunableNumber SLOW =
-        new LoggedTunableNumber("IntakeVolts/Slow", -1.5);
+        new LoggedTunableNumber("IntakeVolts/IntakeSpeed", 10);
+    public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("IntakeVolts/Slow", 7);
     public static final LoggedTunableNumber EJECT =
-        new LoggedTunableNumber("IntakeVolts/Eject", 12);
+        new LoggedTunableNumber("IntakeVolts/Eject", -10);
     public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IntakeVolts/Stop", 0);
   }
 
   /** Stows the intake by moving the rotation motor to the stop position and stopping the roller. */
   public static Command stowIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
     return Commands.parallel(
-        new PositionJointPositionCommand(rotationMotor, ROTATION_POSITIONS.STOW),
+        // new PositionJointPositionCommand(rotationMotor, ROTATION_POSITIONS.STOW),
         new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.STOP));
   }
 
@@ -45,7 +44,7 @@ public class IntakeCommands {
    */
   public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
     return Commands.parallel(
-        new PositionJointPositionCommand(rotationMotor, ROTATION_POSITIONS.DEPLOY),
+        // new PositionJointPositionCommand(rotationMotor, ROTATION_POSITIONS.DEPLOY),
         new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE));
   }
 
