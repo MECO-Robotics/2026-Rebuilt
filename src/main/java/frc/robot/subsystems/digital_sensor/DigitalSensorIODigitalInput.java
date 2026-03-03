@@ -1,7 +1,7 @@
 package frc.robot.subsystems.digital_sensor;
 
 import edu.wpi.first.wpilibj.DigitalInput;
-import frc.robot.subsystems.digital_sensor.DigitalSensorConstants.DigitalSensorConfig;
+import frc.robot.constants.DigitalSensorConstants.DigitalSensorConfig;
 
 public class DigitalSensorIODigitalInput implements DigitalSensorIO {
   private final String name;

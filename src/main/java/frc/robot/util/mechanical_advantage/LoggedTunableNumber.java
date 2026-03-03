@@ -7,7 +7,7 @@
 
 package frc.robot.util.mechanical_advantage;
 
-import frc.robot.Constants;
+import frc.robot.constants.Constants;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

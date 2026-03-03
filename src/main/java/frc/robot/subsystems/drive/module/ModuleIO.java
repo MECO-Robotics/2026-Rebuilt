@@ -1,9 +1,9 @@
 package frc.robot.subsystems.drive.module;
 
-import frc.robot.Constants;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.constants.Constants;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
+import frc.robot.constants.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import java.util.function.Supplier;
 

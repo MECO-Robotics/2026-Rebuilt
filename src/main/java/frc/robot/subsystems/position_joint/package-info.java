@@ -9,7 +9,7 @@
  *   <li>{@link frc.robot.subsystems.position_joint.PositionJointIO}: hardware abstraction
  *       interface.
  *   <li>Hardware-specific IO implementations for TalonFX, SparkMax, simulation, and replay.
- *   <li>{@link frc.robot.subsystems.position_joint.PositionJointConstants}: shared gains and
+ *   <li>{@link frc.robot.constants.PositionJointConstants}: shared gains and
  *       hardware configs.
  * </ul>
  */

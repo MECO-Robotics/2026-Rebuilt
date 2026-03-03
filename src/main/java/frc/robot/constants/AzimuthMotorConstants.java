@@ -1,7 +1,7 @@
-package frc.robot.subsystems.drive.azimuth_motor;
+package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.constants.DriveConstants;
 
 /** Constants and hardware mappings for drivetrain azimuth/steering motors. */
 public class AzimuthMotorConstants {

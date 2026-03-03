@@ -1,4 +1,4 @@
-package frc.robot.subsystems.piece_detection;
+package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;

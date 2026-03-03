@@ -1,6 +1,6 @@
-package frc.robot.subsystems.drive.drive_motor;
+package frc.robot.constants;
 
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.constants.DriveConstants;
 
 /** Constants and hardware mappings for drivetrain wheel motors. */
 public class DriveMotorConstants {

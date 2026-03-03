@@ -1,4 +1,4 @@
-package frc.robot.subsystems.flywheel;
+package frc.robot.constants;
 
 /** Shared constants and configuration records for flywheel/roller mechanisms. */
 public class FlywheelConstants {

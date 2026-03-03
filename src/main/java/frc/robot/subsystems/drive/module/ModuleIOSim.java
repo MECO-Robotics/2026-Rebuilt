@@ -1,10 +1,10 @@
 package frc.robot.subsystems.drive.module;
 
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOSim;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOSimMaple;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
+import frc.robot.constants.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIOSim;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIOSimMaple;

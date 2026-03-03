@@ -9,8 +9,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorGains;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
 /**

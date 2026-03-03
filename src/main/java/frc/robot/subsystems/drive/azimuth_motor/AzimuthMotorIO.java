@@ -1,9 +1,9 @@
 package frc.robot.subsystems.drive.azimuth_motor;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.Constants;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.constants.Constants;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorGains;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 

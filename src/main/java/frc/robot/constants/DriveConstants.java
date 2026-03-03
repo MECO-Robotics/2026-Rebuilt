@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.subsystems.drive;
+package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.FeetPerSecond;
 import static edu.wpi.first.units.Units.Inches;
@@ -22,8 +22,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
+import frc.robot.constants.AzimuthMotorConstants;
+import frc.robot.constants.DriveMotorConstants;
 import frc.robot.util.mechanical_advantage.swerve.ModuleLimits;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;

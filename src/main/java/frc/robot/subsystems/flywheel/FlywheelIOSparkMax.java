@@ -13,8 +13,8 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
 /** SparkMax-backed implementation of {@link FlywheelIO}. */
