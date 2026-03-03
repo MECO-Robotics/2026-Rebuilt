@@ -1,13 +1,14 @@
 package frc.robot.constants;
 
-import frc.robot.constants.DriveConstants;
-
 /** Constants and hardware mappings for drivetrain wheel motors. */
 public class DriveMotorConstants {
-  // by default, the drive is set to the RoboRio's CANBus (you can also make it the rio it by doing
+  // by default, the drive is set to the RoboRio's CANBus (you can also make it
+  // the rio it by doing
   // "")
-  // change this value if using CANivore to CANivore's Bus name, set in Phoenix Tuner X
-  // (if necessary, do this in AzimuthMotorConstants.java if drive motors are connected
+  // change this value if using CANivore to CANivore's Bus name, set in Phoenix
+  // Tuner X
+  // (if necessary, do this in AzimuthMotorConstants.java if drive motors are
+  // connected
   // to CANivore as well)
   public static final String canBusName = "MECO CANIvore";
 

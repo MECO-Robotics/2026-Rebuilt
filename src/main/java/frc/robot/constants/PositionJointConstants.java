@@ -37,7 +37,8 @@ public class PositionJointConstants {
       double kTolerance,
       double kDefaultSetpoint) {}
 
-  // Position Joint Gear Ratio should be multiplied by Math.PI * 2 for rotation joints to convert
+  // Position Joint Gear Ratio should be multiplied by Math.PI * 2 for rotation
+  // joints to convert
   // from rotations to radians
   /**
    * Hardware mapping and mechanism-specific constants for one position joint instance.

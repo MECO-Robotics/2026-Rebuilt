@@ -22,8 +22,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
-import frc.robot.constants.AzimuthMotorConstants;
-import frc.robot.constants.DriveMotorConstants;
 import frc.robot.util.mechanical_advantage.swerve.ModuleLimits;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
@@ -124,7 +122,8 @@ public class DriveConstants {
   // Bumper-to-bumper chassis dimensions used by MapleSim collision body.
   public static final double mapleSimBumperLengthInches = 30.0;
   public static final double mapleSimBumperWidthInches = 30.0;
-  // MapleSim contact tuning (dyn4j fixture values). Keep defaults unless you need less
+  // MapleSim contact tuning (dyn4j fixture values). Keep defaults unless you need
+  // less
   // sliding/bounce.
   public static final double mapleSimBumperFriction = 0.65;
   public static final double mapleSimBumperRestitution = 0.08;
