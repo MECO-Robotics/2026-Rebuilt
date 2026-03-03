@@ -8,7 +8,6 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -20,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
-import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.AzimuthMotorConstants;
@@ -28,6 +26,7 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.DriveMotorConstants;
 import frc.robot.constants.FlywheelConstants;
 import frc.robot.constants.PositionJointConstants;
+import frc.robot.simulation.IntakeSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
@@ -58,6 +57,7 @@ public class RobotContainer {
   private final PositionJoint intakeRack;
   private final PositionJoint hood;
   private final RobotRemyVisualizer robotRemyVisualizer;
+  private final IntakeSim intakeSim;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -88,6 +88,10 @@ public class RobotContainer {
                 ? PhoenixOdometryThread.getInstance()
                 : null,
             null);
+
+    intakeSim = new IntakeSim(drive.getSimulation());
+
+    IntakeCommands.setIntakeSimulation(intakeSim);
 
     topIndexer =
         new Flywheel(
@@ -192,31 +196,6 @@ public class RobotContainer {
             DriveCommands.joystickAimToHub(
                     drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
                 .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
-
-    // // Switch to X pattern when X button is pressed
-    // controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-    // Reset gyro to 0° when B button is pressed
-    controller
-        .b()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
-                    drive)
-                .ignoringDisable(true));
-
-    // controller
-    // .a()
-    // .whileTrue(new FlywheelVoltageCommand(shooterFlywheel, SHOOTER_VOLTS.SHOOT))
-    // .whileFalse(new FlywheelVoltageCommand(shooterFlywheel, SHOOTER_VOLTS.SLOW));
-
-    controller
-        .a()
-        .whileTrue(
-            new FlywheelVoltageCommand(
-                shooterFlywheel, () -> controller.getLeftTriggerAxis() * 12));
 
     controller
         .rightBumper()

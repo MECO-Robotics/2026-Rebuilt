@@ -98,7 +98,7 @@ public class PositionJointConstants {
   // Intake Constants
   // -----------
   public static final PositionJointGains INTAKE_RACK_GAINS =
-      new PositionJointGains(1.5, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, Math.PI, 0.2, 0.0);
+      new PositionJointGains(10, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, 0.21, 0.2, 0.0);
   public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG =
       new PositionJointHardwareConfig(
           new int[] {21},

@@ -608,6 +608,11 @@ public class Drive extends SubsystemBase {
     return DriveConstants.moduleTranslations;
   }
 
+  /** Get the drivetrain simulation object. */
+  public SwerveDriveSimulation getSimulation() {
+    return swerveDriveSimulation;
+  }
+
   private static void applyMapleSimContactTuning(SwerveDriveSimulation sim) {
     for (var fixture : sim.getFixtures()) {
       fixture.setFriction(DriveConstants.mapleSimBumperFriction);
