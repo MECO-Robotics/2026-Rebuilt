@@ -107,6 +107,8 @@ public class DriveConstants {
 
   public static final PIDConstants translationPID = new PIDConstants(5, 0, 0);
   public static final PIDConstants rotationPID = new PIDConstants(5, 0, 0);
+  public static final int mapleSimSteerGearingLevel = 2; // X2i steer stage option
+  public static final int mapleSimDrivePinionTeeth = 11; // X2i drive pinion option (~6.11:1)
 
   public static final DriveTrainSimulationConfig mapleSimConfig =
       DriveTrainSimulationConfig.Default()
@@ -118,6 +120,6 @@ public class DriveConstants {
                   turnGearbox,
                   driveGearbox,
                   wheelCOF,
-                  turnMotorCurrentLimit,
-                  driveMotorCurrentLimit));
+                  mapleSimSteerGearingLevel,
+                  mapleSimDrivePinionTeeth));
 }

@@ -8,6 +8,7 @@
 package frc.robot.subsystems.drive.gyro;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
@@ -29,7 +30,7 @@ public class GyroIOPigeon2 implements GyroIO {
   private final StatusSignal<AngularVelocity> yawVelocity;
 
   public GyroIOPigeon2(int canID, String canBusName) {
-    pigeon = new Pigeon2(canID, canBusName);
+    pigeon = new Pigeon2(canID, new CANBus(canBusName));
     pigeon.getConfigurator().apply(new Pigeon2Configuration());
     pigeon.getConfigurator().setYaw(0.0);
 

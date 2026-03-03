@@ -11,6 +11,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
+import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.Alert;
@@ -164,7 +165,9 @@ public class DriveMotorIOSparkMax implements DriveMotorIO {
         () ->
             motors[0].configure(
                 leaderConfig.apply(
-                    new ClosedLoopConfig().pidf(gains.kP(), gains.kI(), gains.kD(), gains.kV())),
+                    new ClosedLoopConfig()
+                        .pid(gains.kP(), gains.kI(), gains.kD())
+                        .apply(new FeedForwardConfig().kV(gains.kV()))),
                 ResetMode.kNoResetSafeParameters,
                 PersistMode.kNoPersistParameters));
 

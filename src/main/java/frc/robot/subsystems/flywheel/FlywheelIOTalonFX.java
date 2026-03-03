@@ -3,6 +3,7 @@ package frc.robot.subsystems.flywheel;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -67,7 +68,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
    */
   public FlywheelIOTalonFX(String name, FlywheelHardwareConfig config) {
     this.name = name;
-
+    CANBus canBus = new CANBus(config.canBus());
     int numMotors = config.canIds().length;
 
     assert numMotors > 0 && (numMotors == config.reversed().length);
@@ -80,7 +81,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     motorCurrents = new double[numMotors];
     motorAlerts = new Alert[numMotors];
 
-    motors[0] = new TalonFX(config.canIds()[0], config.canBus());
+    motors[0] = new TalonFX(config.canIds()[0], canBus);
     leaderConfig =
         new TalonFXConfiguration()
             .withMotorOutput(
@@ -114,7 +115,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     for (int i = 1; i < config.canIds().length; i++) {
       motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
-      motors[i] = new TalonFX(config.canIds()[i], config.canBus());
+      motors[i] = new TalonFX(config.canIds()[i], canBus);
       motors[i].setControl(new Follower(config.canIds()[0], motorval));
 
       motorAlerts[i] =
