@@ -3,9 +3,11 @@ package frc.robot.subsystems.drive.module;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOSim;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOSimMaple;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIOSim;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorIOSimMaple;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 
 /**
@@ -57,7 +59,8 @@ public class ModuleIOSim implements ModuleIO {
       DriveMotorHardwareConfig driveConfig,
       String azimuthName,
       AzimuthMotorHardwareConfig azimuthConfig) {
-    this(driveName, driveConfig, azimuthName, azimuthConfig);
+    driveMotorIO = new DriveMotorIOSimMaple(moduleSimulation, driveName, driveConfig);
+    azimuthMotorIO = new AzimuthMotorIOSimMaple(moduleSimulation, azimuthName, azimuthConfig);
   }
 
   /** Creates a module simulation bundle using derived drive/steer names from a module name. */
