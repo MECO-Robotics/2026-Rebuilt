@@ -16,6 +16,7 @@ import frc.robot.subsystems.drive.drive_motor.DriveMotorIOInputsAutoLogged;
 import frc.robot.util.OnboardModuleState;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.littletonrobotics.junction.Logger;
 
 /** Wrapper for one swerve module (drive motor + azimuth motor). */
@@ -98,6 +99,37 @@ public class Module {
         ModuleIO.factory(
             driveFactoryBuilder.apply(moduleName + "Drive", driveConfig),
             azimuthFactoryBuilder.apply(moduleName + "Steer", azimuthConfig)),
+        simFactory);
+  }
+
+  /**
+   * Creates a mode-appropriate module from independently selected drive/azimuth real factory
+   * builders and optional Maple module simulation state.
+   */
+  public static Module fromMode(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder,
+      SwerveModuleSimulation moduleSimulation) {
+    Supplier<ModuleIO> simFactory =
+        moduleSimulation != null
+            ? () ->
+                new ModuleIOSim(
+                    moduleSimulation,
+                    moduleName + "Drive",
+                    driveConfig,
+                    moduleName + "Steer",
+                    azimuthConfig)
+            : ModuleIO.simFactory(moduleName, driveConfig, azimuthConfig);
+    return fromMode(
+        moduleName,
+        driveConfig,
+        azimuthConfig,
+        driveFactoryBuilder,
+        azimuthFactoryBuilder,
         simFactory);
   }
 

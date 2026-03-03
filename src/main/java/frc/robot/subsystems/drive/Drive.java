@@ -39,8 +39,6 @@ import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
 import frc.robot.subsystems.drive.gyro.GyroIOSim;
 import frc.robot.subsystems.drive.module.Module;
-import frc.robot.subsystems.drive.module.ModuleIO;
-import frc.robot.subsystems.drive.module.ModuleIOSim;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.drive.odometry_threads.SparkOdometryThread;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
@@ -162,15 +160,7 @@ public class Drive extends SubsystemBase {
             frontLeftAzimuthConfig,
             driveFactoryBuilder,
             azimuthFactoryBuilder,
-            simDrive != null
-                ? () ->
-                    new ModuleIOSim(
-                        simDrive.getModules()[0],
-                        "FrontLeftDrive",
-                        frontLeftDriveConfig,
-                        "FrontLeftSteer",
-                        frontLeftAzimuthConfig)
-                : ModuleIO.simFactory("FrontLeft", frontLeftDriveConfig, frontLeftAzimuthConfig));
+            simDrive != null ? simDrive.getModules()[0] : null);
     Module frontRightModule =
         Module.fromMode(
             "FrontRight",
@@ -178,16 +168,7 @@ public class Drive extends SubsystemBase {
             frontRightAzimuthConfig,
             driveFactoryBuilder,
             azimuthFactoryBuilder,
-            simDrive != null
-                ? () ->
-                    new ModuleIOSim(
-                        simDrive.getModules()[1],
-                        "FrontRightDrive",
-                        frontRightDriveConfig,
-                        "FrontRightSteer",
-                        frontRightAzimuthConfig)
-                : ModuleIO.simFactory(
-                    "FrontRight", frontRightDriveConfig, frontRightAzimuthConfig));
+            simDrive != null ? simDrive.getModules()[1] : null);
     Module backLeftModule =
         Module.fromMode(
             "BackLeft",
@@ -195,15 +176,7 @@ public class Drive extends SubsystemBase {
             backLeftAzimuthConfig,
             driveFactoryBuilder,
             azimuthFactoryBuilder,
-            simDrive != null
-                ? () ->
-                    new ModuleIOSim(
-                        simDrive.getModules()[2],
-                        "BackLeftDrive",
-                        backLeftDriveConfig,
-                        "BackLeftSteer",
-                        backLeftAzimuthConfig)
-                : ModuleIO.simFactory("BackLeft", backLeftDriveConfig, backLeftAzimuthConfig));
+            simDrive != null ? simDrive.getModules()[2] : null);
     Module backRightModule =
         Module.fromMode(
             "BackRight",
@@ -211,15 +184,7 @@ public class Drive extends SubsystemBase {
             backRightAzimuthConfig,
             driveFactoryBuilder,
             azimuthFactoryBuilder,
-            simDrive != null
-                ? () ->
-                    new ModuleIOSim(
-                        simDrive.getModules()[3],
-                        "BackRightDrive",
-                        backRightDriveConfig,
-                        "BackRightSteer",
-                        backRightAzimuthConfig)
-                : ModuleIO.simFactory("BackRight", backRightDriveConfig, backRightAzimuthConfig));
+            simDrive != null ? simDrive.getModules()[3] : null);
 
     Drive drive =
         new Drive(
