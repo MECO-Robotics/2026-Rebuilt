@@ -79,7 +79,9 @@ public interface PositionJointIO {
    * IO during log replay.
    */
   public static PositionJointIO fromMode(
-      String name, PositionJointHardwareConfig config, Supplier<PositionJointIO> subsystemSupplier) {
+      String name,
+      PositionJointHardwareConfig config,
+      Supplier<PositionJointIO> subsystemSupplier) {
     return switch (Constants.currentMode) {
       case REAL -> subsystemSupplier.get();
       case SIM -> new PositionJointIOSim(name, config);

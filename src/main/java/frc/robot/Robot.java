@@ -8,6 +8,7 @@
 package frc.robot;
 
 import com.revrobotics.util.StatusLogger;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.ironmaple.simulation.SimulatedArena;
@@ -91,7 +92,10 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
-    robotContainer.updateVisualization();
+    if (Constants.currentMode == Constants.Mode.SIM
+        || Constants.currentMode == Constants.Mode.REPLAY) {
+      robotContainer.updateVisualization();
+    }
 
     // Update dashboard outputs
     robotContainer.updateDashboardOutputs();
@@ -152,11 +156,19 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot is first started up. */
   @Override
-  public void simulationInit() {}
+  public void simulationInit() {
+    // Clear all game pieces from the field
+    SimulatedArena.getInstance().clearGamePieces();
+    // Add fuel game pieces to the field
+    SimulatedArena.getInstance().resetFieldForAuto();
+  }
 
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {
     SimulatedArena.getInstance().simulationPeriodic();
+    Pose3d[] fuelPoses = SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel");
+    // Publish to telemetry using AdvantageKit
+    Logger.recordOutput("FieldSimulation/FuelPositions", fuelPoses);
   }
 }

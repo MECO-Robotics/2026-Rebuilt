@@ -4,13 +4,13 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOInputsAutoLogged;
-import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIOInputsAutoLogged;
 import frc.robot.util.OnboardModuleState;
@@ -68,7 +68,8 @@ public class Module {
       DriveMotorHardwareConfig driveConfig,
       AzimuthMotorHardwareConfig azimuthConfig,
       BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
-      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>> azimuthFactoryBuilder) {
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder) {
     return fromMode(
         moduleName,
         driveConfig,
@@ -87,7 +88,8 @@ public class Module {
       DriveMotorHardwareConfig driveConfig,
       AzimuthMotorHardwareConfig azimuthConfig,
       BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
-      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>> azimuthFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder,
       Supplier<ModuleIO> simFactory) {
     return fromMode(
         moduleName,

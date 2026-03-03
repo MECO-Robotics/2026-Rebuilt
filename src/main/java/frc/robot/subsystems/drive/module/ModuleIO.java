@@ -79,7 +79,12 @@ public interface ModuleIO {
       DriveMotorHardwareConfig driveConfig,
       AzimuthMotorHardwareConfig azimuthConfig,
       Supplier<ModuleIO> realFactory) {
-    return fromMode(moduleName, driveConfig, azimuthConfig, realFactory, simFactory(moduleName, driveConfig, azimuthConfig));
+    return fromMode(
+        moduleName,
+        driveConfig,
+        azimuthConfig,
+        realFactory,
+        simFactory(moduleName, driveConfig, azimuthConfig));
   }
 
   /**
@@ -105,7 +110,11 @@ public interface ModuleIO {
       String moduleName,
       DriveMotorHardwareConfig driveConfig,
       AzimuthMotorHardwareConfig azimuthConfig) {
-    return fromMode(moduleName, driveConfig, azimuthConfig, talonFXFactory(moduleName, driveConfig, azimuthConfig));
+    return fromMode(
+        moduleName,
+        driveConfig,
+        azimuthConfig,
+        talonFXFactory(moduleName, driveConfig, azimuthConfig));
   }
 
   /** Creates mode-appropriate module IO using TalonFX for real hardware and custom sim IO. */

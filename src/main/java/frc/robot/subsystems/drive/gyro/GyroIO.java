@@ -57,8 +57,7 @@ public interface GyroIO {
    *
    * <p>Allows callers to provide a custom sim factory for shared MapleSim state.
    */
-  public static GyroIO fromMode(
-      Supplier<GyroIO> subsystemSupplier, Supplier<GyroIO> simSupplier) {
+  public static GyroIO fromMode(Supplier<GyroIO> subsystemSupplier, Supplier<GyroIO> simSupplier) {
     return switch (Constants.currentMode) {
       case REAL -> subsystemSupplier.get();
       case SIM -> simSupplier.get();

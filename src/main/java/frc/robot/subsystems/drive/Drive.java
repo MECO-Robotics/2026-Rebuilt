@@ -29,18 +29,18 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
+import frc.robot.subsystems.drive.gyro.GyroIO;
+import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
+import frc.robot.subsystems.drive.gyro.GyroIOSim;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOSim;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
-import frc.robot.subsystems.drive.gyro.GyroIO;
-import frc.robot.subsystems.drive.gyro.GyroIOSim;
-import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.drive.odometry_threads.SparkOdometryThread;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
@@ -49,10 +49,10 @@ import frc.robot.util.mechanical_advantage.swerve.SwerveSetpoint;
 import frc.robot.util.mechanical_advantage.swerve.SwerveSetpointGenerator;
 import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
 import frc.robot.util.pathplanner.LocalADStarAK;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -121,13 +121,14 @@ public class Drive extends SubsystemBase {
   /**
    * Creates a drive subsystem from module configs/factory builders.
    *
-   * <p>Owns Maple swerve simulation internally when running in sim and routes the shared
-   * simulation state to gyro and module IO.
+   * <p>Owns Maple swerve simulation internally when running in sim and routes the shared simulation
+   * state to gyro and module IO.
    */
   public static Drive fromModuleConfigs(
       Supplier<GyroIO> realGyroSupplier,
       BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
-      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>> azimuthFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder,
       DriveMotorHardwareConfig frontLeftDriveConfig,
       AzimuthMotorHardwareConfig frontLeftAzimuthConfig,
       DriveMotorHardwareConfig frontRightDriveConfig,
@@ -142,7 +143,9 @@ public class Drive extends SubsystemBase {
       SparkOdometryThread sparkOdometryThread) {
     SwerveDriveSimulation sim = null;
     if (Constants.currentMode == Constants.Mode.SIM) {
-      sim = new SwerveDriveSimulation(DriveConstants.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+      sim =
+          new SwerveDriveSimulation(
+              DriveConstants.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
       SimulatedArena.getInstance().addDriveTrainSimulation(sim);
     }
     final SwerveDriveSimulation simDrive = sim;

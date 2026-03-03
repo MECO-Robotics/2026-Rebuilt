@@ -24,16 +24,15 @@ import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
+import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
+import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelConstants;
 import frc.robot.subsystems.flywheel.FlywheelIO;
-import frc.robot.subsystems.drive.gyro.GyroIO;
-import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
-import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointConstants;
 import frc.robot.subsystems.position_joint.PositionJointIO;
@@ -96,7 +95,8 @@ public class RobotContainer {
 
     bottomIndexer =
         new Flywheel(
-            FlywheelIO.fromSparkMax("BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
+            FlywheelIO.fromSparkMax(
+                "BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
             FlywheelConstants.INDEXER_ROLLER_GAINS);
 
     conveyor =
