@@ -8,8 +8,10 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.FeetPerSecond;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Kilogram;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Pound;
 
 import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.config.ModuleConfig;
@@ -19,10 +21,12 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Mass;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 
 /** Mechanical, electrical, and path-planning constants for the swerve drivetrain. */
 public class DriveConstants {
@@ -61,13 +65,20 @@ public class DriveConstants {
       FeetPerSecond.of(15); // MK4i 16.5 ft/s L3 Kraken FOC With
   // 14t pinion
 
+  // Sim motor config
+  public static final DCMotor driveGearbox = DCMotor.getKrakenX60Foc(1);
+  public static final DCMotor turnGearbox = DCMotor.getKrakenX60Foc(1);
+
+  // Sim Module config
+  public static final int gearingLevel = 3;
+  public static final int drivePinionTeeth = 11;
+  public static final SwerveModuleSimulationConfig simModule =
+      COTS.ofSwerveXFlipped(
+          turnGearbox, driveGearbox, COTS.WHEELS.VEX_GRIP_V2.cof, gearingLevel, drivePinionTeeth);
+
   // Drive motor configuration
   public static final int driveMotorCurrentLimit = 60;
-  public static final double driveMotorGearRatio =
-      1 / ((14.0 / 50.0) * (28.0 / 16.0) * (15.0 / 45.0)); // Mk4i L3
-  // with 14t
-  // pinion
-  public static final DCMotor driveGearbox = DCMotor.getKrakenX60Foc(1);
+  public static final double driveMotorGearRatio = simModule.DRIVE_GEAR_RATIO;
 
   // Drive encoder configuration
   public static final double driveEncoderPositionFactor =
@@ -78,9 +89,8 @@ public class DriveConstants {
   // Wheel Rad/Sec
 
   // Turn motor configuration
-  public static final double steerMotorGearRatio = 150.0 / 7.0; // MK4i
+  public static final double steerMotorGearRatio = simModule.STEER_GEAR_RATIO;
   public static final int turnMotorCurrentLimit = 40;
-  public static final DCMotor turnGearbox = DCMotor.getKrakenX60Foc(1);
 
   // Turn encoder configuration
   public static final double turnEncoderPositionFactor =
@@ -89,12 +99,12 @@ public class DriveConstants {
       (2 * Math.PI) / 60.0 / steerMotorGearRatio; // RPM -> Rad/Sec
 
   // PathPlanner configuration
-  public static final double robotMassKg = 74.088;
+  public static final Mass robotMass = Pound.of(80); // Convert kg to pounds
   public static final double robotMOI = 6.883;
   public static final double wheelCOF = COTS.WHEELS.VEX_GRIP_V2.cof;
   public static final RobotConfig ppConfig =
       new RobotConfig(
-          robotMassKg,
+          robotMass.in(Kilogram),
           robotMOI,
           new ModuleConfig(
               driveWheelRadiusMeters,
@@ -107,19 +117,17 @@ public class DriveConstants {
 
   public static final PIDConstants translationPID = new PIDConstants(5, 0, 0);
   public static final PIDConstants rotationPID = new PIDConstants(5, 0, 0);
-  public static final int mapleSimSteerGearingLevel = 2; // X2i steer stage option
-  public static final int mapleSimDrivePinionTeeth = 11; // X2i drive pinion option (~6.11:1)
+
+  // Bumper-to-bumper chassis dimensions used by MapleSim collision body.
+  public static final double mapleSimBumperLengthInches = 30.0;
+  public static final double mapleSimBumperWidthInches = 30.0;
 
   public static final DriveTrainSimulationConfig mapleSimConfig =
       DriveTrainSimulationConfig.Default()
+          .withBumperSize(
+              Inches.of(mapleSimBumperLengthInches), Inches.of(mapleSimBumperWidthInches))
           .withCustomModuleTranslations(moduleTranslations)
-          .withRobotMass(Kilogram.of(robotMassKg))
+          .withRobotMass(robotMass)
           .withGyro(COTS.ofPigeon2())
-          .withSwerveModule(
-              COTS.ofSwerveXFlipped(
-                  turnGearbox,
-                  driveGearbox,
-                  wheelCOF,
-                  mapleSimSteerGearingLevel,
-                  mapleSimDrivePinionTeeth));
+          .withSwerveModule(simModule);
 }

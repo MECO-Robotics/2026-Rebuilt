@@ -143,7 +143,7 @@ public class Drive extends SubsystemBase {
     if (Constants.currentMode == Constants.Mode.SIM) {
       sim =
           new SwerveDriveSimulation(
-              DriveConstants.mapleSimConfig, new Pose2d(.0, 0.0, new Rotation2d()));
+              DriveConstants.mapleSimConfig, new Pose2d(3.0, 3.0, new Rotation2d()));
       SimulatedArena.getInstance().addDriveTrainSimulation(sim);
     }
     final SwerveDriveSimulation simDrive = sim;
@@ -198,6 +198,9 @@ public class Drive extends SubsystemBase {
             phoenixOdometryThread,
             sparkOdometryThread);
     drive.swerveDriveSimulation = simDrive;
+    if (simDrive != null) {
+      drive.setPose(simDrive.getSimulatedDriveTrainPose());
+    }
     return drive;
   }
 
@@ -425,6 +428,11 @@ public class Drive extends SubsystemBase {
         kMaxDriveAcceleration,
         kMaxDriveDeceleration,
         kMaxSteeringVelocity);
+
+    // Keep estimator pose exactly aligned with Maple's physics pose in simulation.
+    if (Constants.currentMode == Mode.SIM && swerveDriveSimulation != null) {
+      setPose(swerveDriveSimulation.getSimulatedDriveTrainPose());
+    }
   }
 
   /**
