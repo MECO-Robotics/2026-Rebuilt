@@ -32,6 +32,16 @@ public interface GyroIO {
   /** Refreshes all sensor inputs. */
   public default void updateInputs(GyroIOInputs inputs) {}
 
+  /** Creates a Pigeon2-backed gyro IO supplier. */
+  public static Supplier<GyroIO> pigeon2Factory(int canID, String canBusName) {
+    return () -> new GyroIOPigeon2(canID, canBusName);
+  }
+
+  /** Creates a NavX-backed gyro IO supplier. */
+  public static Supplier<GyroIO> navXFactory() {
+    return GyroIONavX::new;
+  }
+
   /**
    * Creates a mode-appropriate gyro IO.
    *
@@ -39,5 +49,10 @@ public interface GyroIO {
    */
   public static GyroIO fromMode(Supplier<GyroIO> realFactory) {
     return Constants.currentMode == Constants.Mode.REAL ? realFactory.get() : new GyroIO() {};
+  }
+
+  /** Creates mode-appropriate gyro IO using a Pigeon2 for real hardware. */
+  public static GyroIO fromPigeon2(int canID, String canBusName) {
+    return fromMode(pigeon2Factory(canID, canBusName));
   }
 }

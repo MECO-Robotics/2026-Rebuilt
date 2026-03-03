@@ -59,6 +59,29 @@ public interface AzimuthMotorIO {
   /** Applies controller/feedforward gains. */
   public default void setGains(AzimuthMotorGains gains) {}
 
+  /** Creates a TalonFX-backed azimuth motor IO supplier. */
+  public static Supplier<AzimuthMotorIO> talonFXFactory(
+      String name, AzimuthMotorHardwareConfig config) {
+    return () -> new AzimuthMotorIOTalonFX(name, config);
+  }
+
+  /** Creates a SparkMax-backed azimuth motor IO supplier. */
+  public static Supplier<AzimuthMotorIO> sparkMaxFactory(
+      String name, AzimuthMotorHardwareConfig config) {
+    return () -> new AzimuthMotorIOSparkMax(name, config);
+  }
+
+  /** Creates a default simulation azimuth motor IO supplier. */
+  public static Supplier<AzimuthMotorIO> simFactory(
+      String name, AzimuthMotorHardwareConfig config) {
+    return () -> new AzimuthMotorIOSim(name, config);
+  }
+
+  /** Creates a replay azimuth motor IO supplier. */
+  public static Supplier<AzimuthMotorIO> replayFactory(String name) {
+    return () -> new AzimuthMotorIOReplay(name);
+  }
+
   /**
    * Creates a mode-appropriate azimuth motor IO.
    *
@@ -67,11 +90,39 @@ public interface AzimuthMotorIO {
    */
   public static AzimuthMotorIO fromMode(
       String name, AzimuthMotorHardwareConfig config, Supplier<AzimuthMotorIO> realFactory) {
+    return fromMode(name, config, realFactory, simFactory(name, config));
+  }
+
+  /**
+   * Creates a mode-appropriate azimuth motor IO.
+   *
+   * <p>Allows callers to provide a custom sim factory (for example, MapleSim-backed module IO
+   * endpoints that share state with drive IO).
+   */
+  public static AzimuthMotorIO fromMode(
+      String name,
+      AzimuthMotorHardwareConfig config,
+      Supplier<AzimuthMotorIO> realFactory,
+      Supplier<AzimuthMotorIO> simFactory) {
     return switch (Constants.currentMode) {
       case REAL -> realFactory.get();
-      case SIM -> new AzimuthMotorIOSim(name, config);
-      default -> new AzimuthMotorIOReplay(name);
+      case SIM -> simFactory.get();
+      default -> replayFactory(name).get();
     };
+  }
+
+  /** Creates mode-appropriate azimuth motor IO using TalonFX for real hardware. */
+  public static AzimuthMotorIO fromTalonFX(String name, AzimuthMotorHardwareConfig config) {
+    return fromMode(name, config, talonFXFactory(name, config));
+  }
+
+  /**
+   * Creates mode-appropriate azimuth motor IO using TalonFX for real hardware and a custom sim
+   * source.
+   */
+  public static AzimuthMotorIO fromTalonFX(
+      String name, AzimuthMotorHardwareConfig config, Supplier<AzimuthMotorIO> simFactory) {
+    return fromMode(name, config, talonFXFactory(name, config), simFactory);
   }
 
   /** Returns a unique telemetry/logging name for this azimuth motor. */

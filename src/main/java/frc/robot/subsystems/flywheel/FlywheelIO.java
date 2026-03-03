@@ -54,12 +54,22 @@ public interface FlywheelIO {
    * IO during log replay.
    */
   public static FlywheelIO fromMode(
-      String name, FlywheelHardwareConfig config, Supplier<FlywheelIO> realFactory) {
+      String name, FlywheelHardwareConfig config, Supplier<FlywheelIO> subsystemSupplier) {
     return switch (Constants.currentMode) {
-      case REAL -> realFactory.get();
+      case REAL -> subsystemSupplier.get();
       case SIM -> new FlywheelIOSim(name, config);
       default -> new FlywheelIOReplay(name);
     };
+  }
+
+  /** Creates mode-appropriate flywheel IO using SparkMax for real hardware. */
+  public static FlywheelIO fromSparkMax(String name, FlywheelHardwareConfig config) {
+    return fromMode(name, config, () -> new FlywheelIOSparkMax(name, config));
+  }
+
+  /** Creates mode-appropriate flywheel IO using TalonFX for real hardware. */
+  public static FlywheelIO fromTalonFX(String name, FlywheelHardwareConfig config) {
+    return fromMode(name, config, () -> new FlywheelIOTalonFX(name, config));
   }
 
   /** Returns a unique telemetry/logging name for this flywheel. */

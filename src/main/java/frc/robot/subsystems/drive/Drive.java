@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
 import frc.robot.subsystems.drive.gyro.GyroIO;

@@ -68,12 +68,22 @@ public interface PositionJointIO {
    * IO during log replay.
    */
   public static PositionJointIO fromMode(
-      String name, PositionJointHardwareConfig config, Supplier<PositionJointIO> realFactory) {
+      String name, PositionJointHardwareConfig config, Supplier<PositionJointIO> subsystemSupplier) {
     return switch (Constants.currentMode) {
-      case REAL -> realFactory.get();
+      case REAL -> subsystemSupplier.get();
       case SIM -> new PositionJointIOSim(name, config);
       default -> new PositionJointIOReplay(name);
     };
+  }
+
+  /** Creates mode-appropriate position-joint IO using SparkMax for real hardware. */
+  public static PositionJointIO fromSparkMax(String name, PositionJointHardwareConfig config) {
+    return fromMode(name, config, () -> new PositionJointIOSparkMax(name, config));
+  }
+
+  /** Creates mode-appropriate position-joint IO using TalonFX for real hardware. */
+  public static PositionJointIO fromTalonFX(String name, PositionJointHardwareConfig config) {
+    return fromMode(name, config, () -> new PositionJointIOTalonFX(name, config));
   }
 
   /** Returns a unique telemetry/logging name for this joint. */
