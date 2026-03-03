@@ -24,6 +24,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Mass;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
+import frc.robot.util.mechanical_advantage.swerve.ModuleLimits;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
@@ -118,9 +119,15 @@ public class DriveConstants {
   public static final PIDConstants translationPID = new PIDConstants(5, 0, 0);
   public static final PIDConstants rotationPID = new PIDConstants(5, 0, 0);
 
+  public static final ModuleLimits defaultModuleLimits = new ModuleLimits(10, 4, 9, 8);
+
   // Bumper-to-bumper chassis dimensions used by MapleSim collision body.
   public static final double mapleSimBumperLengthInches = 30.0;
   public static final double mapleSimBumperWidthInches = 30.0;
+  // MapleSim contact tuning (dyn4j fixture values). Keep defaults unless you need less
+  // sliding/bounce.
+  public static final double mapleSimBumperFriction = 0.65;
+  public static final double mapleSimBumperRestitution = 0.08;
 
   public static final DriveTrainSimulationConfig mapleSimConfig =
       DriveTrainSimulationConfig.Default()

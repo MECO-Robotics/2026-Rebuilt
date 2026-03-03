@@ -85,7 +85,7 @@ public class Drive extends SubsystemBase {
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
   private final SwerveSetpointGenerator setpointGenerator;
-  private ModuleLimits currentModuleLimits = new ModuleLimits(10, 10, 10, 10);
+  private ModuleLimits currentModuleLimits = DriveConstants.defaultModuleLimits;
   private SwerveSetpoint currentSetpoint =
       new SwerveSetpoint(
           new ChassisSpeeds(),
@@ -116,6 +116,13 @@ public class Drive extends SubsystemBase {
   private final LoggedTunableNumber azimuthkV;
   private final LoggedTunableNumber azimuthkA;
 
+  private final LoggedTunableNumber translationkP;
+  private final LoggedTunableNumber translationkI;
+  private final LoggedTunableNumber translationkD;
+  private final LoggedTunableNumber rotationkP;
+  private final LoggedTunableNumber rotationkI;
+  private final LoggedTunableNumber rotationkD;
+
   /**
    * Creates a drive subsystem from module configs/factory builders.
    *
@@ -144,6 +151,7 @@ public class Drive extends SubsystemBase {
       sim =
           new SwerveDriveSimulation(
               DriveConstants.mapleSimConfig, new Pose2d(3.0, 3.0, new Rotation2d()));
+      applyMapleSimContactTuning(sim);
       SimulatedArena.getInstance().addDriveTrainSimulation(sim);
     }
     final SwerveDriveSimulation simDrive = sim;
@@ -260,6 +268,16 @@ public class Drive extends SubsystemBase {
     azimuthkV = new LoggedTunableNumber("Drive/AzimuthMotors/Gains/kV", azimuthGains.kV());
     azimuthkA = new LoggedTunableNumber("Drive/AzimuthMotors/Gains/kA", azimuthGains.kA());
 
+    translationkP =
+        new LoggedTunableNumber("Pathplanner/TranslationalP", DriveConstants.translationPID.kP);
+    translationkI =
+        new LoggedTunableNumber("Pathplanner/TranslationalI", DriveConstants.translationPID.kI);
+    translationkD =
+        new LoggedTunableNumber("Pathplanner/TranslationalD", DriveConstants.translationPID.kD);
+    rotationkP = new LoggedTunableNumber("Pathplanner/RotationalP", DriveConstants.rotationPID.kP);
+    rotationkI = new LoggedTunableNumber("Pathplanner/RotationalI", DriveConstants.rotationPID.kI);
+    rotationkD = new LoggedTunableNumber("Pathplanner/RotationalD", DriveConstants.rotationPID.kD);
+
     // Load the configured gains immediately so sim IO PID/FF are initialized at startup.
     for (int i = 0; i < 4; i++) {
       modules[i].setGains(driveGains, azimuthGains);
@@ -302,7 +320,15 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new AdvancedPPHolonomicDriveController(
-            DriveConstants.translationPID, DriveConstants.rotationPID),
+            DriveConstants.translationPID,
+            DriveConstants.rotationPID,
+            0.02,
+            translationkP,
+            translationkI,
+            translationkD,
+            rotationkP,
+            rotationkI,
+            rotationkD),
         DriveConstants.ppConfig,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -579,5 +605,12 @@ public class Drive extends SubsystemBase {
   /** Returns an array of module translations. */
   public static Translation2d[] getModuleTranslations() {
     return DriveConstants.moduleTranslations;
+  }
+
+  private static void applyMapleSimContactTuning(SwerveDriveSimulation sim) {
+    for (var fixture : sim.getFixtures()) {
+      fixture.setFriction(DriveConstants.mapleSimBumperFriction);
+      fixture.setRestitution(DriveConstants.mapleSimBumperRestitution);
+    }
   }
 }

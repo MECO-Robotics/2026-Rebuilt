@@ -66,8 +66,8 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    var driveGains = DriveMotorConstants.EXAMPLE_GAINS;
-    var azimuthGains = AzimuthMotorConstants.EXAMPLE_GAINS;
+    var driveGains = DriveMotorConstants.DRIVE_MOTOR_GAINS;
+    var azimuthGains = AzimuthMotorConstants.AZIMUTH_MOTOR_GAINS;
     drive =
         Drive.fromModuleConfigs(
             () -> new GyroIOPigeon2(13, DriveMotorConstants.canBusName),

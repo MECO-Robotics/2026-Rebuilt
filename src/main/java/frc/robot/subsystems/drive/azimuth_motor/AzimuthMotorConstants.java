@@ -80,8 +80,6 @@ public class AzimuthMotorConstants {
           Rotation2d.fromRotations(-0.348877),
           canBusName);
 
-  public static final AzimuthMotorGains EXAMPLE_GAINS = new AzimuthMotorGains(15, 0, 0, 0.25, 2, 0);
-
-  public static final AzimuthMotorGains EXAMPLE_GAINS_SIM =
-      new AzimuthMotorGains(35, 0, 0, 0.0, 3, 0);
+  public static final AzimuthMotorGains AZIMUTH_MOTOR_GAINS =
+      new AzimuthMotorGains(100, 0, 0, 0.25, 2, 0);
 }
