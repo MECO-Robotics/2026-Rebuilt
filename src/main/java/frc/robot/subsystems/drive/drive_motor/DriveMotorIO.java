@@ -72,7 +72,13 @@ public interface DriveMotorIO {
 
   /** Creates a replay drive motor IO supplier. */
   public static Supplier<DriveMotorIO> replayFactory(String name) {
-    return () -> new DriveMotorIOReplay(name);
+    return () ->
+        new DriveMotorIO() {
+          @Override
+          public String getName() {
+            return name;
+          }
+        };
   }
 
   /**

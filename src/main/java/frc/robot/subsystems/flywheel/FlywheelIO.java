@@ -47,6 +47,17 @@ public interface FlywheelIO {
   /** Applies controller/feedforward gains. */
   public default void setGains(FlywheelGains gains) {}
 
+  /** Creates a replay flywheel IO supplier. */
+  public static Supplier<FlywheelIO> replayFactory(String name) {
+    return () ->
+        new FlywheelIO() {
+          @Override
+          public String getName() {
+            return name;
+          }
+        };
+  }
+
   /**
    * Creates a mode-appropriate flywheel IO.
    *
@@ -58,7 +69,7 @@ public interface FlywheelIO {
     return switch (Constants.currentMode) {
       case REAL -> subsystemSupplier.get();
       case SIM -> new FlywheelIOSim(name, config);
-      default -> new FlywheelIOReplay(name);
+      default -> replayFactory(name).get();
     };
   }
 

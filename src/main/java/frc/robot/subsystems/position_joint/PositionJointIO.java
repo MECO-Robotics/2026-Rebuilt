@@ -61,6 +61,17 @@ public interface PositionJointIO {
   /** Resets mechanism position to the implementation-defined zero. */
   public default void resetPosition() {}
 
+  /** Creates a replay position-joint IO supplier. */
+  public static Supplier<PositionJointIO> replayFactory(String name) {
+    return () ->
+        new PositionJointIO() {
+          @Override
+          public String getName() {
+            return name;
+          }
+        };
+  }
+
   /**
    * Creates a mode-appropriate position joint IO.
    *
@@ -72,7 +83,7 @@ public interface PositionJointIO {
     return switch (Constants.currentMode) {
       case REAL -> subsystemSupplier.get();
       case SIM -> new PositionJointIOSim(name, config);
-      default -> new PositionJointIOReplay(name);
+      default -> replayFactory(name).get();
     };
   }
 

@@ -29,10 +29,17 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
 import frc.robot.subsystems.drive.module.Module;
+import frc.robot.subsystems.drive.module.ModuleIO;
+import frc.robot.subsystems.drive.module.ModuleIOSim;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.gyro.GyroIO;
+import frc.robot.subsystems.drive.gyro.GyroIOSim;
 import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.drive.odometry_threads.SparkOdometryThread;
@@ -42,8 +49,12 @@ import frc.robot.util.mechanical_advantage.swerve.SwerveSetpoint;
 import frc.robot.util.mechanical_advantage.swerve.SwerveSetpointGenerator;
 import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
 import frc.robot.util.pathplanner.LocalADStarAK;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -51,6 +62,7 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   public static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
+  private SwerveDriveSimulation swerveDriveSimulation;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
@@ -107,6 +119,121 @@ public class Drive extends SubsystemBase {
   private final LoggedTunableNumber azimuthkA;
 
   /**
+   * Creates a drive subsystem from module configs/factory builders.
+   *
+   * <p>Owns Maple swerve simulation internally when running in sim and routes the shared
+   * simulation state to gyro and module IO.
+   */
+  public static Drive fromModuleConfigs(
+      Supplier<GyroIO> realGyroSupplier,
+      BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>> azimuthFactoryBuilder,
+      DriveMotorHardwareConfig frontLeftDriveConfig,
+      AzimuthMotorHardwareConfig frontLeftAzimuthConfig,
+      DriveMotorHardwareConfig frontRightDriveConfig,
+      AzimuthMotorHardwareConfig frontRightAzimuthConfig,
+      DriveMotorHardwareConfig backLeftDriveConfig,
+      AzimuthMotorHardwareConfig backLeftAzimuthConfig,
+      DriveMotorHardwareConfig backRightDriveConfig,
+      AzimuthMotorHardwareConfig backRightAzimuthConfig,
+      DriveMotorGains driveGains,
+      AzimuthMotorGains azimuthGains,
+      PhoenixOdometryThread phoenixOdometryThread,
+      SparkOdometryThread sparkOdometryThread) {
+    SwerveDriveSimulation sim = null;
+    if (Constants.currentMode == Constants.Mode.SIM) {
+      sim = new SwerveDriveSimulation(DriveConstants.mapleSimConfig, new Pose2d(3, 3, new Rotation2d()));
+      SimulatedArena.getInstance().addDriveTrainSimulation(sim);
+    }
+    final SwerveDriveSimulation simDrive = sim;
+
+    GyroIO gyroIO =
+        GyroIO.fromMode(
+            realGyroSupplier,
+            simDrive != null ? GyroIO.simFactory(simDrive.getGyroSimulation()) : GyroIOSim::new);
+
+    Module frontLeftModule =
+        Module.fromMode(
+            "FrontLeft",
+            frontLeftDriveConfig,
+            frontLeftAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null
+                ? () ->
+                    new ModuleIOSim(
+                        simDrive.getModules()[0],
+                        "FrontLeftDrive",
+                        frontLeftDriveConfig,
+                        "FrontLeftSteer",
+                        frontLeftAzimuthConfig)
+                : ModuleIO.simFactory("FrontLeft", frontLeftDriveConfig, frontLeftAzimuthConfig));
+    Module frontRightModule =
+        Module.fromMode(
+            "FrontRight",
+            frontRightDriveConfig,
+            frontRightAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null
+                ? () ->
+                    new ModuleIOSim(
+                        simDrive.getModules()[1],
+                        "FrontRightDrive",
+                        frontRightDriveConfig,
+                        "FrontRightSteer",
+                        frontRightAzimuthConfig)
+                : ModuleIO.simFactory(
+                    "FrontRight", frontRightDriveConfig, frontRightAzimuthConfig));
+    Module backLeftModule =
+        Module.fromMode(
+            "BackLeft",
+            backLeftDriveConfig,
+            backLeftAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null
+                ? () ->
+                    new ModuleIOSim(
+                        simDrive.getModules()[2],
+                        "BackLeftDrive",
+                        backLeftDriveConfig,
+                        "BackLeftSteer",
+                        backLeftAzimuthConfig)
+                : ModuleIO.simFactory("BackLeft", backLeftDriveConfig, backLeftAzimuthConfig));
+    Module backRightModule =
+        Module.fromMode(
+            "BackRight",
+            backRightDriveConfig,
+            backRightAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null
+                ? () ->
+                    new ModuleIOSim(
+                        simDrive.getModules()[3],
+                        "BackRightDrive",
+                        backRightDriveConfig,
+                        "BackRightSteer",
+                        backRightAzimuthConfig)
+                : ModuleIO.simFactory("BackRight", backRightDriveConfig, backRightAzimuthConfig));
+
+    Drive drive =
+        new Drive(
+            gyroIO,
+            frontLeftModule,
+            frontRightModule,
+            backLeftModule,
+            backRightModule,
+            driveGains,
+            azimuthGains,
+            phoenixOdometryThread,
+            sparkOdometryThread);
+    drive.swerveDriveSimulation = simDrive;
+    return drive;
+  }
+
+  /**
    * Creates a four-module swerve drive subsystem.
    *
    * @param gyroIO gyro abstraction
@@ -129,6 +256,7 @@ public class Drive extends SubsystemBase {
       AzimuthMotorGains azimuthGains,
       PhoenixOdometryThread phoenixOdometryThread,
       SparkOdometryThread sparkOdometryThread) {
+    this.swerveDriveSimulation = null;
     this.gyroIO = gyroIO;
     modules[0] = flModuleIO;
     modules[1] = frModuleIO;

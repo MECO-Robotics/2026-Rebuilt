@@ -63,7 +63,9 @@ public interface ModuleIO {
 
   /** Creates a replay module IO supplier. */
   public static Supplier<ModuleIO> replayFactory(String moduleName) {
-    return () -> new ModuleIOReplay(moduleName);
+    return factory(
+        DriveMotorIO.replayFactory(moduleName + "Drive"),
+        AzimuthMotorIO.replayFactory(moduleName + "Steer"));
   }
 
   /**

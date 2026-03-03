@@ -79,7 +79,13 @@ public interface AzimuthMotorIO {
 
   /** Creates a replay azimuth motor IO supplier. */
   public static Supplier<AzimuthMotorIO> replayFactory(String name) {
-    return () -> new AzimuthMotorIOReplay(name);
+    return () ->
+        new AzimuthMotorIO() {
+          @Override
+          public String getName() {
+            return name;
+          }
+        };
   }
 
   /**

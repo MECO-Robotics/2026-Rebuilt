@@ -78,6 +78,27 @@ public class Module {
             azimuthFactoryBuilder.apply(moduleName + "Steer", azimuthConfig)));
   }
 
+  /**
+   * Creates a mode-appropriate module from independently selected drive/azimuth real factory
+   * builders and a custom sim factory.
+   */
+  public static Module fromMode(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>> azimuthFactoryBuilder,
+      Supplier<ModuleIO> simFactory) {
+    return fromMode(
+        moduleName,
+        driveConfig,
+        azimuthConfig,
+        ModuleIO.factory(
+            driveFactoryBuilder.apply(moduleName + "Drive", driveConfig),
+            azimuthFactoryBuilder.apply(moduleName + "Steer", azimuthConfig)),
+        simFactory);
+  }
+
   /** Creates a mode-appropriate module from real-hardware and custom sim module factories. */
   public static Module fromMode(
       String moduleName,
