@@ -8,6 +8,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -25,6 +26,7 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.DriveMotorConstants;
 import frc.robot.constants.FlywheelConstants;
 import frc.robot.constants.PositionJointConstants;
+import frc.robot.simulation.Hopper;
 import frc.robot.simulation.IntakeSim;
 import frc.robot.simulation.LaunchedFuelSim;
 import frc.robot.subsystems.drive.Drive;
@@ -59,6 +61,7 @@ public class RobotContainer {
   private final RobotRemyVisualizer robotRemyVisualizer;
   private final IntakeSim intakeSim;
   private final LaunchedFuelSim launchedFuelSim;
+  private final Hopper hopper;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -127,6 +130,7 @@ public class RobotContainer {
 
     intakeSim = new IntakeSim(drive.getSimulation());
     launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
+    hopper = new Hopper(intakeSim::getStoredFuelCount, intakeRack::getPosition, drive::getPose);
 
     IntakeCommands.setIntakeSimulation(intakeSim);
     ShooterCommands.setLaunchedFuelSimulation(launchedFuelSim);
@@ -185,10 +189,8 @@ public class RobotContainer {
         .whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
         .whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
-    controller
-        .leftBumper()
-        .whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller))
-        .whileFalse(IntakeCommands.stowIntake(intakeRack, intakeRoller));
+    controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+    controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller));
   }
 
   public void updateDashboardOutputs() {
@@ -233,6 +235,12 @@ public class RobotContainer {
 
   /** Logs robot and component transforms for the custom Robot_Remy asset. */
   public void updateVisualization() {
+    hopper.periodic();
     robotRemyVisualizer.periodic();
+  }
+
+  /** Returns field-relative poses of gamepieces currently stored in the simulated hopper. */
+  public Pose3d[] getHopperGamePiecePoses() {
+    return hopper.getGamePiecePoses();
   }
 }

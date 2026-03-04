@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
+import java.util.Arrays;
 import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.gamepieces.GamePieceProjectile;
@@ -175,7 +176,15 @@ public class Robot extends LoggedRobot {
   @Override
   public void simulationPeriodic() {
     SimulatedArena.getInstance().simulationPeriodic();
-    Pose3d[] fuelPoses = SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel");
+    Pose3d[] arenaFuelPoses = SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel");
+    Pose3d[] hopperFuelPoses = robotContainer.getHopperGamePiecePoses();
+    Pose3d[] fuelPoses = Arrays.stream(arenaFuelPoses).toArray(Pose3d[]::new);
+    if (hopperFuelPoses.length > 0) {
+      fuelPoses =
+          Arrays.stream(new Pose3d[][] {arenaFuelPoses, hopperFuelPoses})
+              .flatMap(Arrays::stream)
+              .toArray(Pose3d[]::new);
+    }
     Set<GamePieceProjectile> projectiles = SimulatedArena.getInstance().gamePieceLaunched();
     Pose3d[] fuelProjectilePoses =
         projectiles.stream()
@@ -184,6 +193,8 @@ public class Robot extends LoggedRobot {
             .toArray(Pose3d[]::new);
     // Publish to telemetry using AdvantageKit
     Logger.recordOutput("FieldSimulation/FuelPositions", fuelPoses);
+    Logger.recordOutput("FieldSimulation/HopperFuelPositions", hopperFuelPoses);
+    Logger.recordOutput("FieldSimulation/HopperFuelCount", hopperFuelPoses.length);
     Logger.recordOutput("FieldSimulation/FuelProjectilePositions", fuelProjectilePoses);
     Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
   }

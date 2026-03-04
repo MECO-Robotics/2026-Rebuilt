@@ -1,14 +1,11 @@
 package frc.robot.util.visualization;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Radians;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.measure.Angle;
+import frc.robot.constants.MapleSimConstants;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -26,8 +23,6 @@ public class RobotRemyVisualizer {
   private final DoubleSupplier climberRotations;
 
   public static final LoggedTunableNumber hood = new LoggedTunableNumber("HoodPosition/Sim", 0);
-
-  private static final Angle IntakeRackAngle = Degrees.of(7.500000);
 
   private static final Translation3d SHOOTER_OFFSET =
       new Translation3d(-0.103310, 0, 0.423); // from center of robot to center of flywheel
@@ -64,19 +59,19 @@ public class RobotRemyVisualizer {
               new Rotation3d(0.0, Units.rotationsToRadians(hoodRotations.getAsDouble()), 0.0)),
           // 2: intake rack
           new Pose3d(
-              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)),
+              intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS),
               0,
-              -intakeRackRotations.getAsDouble() * Math.sin(IntakeRackAngle.in(Radians)),
+              -intakeRackRotations.getAsDouble() * Math.sin(MapleSimConstants.INTAKE_ANGLE_RADIANS),
               Rotation3d.kZero),
           // 3: intake kicker bar
           new Pose3d(
-              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)),
+              intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS),
               0.0,
               0.0,
               Rotation3d.kZero),
           // 4: hopper
           new Pose3d(
-              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)),
+              intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS),
               0.0,
               0.0,
               Rotation3d.kZero),

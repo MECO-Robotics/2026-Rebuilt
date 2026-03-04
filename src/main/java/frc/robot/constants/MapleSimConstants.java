@@ -2,6 +2,7 @@ package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 
 /** Constants used by Maple projectile simulation integration. */
 public final class MapleSimConstants {
@@ -27,6 +28,30 @@ public final class MapleSimConstants {
 
   /** Number of fuel pieces launched per simulated firing event. */
   public static final int FUEL_PER_SHOT = 4;
+
+  /** Maximum number of fuel gamepieces the simulated hopper can hold. */
+  public static final int HOPPER_MAX_BALLS = 54;
+
+  /** Back-to-front hopper limits in robot X coordinates. */
+  public static final double HOPPER_BACK_LIMIT_X_METERS = 0;
+
+  public static final double HOPPER_FRONT_LIMIT_X_METERS = 0.33;
+
+  /** Right-to-left hopper limits in robot Y coordinates. */
+  public static final double HOPPER_RIGHT_LIMIT_Y_METERS = -0.34;
+
+  public static final double HOPPER_LEFT_LIMIT_Y_METERS = 0.34;
+
+  /** Bottom-to-top hopper limits in robot Z coordinates. */
+  public static final double HOPPER_BOTTOM_LIMIT_Z_METERS = 0.18;
+
+  public static final double HOPPER_TOP_LIMIT_Z_METERS = 0.65;
+
+  /** Ball diameter used for hopper sphere packing. */
+  public static final double HOPPER_BALL_DIAMETER_METERS = Units.inchesToMeters(5.5);
+
+  /** Intake rack angle used to project extension onto robot X for hopper front-limit growth. */
+  public static final double INTAKE_ANGLE_RADIANS = Math.toRadians(7.5);
 
   /** Lateral spacing (robot Y axis) between fuel pieces in a burst launch. */
   public static final double FUEL_BURST_LATERAL_SPACING_METERS = 0.08;
