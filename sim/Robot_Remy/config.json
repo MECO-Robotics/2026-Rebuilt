@@ -21,7 +21,7 @@
   "cameras": [],
   "components": [
     {
-      "name": "0 flywheel & hood",
+      "name": "0 flywheel",
       "zeroedRotations": [
         {
           "axis": "x",
@@ -39,7 +39,7 @@
       ]
     },
     {
-      "name": "1 intake rack",
+      "name": "1 hood",
       "zeroedRotations": [
         {
           "axis": "x",
@@ -57,7 +57,7 @@
       ]
     },
     {
-      "name": "2 intake kicker bar",
+      "name": "2 intake rack",
       "zeroedRotations": [
         {
           "axis": "x",
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "name": "3 hopper",
+      "name": "3 intake kicker bar",
       "zeroedRotations": [
         {
           "axis": "x",
@@ -93,7 +93,25 @@
       ]
     },
     {
-      "name": "4 climber",
+      "name": "4 hopper",
+      "zeroedRotations": [
+        {
+          "axis": "x",
+          "degrees": 90
+        },
+        {
+          "axis": "z",
+          "degrees": 90
+        }
+      ],
+      "zeroedPosition": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "5 climber",
       "zeroedRotations": [
         {
           "axis": "x",
