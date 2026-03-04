@@ -468,12 +468,15 @@ public class Drive extends SubsystemBase {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    ChassisSpeeds desaturatedSpeeds = desaturateChassisSpeeds(speeds);
+    // Discretize to improve tracking of simultaneous translation + rotation commands.
+    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(desaturatedSpeeds, 0.02);
     currentSetpoint =
         setpointGenerator.generateSetpoint(
-            currentModuleLimits, currentSetpoint, speeds, new Translation2d(), 0.02);
+            currentModuleLimits, currentSetpoint, discreteSpeeds, new Translation2d(), 0.02);
     // Log unoptimized setpoints and setpoint speeds
     Logger.recordOutput("Drive/SwerveStates/Setpoints", currentSetpoint.moduleStates());
-    Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", speeds);
+    Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", discreteSpeeds);
 
     Logger.recordOutput(
         "Drive/SwerveStates/AzimuthVelocityFF", currentSetpoint.azimuthVelocityFF());
@@ -486,6 +489,13 @@ public class Drive extends SubsystemBase {
 
     // Log optimized setpoints (runSetpoint mutates each state)
     Logger.recordOutput("Drive/SwerveStates/SetpointsOptimized", currentSetpoint.moduleStates());
+  }
+
+  /** Desaturates commanded chassis speeds to respect achievable module wheel speed. */
+  private ChassisSpeeds desaturateChassisSpeeds(ChassisSpeeds speeds) {
+    SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(speeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, getMaxLinearSpeedMetersPerSec());
+    return kinematics.toChassisSpeeds(moduleStates);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */

@@ -29,6 +29,9 @@ import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 
 /** Mechanical, electrical, and path-planning constants for the swerve drivetrain. */
 public class DriveConstants {
+  public static double spinMultipler =
+      0.75; // Multiplier for max spin speed, used to reduce spin speed for better control during
+  // testing
   public static final double odometryFrequency =
       new CANBus(DriveMotorConstants.canBusName).isNetworkFD()
               && new CANBus(AzimuthMotorConstants.canBusName).isNetworkFD()
@@ -76,7 +79,7 @@ public class DriveConstants {
           turnGearbox, driveGearbox, COTS.WHEELS.VEX_GRIP_V2.cof, gearingLevel, drivePinionTeeth);
 
   // Drive motor configuration
-  public static final int driveMotorCurrentLimit = 60;
+  public static final int driveMotorCurrentLimit = 80;
   public static final double driveMotorGearRatio = simModule.DRIVE_GEAR_RATIO;
 
   // Drive encoder configuration
@@ -89,7 +92,7 @@ public class DriveConstants {
 
   // Turn motor configuration
   public static final double steerMotorGearRatio = simModule.STEER_GEAR_RATIO;
-  public static final int turnMotorCurrentLimit = 40;
+  public static final int turnMotorCurrentLimit = 60;
 
   // Turn encoder configuration
   public static final double turnEncoderPositionFactor =
@@ -100,7 +103,7 @@ public class DriveConstants {
   // PathPlanner configuration
   public static final Mass robotMass = Pound.of(80); // Convert kg to pounds
   public static final double robotMOI = 6.883;
-  public static final double wheelCOF = COTS.WHEELS.VEX_GRIP_V2.cof;
+  public static final double wheelCOF = 2.255;
   public static final RobotConfig ppConfig =
       new RobotConfig(
           robotMass.in(Kilogram),

@@ -88,7 +88,7 @@ public class DriveCommands {
               new ChassisSpeeds(
                   linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega * drive.getMaxAngularSpeedRadPerSec());
+                  omega * DriveConstants.spinMultipler * drive.getMaxAngularSpeedRadPerSec());
           boolean isFlipped = Constants.isAllianceRed();
           speeds =
               ChassisSpeeds.fromFieldRelativeSpeeds(
