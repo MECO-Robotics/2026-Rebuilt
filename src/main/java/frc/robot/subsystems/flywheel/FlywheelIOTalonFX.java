@@ -3,7 +3,9 @@ package frc.robot.subsystems.flywheel;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -22,8 +24,8 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
 import java.util.ArrayList;
 
 /** TalonFX-backed implementation of {@link FlywheelIO}. */
@@ -67,7 +69,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
    */
   public FlywheelIOTalonFX(String name, FlywheelHardwareConfig config) {
     this.name = name;
-
+    CANBus canBus = new CANBus(config.canBus());
     int numMotors = config.canIds().length;
 
     assert numMotors > 0 && (numMotors == config.reversed().length);
@@ -80,7 +82,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
     motorCurrents = new double[numMotors];
     motorAlerts = new Alert[numMotors];
 
-    motors[0] = new TalonFX(config.canIds()[0], config.canBus());
+    motors[0] = new TalonFX(config.canIds()[0], canBus);
     leaderConfig =
         new TalonFXConfiguration()
             .withMotorOutput(
@@ -93,7 +95,11 @@ public class FlywheelIOTalonFX implements FlywheelIO {
             .withFeedback(
                 new FeedbackConfigs()
                     .withSensorToMechanismRatio(config.gearRatio())
-                    .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor));
+                    .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor))
+            .withCurrentLimits(
+                new CurrentLimitsConfigs()
+                    .withSupplyCurrentLimit(config.currentLimit())
+                    .withSupplyCurrentLimitEnable(true));
 
     tryUntilOk(5, () -> motors[0].getConfigurator().apply(leaderConfig));
 
@@ -114,8 +120,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
     for (int i = 1; i < config.canIds().length; i++) {
       motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
-      motors[i] = new TalonFX(config.canIds()[i], config.canBus());
-      motors[i].setControl(new Follower(config.canIds()[0], motorval));
+      motors[i] = new TalonFX(config.canIds()[i], canBus);
+      motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
 
       motorAlerts[i] =
           new Alert(

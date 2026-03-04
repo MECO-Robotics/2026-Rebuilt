@@ -3,6 +3,7 @@ package frc.robot.subsystems.drive.drive_motor;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -24,9 +25,9 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorHardwareConfig;
+import frc.robot.constants.DriveConstants;
+import frc.robot.constants.DriveMotorConstants.DriveMotorGains;
+import frc.robot.constants.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import java.util.ArrayList;
 import java.util.Queue;
@@ -68,7 +69,7 @@ public class DriveMotorIOTalonFX implements DriveMotorIO {
 
   public DriveMotorIOTalonFX(String name, DriveMotorHardwareConfig config) {
     this.name = name;
-
+    CANBus canBus = new CANBus(config.canBus());
     int numMotors = config.canIds().length;
 
     assert numMotors > 0 && (numMotors == config.reversed().length);
@@ -81,7 +82,7 @@ public class DriveMotorIOTalonFX implements DriveMotorIO {
     motorCurrents = new double[numMotors];
     motorAlerts = new Alert[numMotors];
 
-    motors[0] = new TalonFX(config.canIds()[0], config.canBus());
+    motors[0] = new TalonFX(config.canIds()[0], canBus);
     leaderConfig =
         new TalonFXConfiguration()
             .withMotorOutput(
@@ -119,7 +120,7 @@ public class DriveMotorIOTalonFX implements DriveMotorIO {
 
     for (int i = 1; i < config.canIds().length; i++) {
       motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
-      motors[i] = new TalonFX(config.canIds()[i], config.canBus());
+      motors[i] = new TalonFX(config.canIds()[i], canBus);
       motors[i].setControl(new Follower(i, motorval));
 
       motorAlerts[i] =

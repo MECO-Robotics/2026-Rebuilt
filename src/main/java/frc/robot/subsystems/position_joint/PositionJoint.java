@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.commands.position_joint.PositionJointVelocityCommand;
-import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.PositionJointConstants.PositionJointGains;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;

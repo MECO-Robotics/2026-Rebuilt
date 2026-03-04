@@ -13,8 +13,8 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
 /** SparkMax-backed implementation of {@link FlywheelIO}. */
@@ -83,14 +83,14 @@ public class FlywheelIOSparkMax implements FlywheelIO {
               .smartCurrentLimit(config.currentLimit());
 
     } else {
+      //NOTE: Brushed Motors does not support current limits! BE CAREFUL
       leaderConfig =
           new SparkMaxConfig()
               .apply(
                   new EncoderConfig()
                       .positionConversionFactor(1.0 / config.gearRatio())
                       .velocityConversionFactor(1.0 / (60.0 * config.gearRatio()))
-                      .inverted(config.reversed()[0]))
-              .smartCurrentLimit(config.currentLimit());
+                      .inverted(config.reversed()[0]));
     }
 
     motors[0].configure(

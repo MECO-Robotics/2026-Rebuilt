@@ -19,9 +19,9 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.subsystems.position_joint.PositionJointConstants.GravityType;
-import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointGains;
-import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.constants.PositionJointConstants.GravityType;
+import frc.robot.constants.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.encoder.AbsoluteCancoder;
 import frc.robot.util.encoder.AbsoluteMagEncoder;
 import frc.robot.util.encoder.IAbsoluteEncoder;
@@ -106,6 +106,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
               .idleMode(IdleMode.kBrake);
 
     } else {
+       //NOTE: Brushed Motors does not support current limits! BE CAREFUL
       leaderConfig =
           new SparkMaxConfig()
               .apply(

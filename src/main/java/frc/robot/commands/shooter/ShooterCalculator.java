@@ -9,8 +9,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.FieldConstants.Hub;
-import frc.robot.commands.shooter.ShooterCommands.Maps;
+import frc.robot.constants.FieldConstants.Hub;
+import frc.robot.constants.ShooterConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
@@ -28,17 +28,19 @@ public class ShooterCalculator {
   public static final Translation2d robotToShooter = new Translation2d(-.19, 0);
 
   public static Command calculateAndShoot(Drive drive, PositionJoint hood, Flywheel shooter) {
-
-    Pose2d shooterPosition =
-        drive.getPose().transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
     Supplier<Distance> distance =
-        () -> Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+        () -> {
+          Pose2d shooterPosition =
+              drive.getPose().transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
+          return Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+        };
 
     DoubleSupplier hoodPosition =
-        () -> Maps.shooterDeflectorAngleMap.get(distance.get()).in(Units.Rotations);
+        () -> ShooterConstants.hoodMap.get(distance.get()).in(Units.Rotations);
 
     DoubleSupplier shooterVelocity =
-        () -> Maps.shooterVelocityMap.get(distance.get()).in(Units.RevolutionsPerSecond);
+        () ->
+            ShooterConstants.shooterVelocityMap.get(distance.get()).in(Units.RevolutionsPerSecond);
 
     return PositionJoint.setPosition(hood, hoodPosition)
         .alongWith(Flywheel.setVelocity(shooter, shooterVelocity));

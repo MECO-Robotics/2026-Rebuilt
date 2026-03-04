@@ -1,12 +1,11 @@
 package frc.robot.util.visualization;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Radians;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.util.Units;
+import frc.robot.constants.MapleSimConstants;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -23,9 +22,13 @@ public class RobotRemyVisualizer {
   private final DoubleSupplier intakeRackRotations;
   private final DoubleSupplier climberRotations;
 
-  public static final Angle IntakeRackAngle = Degrees.of(7.500000);
-
   public static final LoggedTunableNumber hood = new LoggedTunableNumber("HoodPosition/Sim", 0);
+
+  private static final Translation3d SHOOTER_OFFSET =
+      new Translation3d(-0.103310, 0, 0.423); // from center of robot to center of flywheel
+
+  private static final Translation3d CLIMBER_OFFSET =
+      new Translation3d(-0.290, 0, 0.512); // from center of robot to center of climber
 
   public RobotRemyVisualizer(
       Supplier<Pose2d> robotPoseSupplier,
@@ -46,40 +49,36 @@ public class RobotRemyVisualizer {
     Logger.recordOutput(
         COMPONENT_POSES_LOG_KEY,
         new Pose3d[] {
-          // 0: flywheel & hood
+          // 0: flywheel
+          Pose3d.kZero.rotateAround(
+              SHOOTER_OFFSET,
+              new Rotation3d(0.0, Units.rotationsToRadians(flywheelRotations.getAsDouble()), 0.0)),
+          // 1: hood
+          Pose3d.kZero.rotateAround(
+              SHOOTER_OFFSET,
+              new Rotation3d(0.0, Units.rotationsToRadians(hoodRotations.getAsDouble()), 0.0)),
+          // 2: intake rack
           new Pose3d(
-              0.0,
-              0.0,
-              0.0,
-              new Rotation3d(
-                  toRadians(flywheelRotations.getAsDouble()),
-                  toRadians(hoodRotations.getAsDouble()),
-                  0.0)),
-          // 1: intake rack
-          new Pose3d(
-              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)),
+              intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS),
               0,
-              -intakeRackRotations.getAsDouble() * Math.sin(IntakeRackAngle.in(Radians)),
-              new Rotation3d(0.0, 0, 0.0)),
-          // 2: intake kicker bar
+              -intakeRackRotations.getAsDouble() * Math.sin(MapleSimConstants.INTAKE_ANGLE_RADIANS),
+              Rotation3d.kZero),
+          // 3: intake kicker bar
           new Pose3d(
-              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)),
+              intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS),
               0.0,
               0.0,
-              new Rotation3d(0.0, 0.0, 0.0)),
-          // 3: hopper
+              Rotation3d.kZero),
+          // 4: hopper
           new Pose3d(
-              intakeRackRotations.getAsDouble() * Math.cos(IntakeRackAngle.in(Radians)),
+              intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS),
               0.0,
               0.0,
-              new Rotation3d(0.0, 0.0, 0.0)),
-          // 4: climber
-          new Pose3d(
-              0.0, 0.0, 0.0, new Rotation3d(toRadians(climberRotations.getAsDouble()), 0.0, 0.0))
+              Rotation3d.kZero),
+          // 5: climber
+          Pose3d.kZero.rotateAround(
+              CLIMBER_OFFSET,
+              new Rotation3d(0.0, -Units.rotationsToRadians(climberRotations.getAsDouble()), 0.0))
         });
-  }
-
-  private static double toRadians(double rotations) {
-    return rotations * 2.0 * Math.PI;
   }
 }

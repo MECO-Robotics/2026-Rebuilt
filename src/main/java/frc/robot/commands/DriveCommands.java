@@ -13,10 +13,10 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.Constants;
-import frc.robot.FieldConstants.Hub;
+import frc.robot.constants.Constants;
+import frc.robot.constants.DriveConstants;
+import frc.robot.constants.FieldConstants.Hub;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -88,7 +88,7 @@ public class DriveCommands {
               new ChassisSpeeds(
                   linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                   linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
-                  omega * drive.getMaxAngularSpeedRadPerSec());
+                  omega * DriveConstants.spinMultipler * drive.getMaxAngularSpeedRadPerSec());
           boolean isFlipped = Constants.isAllianceRed();
           speeds =
               ChassisSpeeds.fromFieldRelativeSpeeds(

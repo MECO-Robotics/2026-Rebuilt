@@ -3,6 +3,7 @@ package frc.robot.subsystems.position_joint;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import com.ctre.phoenix6.BaseStatusSignal;
+import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -27,9 +28,9 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.subsystems.position_joint.PositionJointConstants.GravityType;
-import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointGains;
-import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.constants.PositionJointConstants.GravityType;
+import frc.robot.constants.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.encoder.AbsoluteCancoder;
 import frc.robot.util.encoder.AbsoluteMagEncoder;
 import frc.robot.util.encoder.IAbsoluteEncoder;
@@ -91,7 +92,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
     this.name = name;
     hardwareConfig = config;
     this.externalFeedforward = externalFeedforward;
-
+    CANBus canBus = new CANBus(config.canBus());
     int numMotors = config.canIds().length;
 
     assert numMotors > 0 && (numMotors == config.reversed().length);
@@ -104,7 +105,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
     motorCurrents = new double[numMotors];
     motorAlerts = new Alert[numMotors];
 
-    motors[0] = new TalonFX(config.canIds()[0], config.canBus());
+    motors[0] = new TalonFX(config.canIds()[0], canBus);
     leaderConfig =
         new TalonFXConfiguration()
             .withMotorOutput(
@@ -226,8 +227,8 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 
     for (int i = 1; i < config.canIds().length; i++) {
       motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
-      motors[i] = new TalonFX(config.canIds()[i], config.canBus());
-      motors[i].setControl(new Follower(i, motorval));
+      motors[i] = new TalonFX(config.canIds()[i], canBus);
+      motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
 
       motorAlerts[i] =
           new Alert(

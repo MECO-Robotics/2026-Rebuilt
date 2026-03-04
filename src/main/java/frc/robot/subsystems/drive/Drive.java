@@ -27,12 +27,19 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants;
-import frc.robot.Constants.Mode;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorGains;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.constants.Constants;
+import frc.robot.constants.Constants.Mode;
+import frc.robot.constants.DriveConstants;
+import frc.robot.constants.DriveMotorConstants.DriveMotorGains;
+import frc.robot.constants.DriveMotorConstants.DriveMotorHardwareConfig;
+import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
+import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
+import frc.robot.subsystems.drive.gyro.GyroIOSim;
+import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.drive.odometry_threads.SparkOdometryThread;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
@@ -43,6 +50,10 @@ import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
 import frc.robot.util.pathplanner.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -50,6 +61,7 @@ import org.littletonrobotics.junction.Logger;
 public class Drive extends SubsystemBase {
   public static final Lock odometryLock = new ReentrantLock();
   private final GyroIO gyroIO;
+  private SwerveDriveSimulation swerveDriveSimulation;
   private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
   private final Module[] modules = new Module[4]; // FL, FR, BL, BR
   private final SysIdRoutine sysId;
@@ -74,7 +86,7 @@ public class Drive extends SubsystemBase {
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
 
   private final SwerveSetpointGenerator setpointGenerator;
-  private ModuleLimits currentModuleLimits = new ModuleLimits(10, 10, 10, 10);
+  private ModuleLimits currentModuleLimits = DriveConstants.defaultModuleLimits;
   private SwerveSetpoint currentSetpoint =
       new SwerveSetpoint(
           new ChassisSpeeds(),
@@ -105,6 +117,102 @@ public class Drive extends SubsystemBase {
   private final LoggedTunableNumber azimuthkV;
   private final LoggedTunableNumber azimuthkA;
 
+  private final LoggedTunableNumber translationkP;
+  private final LoggedTunableNumber translationkI;
+  private final LoggedTunableNumber translationkD;
+  private final LoggedTunableNumber rotationkP;
+  private final LoggedTunableNumber rotationkI;
+  private final LoggedTunableNumber rotationkD;
+
+  /**
+   * Creates a drive subsystem from module configs/factory builders.
+   *
+   * <p>Owns Maple swerve simulation internally when running in sim and routes the shared simulation
+   * state to gyro and module IO.
+   */
+  public static Drive fromModuleConfigs(
+      Supplier<GyroIO> realGyroSupplier,
+      BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder,
+      DriveMotorHardwareConfig frontLeftDriveConfig,
+      AzimuthMotorHardwareConfig frontLeftAzimuthConfig,
+      DriveMotorHardwareConfig frontRightDriveConfig,
+      AzimuthMotorHardwareConfig frontRightAzimuthConfig,
+      DriveMotorHardwareConfig backLeftDriveConfig,
+      AzimuthMotorHardwareConfig backLeftAzimuthConfig,
+      DriveMotorHardwareConfig backRightDriveConfig,
+      AzimuthMotorHardwareConfig backRightAzimuthConfig,
+      DriveMotorGains driveGains,
+      AzimuthMotorGains azimuthGains,
+      PhoenixOdometryThread phoenixOdometryThread,
+      SparkOdometryThread sparkOdometryThread) {
+    SwerveDriveSimulation sim = null;
+    if (Constants.currentMode == Constants.Mode.SIM) {
+      sim =
+          new SwerveDriveSimulation(
+              DriveConstants.mapleSimConfig, new Pose2d(3.0, 3.0, new Rotation2d()));
+      applyMapleSimContactTuning(sim);
+      SimulatedArena.getInstance().addDriveTrainSimulation(sim);
+    }
+    final SwerveDriveSimulation simDrive = sim;
+
+    GyroIO gyroIO =
+        GyroIO.fromMode(
+            realGyroSupplier,
+            simDrive != null ? GyroIO.simFactory(simDrive.getGyroSimulation()) : GyroIOSim::new);
+
+    Module frontLeftModule =
+        Module.fromMode(
+            "FrontLeft",
+            frontLeftDriveConfig,
+            frontLeftAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null ? simDrive.getModules()[0] : null);
+    Module frontRightModule =
+        Module.fromMode(
+            "FrontRight",
+            frontRightDriveConfig,
+            frontRightAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null ? simDrive.getModules()[1] : null);
+    Module backLeftModule =
+        Module.fromMode(
+            "BackLeft",
+            backLeftDriveConfig,
+            backLeftAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null ? simDrive.getModules()[2] : null);
+    Module backRightModule =
+        Module.fromMode(
+            "BackRight",
+            backRightDriveConfig,
+            backRightAzimuthConfig,
+            driveFactoryBuilder,
+            azimuthFactoryBuilder,
+            simDrive != null ? simDrive.getModules()[3] : null);
+
+    Drive drive =
+        new Drive(
+            gyroIO,
+            frontLeftModule,
+            frontRightModule,
+            backLeftModule,
+            backRightModule,
+            driveGains,
+            azimuthGains,
+            phoenixOdometryThread,
+            sparkOdometryThread);
+    drive.swerveDriveSimulation = simDrive;
+    if (simDrive != null) {
+      drive.setPose(simDrive.getSimulatedDriveTrainPose());
+    }
+    return drive;
+  }
+
   /**
    * Creates a four-module swerve drive subsystem.
    *
@@ -128,6 +236,7 @@ public class Drive extends SubsystemBase {
       AzimuthMotorGains azimuthGains,
       PhoenixOdometryThread phoenixOdometryThread,
       SparkOdometryThread sparkOdometryThread) {
+    this.swerveDriveSimulation = null;
     this.gyroIO = gyroIO;
     modules[0] = flModuleIO;
     modules[1] = frModuleIO;
@@ -159,6 +268,16 @@ public class Drive extends SubsystemBase {
     azimuthkS = new LoggedTunableNumber("Drive/AzimuthMotors/Gains/kS", azimuthGains.kS());
     azimuthkV = new LoggedTunableNumber("Drive/AzimuthMotors/Gains/kV", azimuthGains.kV());
     azimuthkA = new LoggedTunableNumber("Drive/AzimuthMotors/Gains/kA", azimuthGains.kA());
+
+    translationkP =
+        new LoggedTunableNumber("Pathplanner/TranslationalP", DriveConstants.translationPID.kP);
+    translationkI =
+        new LoggedTunableNumber("Pathplanner/TranslationalI", DriveConstants.translationPID.kI);
+    translationkD =
+        new LoggedTunableNumber("Pathplanner/TranslationalD", DriveConstants.translationPID.kD);
+    rotationkP = new LoggedTunableNumber("Pathplanner/RotationalP", DriveConstants.rotationPID.kP);
+    rotationkI = new LoggedTunableNumber("Pathplanner/RotationalI", DriveConstants.rotationPID.kI);
+    rotationkD = new LoggedTunableNumber("Pathplanner/RotationalD", DriveConstants.rotationPID.kD);
 
     // Load the configured gains immediately so sim IO PID/FF are initialized at startup.
     for (int i = 0; i < 4; i++) {
@@ -202,7 +321,15 @@ public class Drive extends SubsystemBase {
         this::getChassisSpeeds,
         this::runVelocity,
         new AdvancedPPHolonomicDriveController(
-            DriveConstants.translationPID, DriveConstants.rotationPID),
+            DriveConstants.translationPID,
+            DriveConstants.rotationPID,
+            0.02,
+            translationkP,
+            translationkI,
+            translationkD,
+            rotationkP,
+            rotationkI,
+            rotationkD),
         DriveConstants.ppConfig,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -328,6 +455,11 @@ public class Drive extends SubsystemBase {
         kMaxDriveAcceleration,
         kMaxDriveDeceleration,
         kMaxSteeringVelocity);
+
+    // Keep estimator pose exactly aligned with Maple's physics pose in simulation.
+    if (Constants.currentMode == Mode.SIM && swerveDriveSimulation != null) {
+      setPose(swerveDriveSimulation.getSimulatedDriveTrainPose());
+    }
   }
 
   /**
@@ -336,12 +468,15 @@ public class Drive extends SubsystemBase {
    * @param speeds Speeds in meters/sec
    */
   public void runVelocity(ChassisSpeeds speeds) {
+    ChassisSpeeds desaturatedSpeeds = desaturateChassisSpeeds(speeds);
+    // Discretize to improve tracking of simultaneous translation + rotation commands.
+    ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(desaturatedSpeeds, 0.02);
     currentSetpoint =
         setpointGenerator.generateSetpoint(
-            currentModuleLimits, currentSetpoint, speeds, new Translation2d(), 0.02);
+            currentModuleLimits, currentSetpoint, discreteSpeeds, new Translation2d(), 0.02);
     // Log unoptimized setpoints and setpoint speeds
     Logger.recordOutput("Drive/SwerveStates/Setpoints", currentSetpoint.moduleStates());
-    Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", speeds);
+    Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", discreteSpeeds);
 
     Logger.recordOutput(
         "Drive/SwerveStates/AzimuthVelocityFF", currentSetpoint.azimuthVelocityFF());
@@ -354,6 +489,13 @@ public class Drive extends SubsystemBase {
 
     // Log optimized setpoints (runSetpoint mutates each state)
     Logger.recordOutput("Drive/SwerveStates/SetpointsOptimized", currentSetpoint.moduleStates());
+  }
+
+  /** Desaturates commanded chassis speeds to respect achievable module wheel speed. */
+  private ChassisSpeeds desaturateChassisSpeeds(ChassisSpeeds speeds) {
+    SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(speeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, getMaxLinearSpeedMetersPerSec());
+    return kinematics.toChassisSpeeds(moduleStates);
   }
 
   /** Runs the drive in a straight line with the specified drive output. */
@@ -474,5 +616,17 @@ public class Drive extends SubsystemBase {
   /** Returns an array of module translations. */
   public static Translation2d[] getModuleTranslations() {
     return DriveConstants.moduleTranslations;
+  }
+
+  /** Get the drivetrain simulation object. */
+  public SwerveDriveSimulation getSimulation() {
+    return swerveDriveSimulation;
+  }
+
+  private static void applyMapleSimContactTuning(SwerveDriveSimulation sim) {
+    for (var fixture : sim.getFixtures()) {
+      fixture.setFriction(DriveConstants.mapleSimBumperFriction);
+      fixture.setRestitution(DriveConstants.mapleSimBumperRestitution);
+    }
   }
 }
