@@ -102,7 +102,7 @@ public class PositionJointConstants {
       new PositionJointHardwareConfig(
           new int[] {21},
           new boolean[] {true},
-          4.3125,
+          ((48 / 16) * (26 / 16)) / (((Math.PI * 10) / 10) * 0.0254),
           0.01,
           40,
           GravityType.COSINE,

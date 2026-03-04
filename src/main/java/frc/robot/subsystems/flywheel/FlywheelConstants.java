@@ -58,7 +58,7 @@ public class FlywheelConstants {
   public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG =
       new FlywheelHardwareConfig(new int[] {22}, new boolean[] {false}, 1.5, 0.025, 40, "");
   public static final FlywheelGains INTAKE_ROLLER_GAINS =
-      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 0.0, 0.0);
 
   // ------------
   // Indexer Constants
