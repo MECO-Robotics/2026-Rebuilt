@@ -20,16 +20,28 @@ public final class MapleSimConstants {
   public static final double MPS_PER_FLYWHEEL_RPS = 4.0 * Math.PI * 0.0254; // 4" diameter wheel
 
   /** Minimum flywheel speed before a shot can launch in simulation. */
-  public static final double MIN_FLYWHEEL_RPS_FOR_SHOT = 20.0;
+  public static final double MIN_FLYWHEEL_RPS_FOR_SHOT = 15.0;
 
-  /** Minimum time between simulated launches while feeding. */
-  public static final double SHOT_COOLDOWN_SECONDS = 0.15;
+  /** Minimum time between simulated burst starts while feeding. */
+  public static final double SHOT_COOLDOWN_SECONDS = 0.20;
 
   /** Number of fuel pieces launched per simulated firing event. */
   public static final int FUEL_PER_SHOT = 4;
 
   /** Lateral spacing (robot Y axis) between fuel pieces in a burst launch. */
   public static final double FUEL_BURST_LATERAL_SPACING_METERS = 0.08;
+
+  /** Fractional randomization applied to average intra-burst stagger interval. */
+  public static final double SHOT_STAGGER_RANDOMNESS_RATIO = 0.30;
+
+  /** Floor for intra-burst stagger delay to avoid same-tick clumping. */
+  public static final double MIN_SHOT_STAGGER_SECONDS = 0.01;
+
+  /** Random launch-angle variation as a fraction of nominal angle (e.g. 0.02 = ±2%). */
+  public static final double SHOT_ANGLE_RANDOMNESS_RATIO = 0.10;
+
+  /** Random projectile-speed variation as a fraction of nominal speed (e.g. 0.01 = ±1%). */
+  public static final double SHOT_VELOCITY_RANDOMNESS_RATIO = 0.10;
 
   /** Offset behind the alliance hub where scored fuel is respawned on the field. */
   public static final double HUB_BACK_SPAWN_X_OFFSET_METERS = 0.65;
