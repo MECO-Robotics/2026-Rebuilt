@@ -1,16 +1,10 @@
 package frc.robot.commands.shooter;
 
-import edu.wpi.first.units.AngleUnit;
-import edu.wpi.first.units.AngularVelocityUnit;
-import edu.wpi.first.units.DistanceUnit;
-import edu.wpi.first.units.TimeUnit;
-import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.simulation.LaunchedFuelSim;
 import frc.robot.subsystems.flywheel.Flywheel;
-import frc.robot.util.UnitInterpolatingMap;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
 /** Factory methods for coordinated shooter/indexer/conveyor command groups. */
@@ -53,15 +47,6 @@ public class ShooterCommands {
     public static final LoggedTunableNumber EJECT =
         new LoggedTunableNumber("ShooterVolts/Eject", 12);
     public static final LoggedTunableNumber STOP = new LoggedTunableNumber("ShooterVolts/Stop", 0);
-  }
-
-  public final class Maps {
-    public static final UnitInterpolatingMap<DistanceUnit, AngleUnit> shooterDeflectorAngleMap =
-        new UnitInterpolatingMap<>(Units.Meters, Units.Rotations);
-    public static final UnitInterpolatingMap<DistanceUnit, AngularVelocityUnit> shooterVelocityMap =
-        new UnitInterpolatingMap<>(Units.Meters, Units.RevolutionsPerSecond);
-    public static final UnitInterpolatingMap<DistanceUnit, TimeUnit> timeOfFlightMap =
-        new UnitInterpolatingMap<>(Units.Meters, Units.Seconds);
   }
 
   /** Puts the Shooter and bottom indexers in a slow idle speed, and stopping the top indexer */

@@ -15,7 +15,4 @@ public class ShooterConstants {
       new UnitInterpolatingMap<>(Units.Meters, Units.RevolutionsPerSecond);
   public static final UnitInterpolatingMap<DistanceUnit, TimeUnit> timeOfFlightMap =
       new UnitInterpolatingMap<>(Units.Meters, Units.Seconds);
-
-  static {
-  }
 }

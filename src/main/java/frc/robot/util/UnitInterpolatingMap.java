@@ -29,6 +29,20 @@ public class UnitInterpolatingMap<K extends Unit, V extends Unit> {
     this.valueUnit = valueUnit;
   }
 
+  @SafeVarargs
+  public static <K extends Unit, V extends Unit> UnitInterpolatingMap<K, V> ofEntries(
+      K keyUnit, V valueUnit, Measure<K>[] keys, Measure<V>... values) {
+    if (keys.length != values.length) {
+      throw new IllegalArgumentException("keys and values must have the same length");
+    }
+
+    var map = new UnitInterpolatingMap<>(keyUnit, valueUnit);
+    for (int i = 0; i < keys.length; i++) {
+      map.put(keys[i], values[i]);
+    }
+    return map;
+  }
+
   public void put(Measure<K> key, Measure<V> value) {
     var keyValue = key.in(keyUnit);
     map.put(keyValue, value.in(valueUnit));
