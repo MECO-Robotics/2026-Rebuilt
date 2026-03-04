@@ -131,8 +131,6 @@ public class Robot extends LoggedRobot {
       CommandScheduler.getInstance().schedule(autonomousCommand);
     }
     if (Constants.currentMode == Constants.Mode.SIM) {
-      // Clear all game pieces from the field
-      SimulatedArena.getInstance().clearGamePieces();
       // Add fuel game pieces to the field
       SimulatedArena.getInstance().resetFieldForAuto();
     }
