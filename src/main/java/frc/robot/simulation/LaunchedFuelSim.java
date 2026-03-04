@@ -31,6 +31,7 @@ public class LaunchedFuelSim {
   private final IntakeSim intakeSim;
   private final PositionJoint hood;
   private final Flywheel shooterFlywheel;
+  private int successfulScoreCount = 0;
 
   private double lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
   private double nextBurstShotTimestampSeconds = Double.NEGATIVE_INFINITY;
@@ -102,6 +103,17 @@ public class LaunchedFuelSim {
     return Commands.run(this::tryLaunch);
   }
 
+  /** Resets the simulated successful score counter. */
+  public void resetSuccessfulScoreCount() {
+    successfulScoreCount = 0;
+    Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
+  }
+
+  /** Returns the simulated successful score counter. */
+  public int getSuccessfulScoreCount() {
+    return successfulScoreCount;
+  }
+
   private boolean hasLaunchVelocity() {
     return Math.abs(shooterFlywheel.getVelocity()) >= MapleSimConstants.MIN_FLYWHEEL_RPS_FOR_SHOT;
   }
@@ -152,7 +164,12 @@ public class LaunchedFuelSim {
                     new Translation3d(Units.feetToMeters(2), Units.feetToMeters(2), 0.1))
                 // Set a callback to run when the fuel hits the target
                 .withHitTargetCallBack(
-                    () -> SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel()))
+                    () -> {
+                      successfulScoreCount++;
+                      Logger.recordOutput(
+                          "FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
+                      SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel());
+                    })
                 // Configure callbacks to visualize the flight trajectory of the projectile
                 .withProjectileTrajectoryDisplayCallBack(
                     // Callback for when the fuel will eventually hit the target (if configured)

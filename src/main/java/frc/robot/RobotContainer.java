@@ -243,4 +243,14 @@ public class RobotContainer {
   public Pose3d[] getHopperGamePiecePoses() {
     return hopper.getGamePiecePoses();
   }
+
+  /** Resets the simulated successful score counter. */
+  public void resetSimulationScoreCounter() {
+    launchedFuelSim.resetSuccessfulScoreCount();
+  }
+
+  /** Returns the simulated successful score counter. */
+  public int getSimulationScoreCounter() {
+    return launchedFuelSim.getSuccessfulScoreCount();
+  }
 }
