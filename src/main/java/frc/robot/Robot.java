@@ -13,7 +13,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
+import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.gamepieces.GamePieceProjectile;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -176,7 +178,15 @@ public class Robot extends LoggedRobot {
   public void simulationPeriodic() {
     SimulatedArena.getInstance().simulationPeriodic();
     Pose3d[] fuelPoses = SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel");
+    Set<GamePieceProjectile> projectiles = SimulatedArena.getInstance().gamePieceLaunched();
+    Pose3d[] fuelProjectilePoses =
+        projectiles.stream()
+            .filter(projectile -> "Fuel".equals(projectile.getType()))
+            .map(GamePieceProjectile::getPose3d)
+            .toArray(Pose3d[]::new);
     // Publish to telemetry using AdvantageKit
     Logger.recordOutput("FieldSimulation/FuelPositions", fuelPoses);
+    Logger.recordOutput("FieldSimulation/FuelProjectilePositions", fuelProjectilePoses);
+    Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
   }
 }

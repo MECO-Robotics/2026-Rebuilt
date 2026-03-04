@@ -70,15 +70,16 @@ public class FlywheelIOSim implements FlywheelIO {
 
   @Override
   public void updateInputs(FlywheelIOInputs inputs) {
+    double measuredVelocityRps = sim.getAngularVelocity().in(RotationsPerSecond);
     double inputVoltage =
         closedLoop
-            ? controller.calculate(sim.getAngularVelocityRPM(), velocitySetpoint)
-                + feedforward.calculateWithVelocities(sim.getAngularVelocityRPM(), velocitySetpoint)
+            ? controller.calculate(measuredVelocityRps, velocitySetpoint)
+                + feedforward.calculateWithVelocities(measuredVelocityRps, velocitySetpoint)
             : voltageSetpoint;
     sim.setInputVoltage(inputVoltage);
     sim.update(0.02);
 
-    inputs.velocity = sim.getAngularVelocityRPM();
+    inputs.velocity = sim.getAngularVelocity().in(RotationsPerSecond);
     inputs.position = sim.getAngularPositionRotations();
     inputs.desiredVelocity = velocitySetpoint;
 

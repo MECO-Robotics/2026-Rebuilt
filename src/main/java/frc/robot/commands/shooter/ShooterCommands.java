@@ -8,12 +8,18 @@ import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
+import frc.robot.simulation.LaunchedFuelSim;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.util.UnitInterpolatingMap;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
 /** Factory methods for coordinated shooter/indexer/conveyor command groups. */
 public class ShooterCommands {
+  private static LaunchedFuelSim launchedFuelSimulation;
+
+  public static void setLaunchedFuelSimulation(LaunchedFuelSim sim) {
+    launchedFuelSimulation = sim;
+  }
 
   /** Conveyor roller preset voltages. */
   public final class CONVEYOR_VOLTS {
@@ -73,7 +79,8 @@ public class ShooterCommands {
     return Commands.parallel(
         new FlywheelVoltageCommand(bottomIntakingRoller, INDEXER_VOLTS.FEED),
         new FlywheelVoltageCommand(topIntakingRoller, INDEXER_VOLTS.FEEDOTHER),
-        new FlywheelVoltageCommand(conveyorRoller, CONVEYOR_VOLTS.FEED));
+        new FlywheelVoltageCommand(conveyorRoller, CONVEYOR_VOLTS.FEED),
+        launchedFuelSimulation.launchCommand());
   }
 
   static {

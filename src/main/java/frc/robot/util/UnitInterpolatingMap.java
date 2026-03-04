@@ -15,9 +15,12 @@ package frc.robot.util;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.Measure;
 import edu.wpi.first.units.Unit;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 public class UnitInterpolatingMap<K extends Unit, V extends Unit> {
   private final InterpolatingDoubleTreeMap map = new InterpolatingDoubleTreeMap();
+  private final NavigableSet<Double> keys = new TreeSet<>();
   private final K keyUnit;
   private final V valueUnit;
 
@@ -27,11 +30,24 @@ public class UnitInterpolatingMap<K extends Unit, V extends Unit> {
   }
 
   public void put(Measure<K> key, Measure<V> value) {
-    map.put(key.in(keyUnit), value.in(valueUnit));
+    var keyValue = key.in(keyUnit);
+    map.put(keyValue, value.in(valueUnit));
+    keys.add(keyValue);
   }
 
   @SuppressWarnings("unchecked")
   public Measure<V> get(Measure<K> key) {
-    return (Measure<V>) valueUnit.of(map.get(key.in(keyUnit)));
+    if (keys.isEmpty()) {
+      return (Measure<V>) valueUnit.of(0.0);
+    }
+
+    var keyValue = key.in(keyUnit);
+    var clampedKey = Math.max(keys.first(), Math.min(keys.last(), keyValue));
+    var interpolated = map.get(clampedKey);
+    if (interpolated == null) {
+      return (Measure<V>) valueUnit.of(0.0);
+    }
+
+    return (Measure<V>) valueUnit.of(interpolated);
   }
 }

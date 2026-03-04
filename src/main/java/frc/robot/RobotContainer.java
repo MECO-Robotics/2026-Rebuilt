@@ -15,7 +15,6 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.DriveCommands;
 import frc.robot.commands.IntakeCommands;
@@ -27,6 +26,7 @@ import frc.robot.constants.DriveMotorConstants;
 import frc.robot.constants.FlywheelConstants;
 import frc.robot.constants.PositionJointConstants;
 import frc.robot.simulation.IntakeSim;
+import frc.robot.simulation.LaunchedFuelSim;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
@@ -58,6 +58,7 @@ public class RobotContainer {
   private final PositionJoint hood;
   private final RobotRemyVisualizer robotRemyVisualizer;
   private final IntakeSim intakeSim;
+  private final LaunchedFuelSim launchedFuelSim;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -88,10 +89,6 @@ public class RobotContainer {
                 ? PhoenixOdometryThread.getInstance()
                 : null,
             null);
-
-    intakeSim = new IntakeSim(drive.getSimulation());
-
-    IntakeCommands.setIntakeSimulation(intakeSim);
 
     topIndexer =
         new Flywheel(
@@ -128,6 +125,12 @@ public class RobotContainer {
             PositionJointIO.fromSparkMax("Hood", PositionJointConstants.HOOD_CONFIG),
             PositionJointConstants.HOOD_GAINS);
 
+    intakeSim = new IntakeSim(drive.getSimulation());
+    launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
+
+    IntakeCommands.setIntakeSimulation(intakeSim);
+    ShooterCommands.setLaunchedFuelSimulation(launchedFuelSim);
+
     robotRemyVisualizer =
         new RobotRemyVisualizer(
             drive::getPose,
@@ -138,28 +141,6 @@ public class RobotContainer {
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
-    // // Set up SysId routines
-    /*
-     * autoChooser.addOption(
-     * "Drive Wheel Radius Characterization",
-     * DriveCommands.wheelRadiusCharacterization(drive));
-     * autoChooser.addOption(
-     * "Drive Simple FF Characterization",
-     * DriveCommands.feedforwardCharacterization(drive));
-     * autoChooser.addOption(
-     * "Drive SysId (Quasistatic Forward)",
-     * drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-     * autoChooser.addOption(
-     * "Drive SysId (Quasistatic Reverse)",
-     * drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-     * autoChooser.addOption(
-     * "Drive SysId (Dynamic Forward)",
-     * drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-     * autoChooser.addOption(
-     * "Drive SysId (Dynamic Reverse)",
-     * drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-     */
 
     // Configure the button bindings
     configureButtonBindings();
@@ -180,7 +161,7 @@ public class RobotContainer {
             () -> -controller.getLeftX(),
             () -> -controller.getRightX()));
 
-    // // Lock to 0° when A button is held
+    // Lock to 0° when A button is held
     controller
         .x()
         .whileTrue(
@@ -190,6 +171,7 @@ public class RobotContainer {
                 () -> -controller.getLeftX(),
                 () -> Rotation2d.kZero));
 
+    // Auto-aim to hub when Y button is held
     controller
         .y()
         .whileTrue(
@@ -197,6 +179,7 @@ public class RobotContainer {
                     drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
                 .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
 
+    // * INTAKE BINDS */
     controller
         .rightBumper()
         .whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
@@ -206,17 +189,6 @@ public class RobotContainer {
         .leftBumper()
         .whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller))
         .whileFalse(IntakeCommands.stowIntake(intakeRack, intakeRoller));
-
-    controller
-        .pov(0)
-        .whileTrue(
-            Commands.runEnd(
-                () -> intakeRack.setVoltage(-6), () -> intakeRack.setVoltage(0), intakeRack));
-    controller
-        .pov(180)
-        .whileTrue(
-            Commands.runEnd(
-                () -> intakeRack.setVoltage(6), () -> intakeRack.setVoltage(0), intakeRack));
   }
 
   public void updateDashboardOutputs() {

@@ -40,6 +40,10 @@ public class IntakeSim {
     return intakeSimulation.obtainGamePieceFromIntake();
   }
 
+  public int getStoredFuelCount() {
+    return intakeSimulation.getGamePiecesAmount();
+  }
+
   public Command startIntake() {
     return Commands.run(() -> setRunning(true));
   }

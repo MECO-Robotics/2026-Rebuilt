@@ -28,11 +28,12 @@ public class ShooterCalculator {
   public static final Translation2d robotToShooter = new Translation2d(-.19, 0);
 
   public static Command calculateAndShoot(Drive drive, PositionJoint hood, Flywheel shooter) {
-
-    Pose2d shooterPosition =
-        drive.getPose().transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
     Supplier<Distance> distance =
-        () -> Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+        () -> {
+          Pose2d shooterPosition =
+              drive.getPose().transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
+          return Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+        };
 
     DoubleSupplier hoodPosition =
         () -> Maps.shooterDeflectorAngleMap.get(distance.get()).in(Units.Rotations);
