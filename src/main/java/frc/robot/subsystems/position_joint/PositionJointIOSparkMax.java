@@ -106,6 +106,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
               .idleMode(IdleMode.kBrake);
 
     } else {
+      // NOTE: Brushed Motors does not support current limits! BE CAREFUL
       leaderConfig =
           new SparkMaxConfig()
               .apply(

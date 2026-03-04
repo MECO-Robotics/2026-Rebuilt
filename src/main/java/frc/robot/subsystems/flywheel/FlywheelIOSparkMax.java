@@ -83,14 +83,14 @@ public class FlywheelIOSparkMax implements FlywheelIO {
               .smartCurrentLimit(config.currentLimit());
 
     } else {
+      // NOTE: Brushed Motors does not support current limits! BE CAREFUL
       leaderConfig =
           new SparkMaxConfig()
               .apply(
                   new EncoderConfig()
                       .positionConversionFactor(1.0 / config.gearRatio())
                       .velocityConversionFactor(1.0 / (60.0 * config.gearRatio()))
-                      .inverted(config.reversed()[0]))
-              .smartCurrentLimit(config.currentLimit());
+                      .inverted(config.reversed()[0]));
     }
 
     motors[0].configure(
