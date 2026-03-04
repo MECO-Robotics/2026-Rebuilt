@@ -16,6 +16,7 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 /** Continuously sets a hood joint position from a distance-to-angle heuristic. */
 public class ShooterCalculator {
@@ -32,7 +33,10 @@ public class ShooterCalculator {
         () -> {
           Pose2d shooterPosition =
               drive.getPose().transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
-          return Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+          Distance distanceToHub =
+              Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+          Logger.recordOutput("Shooter/DistanceToHubMeters", distanceToHub.in(Units.Meters));
+          return distanceToHub;
         };
 
     DoubleSupplier hoodPosition =

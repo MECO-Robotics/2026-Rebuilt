@@ -202,7 +202,10 @@ public class DriveCommands {
     Supplier<Rotation2d> angleToHub =
         () ->
             flipRotation2dAlliance(
-                Hub.hubPosition().minus(drive.getPose().getTranslation()).getAngle());
+                Hub.hubPosition()
+                    .minus(drive.getPose().getTranslation())
+                    .getAngle()
+                    .plus(Rotation2d.fromDegrees(180)));
 
     return joystickDriveAtAngle(drive, xSupplier, ySupplier, angleToHub);
   }
