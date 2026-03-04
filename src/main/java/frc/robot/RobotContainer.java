@@ -8,6 +8,7 @@
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -142,6 +143,17 @@ public class RobotContainer {
             shooterFlywheel::getPosition,
             intakeRack::getPosition,
             () -> 0);
+
+    NamedCommands.registerCommand(
+        "DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
+    NamedCommands.registerCommand(
+        "StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller));
+    NamedCommands.registerCommand(
+        "AgitateIntake", IntakeCommands.agitateIntake(intakeRack, intakeRoller));
+    NamedCommands.registerCommand(
+        "FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
+    NamedCommands.registerCommand(
+        "IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
