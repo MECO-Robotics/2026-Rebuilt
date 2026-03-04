@@ -69,7 +69,7 @@ public class PositionJointConstants {
       boolean[] reversed,
       double gearRatio,
       double momentOfInertiaKgMetersSquared,
-      double currentLimit,
+      int currentLimit,
       GravityType gravity,
       EncoderType encoderType,
       int encoderID,
