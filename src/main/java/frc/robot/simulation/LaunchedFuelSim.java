@@ -187,9 +187,9 @@ public class LaunchedFuelSim {
 
   private double getRandomizedLaunchAngleRadians() {
     double baseAngleRadians = getLaunchAngleRadians();
-    double jitterScale =
-        1.0 + (Math.random() * 2.0 - 1.0) * MapleSimConstants.SHOT_ANGLE_RANDOMNESS_RATIO;
-    double randomizedAngleRadians = baseAngleRadians * jitterScale;
+    double jitterRadians =
+        (Math.random() * 2.0 - 1.0) * MapleSimConstants.SHOT_ANGLE_RANDOMNESS_RADIANS;
+    double randomizedAngleRadians = baseAngleRadians + jitterRadians;
     return MathUtil.clamp(
         randomizedAngleRadians,
         MapleSimConstants.MIN_LAUNCH_ANGLE_RADIANS,

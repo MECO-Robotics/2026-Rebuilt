@@ -62,11 +62,11 @@ public final class MapleSimConstants {
   /** Floor for intra-burst stagger delay to avoid same-tick clumping. */
   public static final double MIN_SHOT_STAGGER_SECONDS = 0.01;
 
-  /** Random launch-angle variation as a fraction of nominal angle (e.g. 0.02 = ±2%). */
-  public static final double SHOT_ANGLE_RANDOMNESS_RATIO = 0.10;
+  /** Max random launch-angle offset (radians) applied to nominal launch angle. */
+  public static final double SHOT_ANGLE_RANDOMNESS_RADIANS = Units.degreesToRadians(1.0);
 
   /** Random projectile-speed variation as a fraction of nominal speed (e.g. 0.01 = ±1%). */
-  public static final double SHOT_VELOCITY_RANDOMNESS_RATIO = 0.10;
+  public static final double SHOT_VELOCITY_RANDOMNESS_RATIO = 0.05;
 
   /** Offset behind the alliance hub where scored fuel is respawned on the field. */
   public static final double HUB_BACK_SPAWN_X_OFFSET_METERS = 0.65;
@@ -78,10 +78,10 @@ public final class MapleSimConstants {
   public static final double HUB_BACK_SPAWN_DIRECTION_RNG_DEG = 45.0;
 
   /** Offset applied to hood angle (radians) to align mechanism zero with shot pitch. */
-  public static final double HOOD_ANGLE_OFFSET_RADIANS = 0.0;
+  public static final double HOOD_ANGLE_OFFSET_RADIANS = Math.toRadians(5.0);
 
   /** Physical clamp range for launched pitch angle. */
-  public static final double MIN_LAUNCH_ANGLE_RADIANS = Math.toRadians(15.0);
+  public static final double MIN_LAUNCH_ANGLE_RADIANS = Math.toRadians(5.0 - 5);
 
-  public static final double MAX_LAUNCH_ANGLE_RADIANS = Math.toRadians(80.0);
+  public static final double MAX_LAUNCH_ANGLE_RADIANS = Math.toRadians(28.0 + 5);
 }
