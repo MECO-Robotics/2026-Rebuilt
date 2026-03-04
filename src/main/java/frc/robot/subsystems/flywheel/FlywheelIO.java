@@ -1,8 +1,8 @@
 package frc.robot.subsystems.flywheel;
 
-import frc.robot.Constants;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelGains;
-import frc.robot.subsystems.flywheel.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.Constants;
+import frc.robot.constants.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -47,6 +47,17 @@ public interface FlywheelIO {
   /** Applies controller/feedforward gains. */
   public default void setGains(FlywheelGains gains) {}
 
+  /** Creates a replay flywheel IO supplier. */
+  public static Supplier<FlywheelIO> replayFactory(String name) {
+    return () ->
+        new FlywheelIO() {
+          @Override
+          public String getName() {
+            return name;
+          }
+        };
+  }
+
   /**
    * Creates a mode-appropriate flywheel IO.
    *
@@ -54,12 +65,22 @@ public interface FlywheelIO {
    * IO during log replay.
    */
   public static FlywheelIO fromMode(
-      String name, FlywheelHardwareConfig config, Supplier<FlywheelIO> realFactory) {
+      String name, FlywheelHardwareConfig config, Supplier<FlywheelIO> subsystemSupplier) {
     return switch (Constants.currentMode) {
-      case REAL -> realFactory.get();
+      case REAL -> subsystemSupplier.get();
       case SIM -> new FlywheelIOSim(name, config);
-      default -> new FlywheelIOReplay(name);
+      default -> replayFactory(name).get();
     };
+  }
+
+  /** Creates mode-appropriate flywheel IO using SparkMax for real hardware. */
+  public static FlywheelIO fromSparkMax(String name, FlywheelHardwareConfig config) {
+    return fromMode(name, config, () -> new FlywheelIOSparkMax(name, config));
+  }
+
+  /** Creates mode-appropriate flywheel IO using TalonFX for real hardware. */
+  public static FlywheelIO fromTalonFX(String name, FlywheelHardwareConfig config) {
+    return fromMode(name, config, () -> new FlywheelIOTalonFX(name, config));
   }
 
   /** Returns a unique telemetry/logging name for this flywheel. */

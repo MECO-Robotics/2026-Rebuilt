@@ -1,14 +1,16 @@
-package frc.robot.subsystems.drive.azimuth_motor;
+package frc.robot.constants;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.subsystems.drive.DriveConstants;
 
 /** Constants and hardware mappings for drivetrain azimuth/steering motors. */
 public class AzimuthMotorConstants {
-  // by default, the drive is set to the RoboRio's CANBus (you can also make it the rio it by doing
+  // by default, the drive is set to the RoboRio's CANBus (you can also make it
+  // the rio it by doing
   // "")
-  // change this value if using CANivore to CANivore's Bus name, set in Phoenix Tuner X
-  // (if necessary, do this in DriveMotorConstants.java if drive motors are connected
+  // change this value if using CANivore to CANivore's Bus name, set in Phoenix
+  // Tuner X
+  // (if necessary, do this in DriveMotorConstants.java if drive motors are
+  // connected
   // to CANivore as well)
   public static final String canBusName = "MECO CANIvore";
 
@@ -80,8 +82,6 @@ public class AzimuthMotorConstants {
           Rotation2d.fromRotations(-0.348877),
           canBusName);
 
-  public static final AzimuthMotorGains EXAMPLE_GAINS = new AzimuthMotorGains(15, 0, 0, 0.25, 2, 0);
-
-  public static final AzimuthMotorGains EXAMPLE_GAINS_SIM =
-      new AzimuthMotorGains(35, 0, 0, 0.0, 3, 0);
+  public static final AzimuthMotorGains AZIMUTH_MOTOR_GAINS =
+      new AzimuthMotorGains(100, 0, 0, 0.25, 2, 0);
 }

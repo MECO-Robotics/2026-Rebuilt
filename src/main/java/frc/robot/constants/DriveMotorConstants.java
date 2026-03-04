@@ -1,13 +1,14 @@
-package frc.robot.subsystems.drive.drive_motor;
-
-import frc.robot.subsystems.drive.DriveConstants;
+package frc.robot.constants;
 
 /** Constants and hardware mappings for drivetrain wheel motors. */
 public class DriveMotorConstants {
-  // by default, the drive is set to the RoboRio's CANBus (you can also make it the rio it by doing
+  // by default, the drive is set to the RoboRio's CANBus (you can also make it
+  // the rio it by doing
   // "")
-  // change this value if using CANivore to CANivore's Bus name, set in Phoenix Tuner X
-  // (if necessary, do this in AzimuthMotorConstants.java if drive motors are connected
+  // change this value if using CANivore to CANivore's Bus name, set in Phoenix
+  // Tuner X
+  // (if necessary, do this in AzimuthMotorConstants.java if drive motors are
+  // connected
   // to CANivore as well)
   public static final String canBusName = "MECO CANIvore";
 
@@ -35,8 +36,6 @@ public class DriveMotorConstants {
       new DriveMotorHardwareConfig(
           new int[] {8}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 40, canBusName);
 
-  public static final DriveMotorGains EXAMPLE_GAINS = new DriveMotorGains(1, 0, 0, 0.5, 0.71, 0);
-
-  public static final DriveMotorGains EXAMPLE_GAINS_SIM =
-      new DriveMotorGains(1, 0, 0, 0.15, 0.91, 0);
+  public static final DriveMotorGains DRIVE_MOTOR_GAINS =
+      new DriveMotorGains(12, 0, 0, 0.5, 0.71, 0);
 }

@@ -1,4 +1,4 @@
-package frc.robot.commands.shooter;
+package frc.robot.constants;
 
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularVelocityUnit;

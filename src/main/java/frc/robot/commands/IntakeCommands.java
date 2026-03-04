@@ -1,9 +1,10 @@
 package frc.robot.commands;
 
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
+import frc.robot.commands.position_joint.PositionJointPositionCommand;
+import frc.robot.simulation.IntakeSim;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
@@ -11,14 +12,20 @@ import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 /** Factory methods for coordinated intake-rack and intake-roller command groups. */
 public class IntakeCommands {
 
+  private static IntakeSim intakeSimulation;
+
+  public static void setIntakeSimulation(IntakeSim sim) {
+    intakeSimulation = sim;
+  }
+
   /** Intake rotation preset positions. */
-  public static final class ROTATION_POSITIONS {
+  public static final class INTAKE_POSITIONS {
     public static final LoggedTunableNumber STOW =
         new LoggedTunableNumber("IntakePosition/Stow", 0);
     public static final LoggedTunableNumber DEPLOY =
-        new LoggedTunableNumber("IntakePosition/Deploy", Units.degreesToRotations(101));
+        new LoggedTunableNumber("IntakePosition/Deploy", .21);
     public static final LoggedTunableNumber SAFE =
-        new LoggedTunableNumber("IntakePosition/Safe", Units.degreesToRotations(101));
+        new LoggedTunableNumber("IntakePosition/Safe", 0.1);
   }
 
   /** Intake roller preset voltages. */
@@ -34,8 +41,9 @@ public class IntakeCommands {
   /** Stows the intake by moving the rotation motor to the stop position and stopping the roller. */
   public static Command stowIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
     return Commands.parallel(
-        // new PositionJointPositionCommand(rotationMotor, ROTATION_POSITIONS.STOW),
-        new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.STOP));
+        new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW),
+        new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.STOP),
+        intakeSimulation.stopIntake());
   }
 
   /**
@@ -44,8 +52,9 @@ public class IntakeCommands {
    */
   public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
     return Commands.parallel(
-        // new PositionJointPositionCommand(rotationMotor, ROTATION_POSITIONS.DEPLOY),
-        new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE));
+        new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.DEPLOY),
+        new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
+        intakeSimulation.startIntake());
   }
 
   /**
@@ -57,12 +66,11 @@ public class IntakeCommands {
         new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.EJECT),
         Commands.sequence(
                 // TODO: need to fix depending if positions are positive or negative
-                PositionJoint.setPosition(rotationMotor, ROTATION_POSITIONS.SAFE),
+                PositionJoint.setPosition(rotationMotor, INTAKE_POSITIONS.SAFE),
+                Commands.waitUntil(() -> rotationMotor.getPosition() > INTAKE_POSITIONS.SAFE.get()),
+                PositionJoint.setPosition(rotationMotor, INTAKE_POSITIONS.DEPLOY),
                 Commands.waitUntil(
-                    () -> rotationMotor.getPosition() > ROTATION_POSITIONS.SAFE.get()),
-                PositionJoint.setPosition(rotationMotor, ROTATION_POSITIONS.DEPLOY),
-                Commands.waitUntil(
-                    () -> rotationMotor.getPosition() > ROTATION_POSITIONS.DEPLOY.get()))
+                    () -> rotationMotor.getPosition() > INTAKE_POSITIONS.DEPLOY.get()))
             .repeatedly());
   }
 }

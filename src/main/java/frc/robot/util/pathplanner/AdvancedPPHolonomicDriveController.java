@@ -43,33 +43,66 @@ public class AdvancedPPHolonomicDriveController implements PathFollowingControll
    * @param translationConstants PID constants for the translation PID controllers
    * @param rotationConstants PID constants for the rotation controller
    * @param period Period of the control loop in seconds
+   * @param translationalP Tunable translation P gain
+   * @param translationalI Tunable translation I gain
+   * @param translationalD Tunable translation D gain
+   * @param rotationalP Tunable rotation P gain
+   * @param rotationalI Tunable rotation I gain
+   * @param rotationalD Tunable rotation D gain
    */
   public AdvancedPPHolonomicDriveController(
-      PIDConstants translationConstants, PIDConstants rotationConstants, double period) {
+      PIDConstants translationConstants,
+      PIDConstants rotationConstants,
+      double period,
+      LoggedTunableNumber translationalP,
+      LoggedTunableNumber translationalI,
+      LoggedTunableNumber translationalD,
+      LoggedTunableNumber rotationalP,
+      LoggedTunableNumber rotationalI,
+      LoggedTunableNumber rotationalD) {
 
-    translationalP = new LoggedTunableNumber("Pathplanner/TranslationalP", translationConstants.kP);
-    translationalI = new LoggedTunableNumber("Pathplanner/TranslationalI", translationConstants.kI);
-    translationalD = new LoggedTunableNumber("Pathplanner/TranslationalD", translationConstants.kD);
+    this.translationalP = translationalP;
+    this.translationalI = translationalI;
+    this.translationalD = translationalD;
 
-    rotationalP = new LoggedTunableNumber("Pathplanner/RotationalP", rotationConstants.kP);
-    rotationalI = new LoggedTunableNumber("Pathplanner/RotationalI", rotationConstants.kI);
-    rotationalD = new LoggedTunableNumber("Pathplanner/RotationalD", rotationConstants.kD);
+    this.rotationalP = rotationalP;
+    this.rotationalI = rotationalI;
+    this.rotationalD = rotationalD;
 
     this.xController =
-        new PIDController(
-            translationConstants.kP, translationConstants.kI, translationConstants.kD, period);
+        new PIDController(translationalP.get(), translationalI.get(), translationalD.get(), period);
     this.xController.setIntegratorRange(-translationConstants.iZone, translationConstants.iZone);
 
     this.yController =
-        new PIDController(
-            translationConstants.kP, translationConstants.kI, translationConstants.kD, period);
+        new PIDController(translationalP.get(), translationalI.get(), translationalD.get(), period);
     this.yController.setIntegratorRange(-translationConstants.iZone, translationConstants.iZone);
 
     // Temp rate limit of 0, will be changed in calculate
     this.rotationController =
-        new PIDController(rotationConstants.kP, rotationConstants.kI, rotationConstants.kD, period);
+        new PIDController(rotationalP.get(), rotationalI.get(), rotationalD.get(), period);
     this.rotationController.setIntegratorRange(-rotationConstants.iZone, rotationConstants.iZone);
     this.rotationController.enableContinuousInput(-Math.PI, Math.PI);
+  }
+
+  /**
+   * Constructs a HolonomicDriveController
+   *
+   * @param translationConstants PID constants for the translation PID controllers
+   * @param rotationConstants PID constants for the rotation controller
+   * @param period Period of the control loop in seconds
+   */
+  public AdvancedPPHolonomicDriveController(
+      PIDConstants translationConstants, PIDConstants rotationConstants, double period) {
+    this(
+        translationConstants,
+        rotationConstants,
+        period,
+        new LoggedTunableNumber("Pathplanner/TranslationalP", translationConstants.kP),
+        new LoggedTunableNumber("Pathplanner/TranslationalI", translationConstants.kI),
+        new LoggedTunableNumber("Pathplanner/TranslationalD", translationConstants.kD),
+        new LoggedTunableNumber("Pathplanner/RotationalP", rotationConstants.kP),
+        new LoggedTunableNumber("Pathplanner/RotationalI", rotationConstants.kI),
+        new LoggedTunableNumber("Pathplanner/RotationalD", rotationConstants.kD));
   }
 
   /**

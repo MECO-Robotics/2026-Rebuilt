@@ -1,4 +1,4 @@
-package frc.robot.subsystems.flywheel;
+package frc.robot.constants;
 
 /** Shared constants and configuration records for flywheel/roller mechanisms. */
 public class FlywheelConstants {
@@ -75,7 +75,12 @@ public class FlywheelConstants {
   // ------------
   public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG =
       new FlywheelHardwareConfig(
-          new int[] {34, 35}, new boolean[] {false, true}, 22.0 / 14, 0.025, 40, "MECO CANIvore");
+          new int[] {34, 35},
+          new boolean[] {false, true},
+          22.0 / 14,
+          0.006421,
+          60,
+          "MECO CANIvore");
   public static final FlywheelGains FLYWHEEL_ROLLER_GAINS =
       new FlywheelGains(0.3, 0.0, 0.0, 25, 0.2, 0.0, 2.5, 1.0);
 }

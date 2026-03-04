@@ -1,16 +1,22 @@
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drive.module;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants.AzimuthMotorGains;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorGains;
+import frc.robot.constants.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.constants.DriveConstants;
+import frc.robot.constants.DriveMotorConstants.DriveMotorGains;
+import frc.robot.constants.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOInputsAutoLogged;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants.DriveMotorGains;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIOInputsAutoLogged;
 import frc.robot.util.OnboardModuleState;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.littletonrobotics.junction.Logger;
 
 /** Wrapper for one swerve module (drive motor + azimuth motor). */
@@ -38,6 +44,126 @@ public class Module {
 
     driveName = driveMotorIO.getName();
     azimuthName = azimuthMotorIO.getName();
+  }
+
+  /** Creates a swerve module wrapper from a module IO bundle. */
+  public Module(ModuleIO moduleIO) {
+    this(moduleIO.driveMotorIO(), moduleIO.azimuthMotorIO());
+  }
+
+  /** Creates a mode-appropriate module from a real-hardware module factory. */
+  public static Module fromMode(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      Supplier<ModuleIO> realFactory) {
+    return new Module(ModuleIO.fromMode(moduleName, driveConfig, azimuthConfig, realFactory));
+  }
+
+  /**
+   * Creates a mode-appropriate module from independently selected drive/azimuth real factory
+   * builders. Names and configs are provided once and reused for both factories.
+   */
+  public static Module fromMode(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder) {
+    return fromMode(
+        moduleName,
+        driveConfig,
+        azimuthConfig,
+        ModuleIO.factory(
+            driveFactoryBuilder.apply(moduleName + "Drive", driveConfig),
+            azimuthFactoryBuilder.apply(moduleName + "Steer", azimuthConfig)));
+  }
+
+  /**
+   * Creates a mode-appropriate module from independently selected drive/azimuth real factory
+   * builders and a custom sim factory.
+   */
+  public static Module fromMode(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder,
+      Supplier<ModuleIO> simFactory) {
+    return fromMode(
+        moduleName,
+        driveConfig,
+        azimuthConfig,
+        ModuleIO.factory(
+            driveFactoryBuilder.apply(moduleName + "Drive", driveConfig),
+            azimuthFactoryBuilder.apply(moduleName + "Steer", azimuthConfig)),
+        simFactory);
+  }
+
+  /**
+   * Creates a mode-appropriate module from independently selected drive/azimuth real factory
+   * builders and optional Maple module simulation state.
+   */
+  public static Module fromMode(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      BiFunction<String, DriveMotorHardwareConfig, Supplier<DriveMotorIO>> driveFactoryBuilder,
+      BiFunction<String, AzimuthMotorHardwareConfig, Supplier<AzimuthMotorIO>>
+          azimuthFactoryBuilder,
+      SwerveModuleSimulation moduleSimulation) {
+    Supplier<ModuleIO> simFactory =
+        moduleSimulation != null
+            ? () ->
+                new ModuleIOSim(
+                    moduleSimulation,
+                    moduleName + "Drive",
+                    driveConfig,
+                    moduleName + "Steer",
+                    azimuthConfig)
+            : ModuleIO.simFactory(moduleName, driveConfig, azimuthConfig);
+    return fromMode(
+        moduleName,
+        driveConfig,
+        azimuthConfig,
+        driveFactoryBuilder,
+        azimuthFactoryBuilder,
+        simFactory);
+  }
+
+  /** Creates a mode-appropriate module from real-hardware and custom sim module factories. */
+  public static Module fromMode(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      Supplier<ModuleIO> realFactory,
+      Supplier<ModuleIO> simFactory) {
+    return new Module(
+        ModuleIO.fromMode(moduleName, driveConfig, azimuthConfig, realFactory, simFactory));
+  }
+
+  /**
+   * Creates a TalonFX-based module with default sim/replay behavior and derived drive/steer names.
+   */
+  public static Module fromTalonFX(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig) {
+    return new Module(ModuleIO.fromTalonFX(moduleName, driveConfig, azimuthConfig));
+  }
+
+  /**
+   * Creates a TalonFX-based module with custom simulation endpoints and derived drive/steer names.
+   */
+  public static Module fromTalonFX(
+      String moduleName,
+      DriveMotorHardwareConfig driveConfig,
+      AzimuthMotorHardwareConfig azimuthConfig,
+      ModuleIOSim simBundle) {
+    Supplier<ModuleIO> simFactory = () -> simBundle;
+    return new Module(ModuleIO.fromTalonFX(moduleName, driveConfig, azimuthConfig, simFactory));
   }
 
   public void periodic() {

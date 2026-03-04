@@ -1,8 +1,8 @@
 package frc.robot.subsystems.position_joint;
 
-import frc.robot.Constants;
-import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointGains;
-import frc.robot.subsystems.position_joint.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.constants.Constants;
+import frc.robot.constants.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.PositionJointConstants.PositionJointHardwareConfig;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -61,6 +61,17 @@ public interface PositionJointIO {
   /** Resets mechanism position to the implementation-defined zero. */
   public default void resetPosition() {}
 
+  /** Creates a replay position-joint IO supplier. */
+  public static Supplier<PositionJointIO> replayFactory(String name) {
+    return () ->
+        new PositionJointIO() {
+          @Override
+          public String getName() {
+            return name;
+          }
+        };
+  }
+
   /**
    * Creates a mode-appropriate position joint IO.
    *
@@ -68,12 +79,24 @@ public interface PositionJointIO {
    * IO during log replay.
    */
   public static PositionJointIO fromMode(
-      String name, PositionJointHardwareConfig config, Supplier<PositionJointIO> realFactory) {
+      String name,
+      PositionJointHardwareConfig config,
+      Supplier<PositionJointIO> subsystemSupplier) {
     return switch (Constants.currentMode) {
-      case REAL -> realFactory.get();
+      case REAL -> subsystemSupplier.get();
       case SIM -> new PositionJointIOSim(name, config);
-      default -> new PositionJointIOReplay(name);
+      default -> replayFactory(name).get();
     };
+  }
+
+  /** Creates mode-appropriate position-joint IO using SparkMax for real hardware. */
+  public static PositionJointIO fromSparkMax(String name, PositionJointHardwareConfig config) {
+    return fromMode(name, config, () -> new PositionJointIOSparkMax(name, config));
+  }
+
+  /** Creates mode-appropriate position-joint IO using TalonFX for real hardware. */
+  public static PositionJointIO fromTalonFX(String name, PositionJointHardwareConfig config) {
+    return fromMode(name, config, () -> new PositionJointIOTalonFX(name, config));
   }
 
   /** Returns a unique telemetry/logging name for this joint. */

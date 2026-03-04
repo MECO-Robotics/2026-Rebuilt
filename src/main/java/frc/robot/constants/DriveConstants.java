@@ -5,10 +5,13 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.subsystems.drive;
+package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.FeetPerSecond;
+import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Kilogram;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Pound;
 
 import com.ctre.phoenix6.CANBus;
 import com.pathplanner.lib.config.ModuleConfig;
@@ -18,19 +21,27 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.LinearVelocity;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
+import edu.wpi.first.units.measure.Mass;
+import frc.robot.util.mechanical_advantage.swerve.ModuleLimits;
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 
 /** Mechanical, electrical, and path-planning constants for the swerve drivetrain. */
 public class DriveConstants {
+  public static double spinMultipler =
+      0.75; // Multiplier for max spin speed, used to reduce spin speed for better control during
+  // testing
   public static final double odometryFrequency =
       new CANBus(DriveMotorConstants.canBusName).isNetworkFD()
               && new CANBus(AzimuthMotorConstants.canBusName).isNetworkFD()
           ? 250.0
-          : 100.0; // If both Azimuth and Drive use CANFD, sample odometry at 250 Hz, if either loop
+          : 100.0; // If both Azimuth and Drive use CANFD, sample odometry at 250 Hz, if either
+  // loop
   // is not FD, sample odometry at 100 Hz
 
-  // NavX's highest allowed odometry frequency is now 200, this change reflects that
+  // NavX's highest allowed odometry frequency is now 200, this change reflects
+  // that
   public static final double navXFrequency =
       new CANBus(DriveMotorConstants.canBusName).isNetworkFD()
               && new CANBus(AzimuthMotorConstants.canBusName).isNetworkFD()
@@ -53,24 +64,35 @@ public class DriveConstants {
   public static final double kDriveInertia = 0.025;
 
   public static final LinearVelocity maxSpeedAt12Volts =
-      FeetPerSecond.of(15); // MK4i 16.5 ft/s L3 Kraken FOC With 14t pinion
+      FeetPerSecond.of(15); // MK4i 16.5 ft/s L3 Kraken FOC With
+  // 14t pinion
+
+  // Sim motor config
+  public static final DCMotor driveGearbox = DCMotor.getKrakenX60Foc(1);
+  public static final DCMotor turnGearbox = DCMotor.getKrakenX60Foc(1);
+
+  // Sim Module config
+  public static final int gearingLevel = 3;
+  public static final int drivePinionTeeth = 11;
+  public static final SwerveModuleSimulationConfig simModule =
+      COTS.ofSwerveXFlipped(
+          turnGearbox, driveGearbox, COTS.WHEELS.VEX_GRIP_V2.cof, gearingLevel, drivePinionTeeth);
 
   // Drive motor configuration
-  public static final int driveMotorCurrentLimit = 50;
-  public static final double driveMotorGearRatio =
-      1 / ((14.0 / 50.0) * (28.0 / 16.0) * (15.0 / 45.0)); // Mk4i L3 with 14t pinion
-  public static final DCMotor driveGearbox = DCMotor.getKrakenX60Foc(1);
+  public static final int driveMotorCurrentLimit = 80;
+  public static final double driveMotorGearRatio = simModule.DRIVE_GEAR_RATIO;
 
   // Drive encoder configuration
   public static final double driveEncoderPositionFactor =
-      2 * Math.PI / driveMotorGearRatio; // Rotor Rotations -> Wheel Radians
+      2 * Math.PI / driveMotorGearRatio; // Rotor Rotations ->
+  // Wheel Radians
   public static final double driveEncoderVelocityFactor =
-      (2 * Math.PI) / 60.0 / driveMotorGearRatio; // Rotor RPM -> Wheel Rad/Sec
+      (2 * Math.PI) / 60.0 / driveMotorGearRatio; // Rotor RPM ->
+  // Wheel Rad/Sec
 
   // Turn motor configuration
-  public static final double steerMotorGearRatio = 150.0 / 7.0; // MK4i
-  public static final int turnMotorCurrentLimit = 20;
-  public static final DCMotor turnGearbox = DCMotor.getKrakenX60Foc(1);
+  public static final double steerMotorGearRatio = simModule.STEER_GEAR_RATIO;
+  public static final int turnMotorCurrentLimit = 60;
 
   // Turn encoder configuration
   public static final double turnEncoderPositionFactor =
@@ -79,12 +101,12 @@ public class DriveConstants {
       (2 * Math.PI) / 60.0 / steerMotorGearRatio; // RPM -> Rad/Sec
 
   // PathPlanner configuration
-  public static final double robotMassKg = 74.088;
+  public static final Mass robotMass = Pound.of(80); // Convert kg to pounds
   public static final double robotMOI = 6.883;
-  public static final double wheelCOF = 1.2;
+  public static final double wheelCOF = 2.255;
   public static final RobotConfig ppConfig =
       new RobotConfig(
-          robotMassKg,
+          robotMass.in(Kilogram),
           robotMOI,
           new ModuleConfig(
               driveWheelRadiusMeters,
@@ -98,24 +120,23 @@ public class DriveConstants {
   public static final PIDConstants translationPID = new PIDConstants(5, 0, 0);
   public static final PIDConstants rotationPID = new PIDConstants(5, 0, 0);
 
-  // add when maple sim is up
+  public static final ModuleLimits defaultModuleLimits = new ModuleLimits(10, 4, 9, 8);
 
-  //   public static final DriveTrainSimulationConfig mapleSimConfig =
-  //       DriveTrainSimulationConfig.Default()
-  //           .withCustomModuleTranslations(moduleTranslations)
-  //           .withRobotMass(Kilogram.of(robotMassKg))
-  //           .withGyro(COTS.ofPigeon2())
-  //           .withSwerveModule(
-  //               () ->
-  //                   new SwerveModuleSimulation(
-  //                       new SwerveModuleSimulationConfig(
-  //                           driveGearbox,
-  //                           turnGearbox,
-  //                           driveMotorGearRatio,
-  //                           18.0,
-  //                           Volts.of(0.1),
-  //                           Volts.of(0.1),
-  //                           Meters.of(driveWheelRadiusMeters),
-  //                           KilogramSquareMeters.of(0.02),
-  //                           wheelCOF)));
+  // Bumper-to-bumper chassis dimensions used by MapleSim collision body.
+  public static final double mapleSimBumperLengthInches = 30.0;
+  public static final double mapleSimBumperWidthInches = 30.0;
+  // MapleSim contact tuning (dyn4j fixture values). Keep defaults unless you need
+  // less
+  // sliding/bounce.
+  public static final double mapleSimBumperFriction = 0.65;
+  public static final double mapleSimBumperRestitution = 0.08;
+
+  public static final DriveTrainSimulationConfig mapleSimConfig =
+      DriveTrainSimulationConfig.Default()
+          .withBumperSize(
+              Inches.of(mapleSimBumperLengthInches), Inches.of(mapleSimBumperWidthInches))
+          .withCustomModuleTranslations(moduleTranslations)
+          .withRobotMass(robotMass)
+          .withGyro(COTS.ofPigeon2())
+          .withSwerveModule(simModule);
 }
