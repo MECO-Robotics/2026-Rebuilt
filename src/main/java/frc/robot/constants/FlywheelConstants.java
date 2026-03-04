@@ -82,5 +82,5 @@ public class FlywheelConstants {
           60,
           "MECO CANIvore");
   public static final FlywheelGains FLYWHEEL_ROLLER_GAINS =
-      new FlywheelGains(0.3, 0.0, 0.0, 25, 0.2, 0.0, 2.5, 1.0);
+      new FlywheelGains(0.3, 0.0, 0.0, 0.25, 0.2, 0.0, 2.5, 1.0);
 }
