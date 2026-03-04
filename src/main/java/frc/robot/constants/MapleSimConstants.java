@@ -25,6 +25,12 @@ public final class MapleSimConstants {
   /** Minimum time between simulated launches while feeding. */
   public static final double SHOT_COOLDOWN_SECONDS = 0.15;
 
+  /** Number of fuel pieces launched per simulated firing event. */
+  public static final int FUEL_PER_SHOT = 4;
+
+  /** Lateral spacing (robot Y axis) between fuel pieces in a burst launch. */
+  public static final double FUEL_BURST_LATERAL_SPACING_METERS = 0.08;
+
   /** Offset behind the alliance hub where scored fuel is respawned on the field. */
   public static final double HUB_BACK_SPAWN_X_OFFSET_METERS = 0.65;
 

@@ -42,7 +42,7 @@ public class LaunchedFuelSim {
     this.shooterFlywheel = shooterFlywheel;
   }
 
-  /** Attempts to launch one fuel from robot storage into the simulated arena. */
+  /** Attempts to launch a burst of fuel from robot storage into the simulated arena. */
   public void tryLaunch() {
     boolean inSim = Constants.currentMode == Constants.Mode.SIM && drive.getSimulation() != null;
     boolean hasVelocity = hasLaunchVelocity();
@@ -64,50 +64,58 @@ public class LaunchedFuelSim {
       return;
     }
 
-    if (!intakeSim.launchFuel()) {
+    int launchedFuelCount = 0;
+    for (int i = 0; i < MapleSimConstants.FUEL_PER_SHOT; i++) {
+      if (!intakeSim.launchFuel()) {
+        break;
+      }
+
+      SimulatedArena.getInstance()
+          .addGamePieceProjectile(
+              new RebuiltFuelOnFly(
+                      drive.getPose().getTranslation(),
+                      getShooterTranslationForBurstIndex(i),
+                      ChassisSpeeds.fromRobotRelativeSpeeds(
+                          drive.getChassisSpeeds(), drive.getRotation()),
+                      drive.getRotation().plus(MapleSimConstants.SHOOTER_YAW_OFFSET),
+                      Meters.of(MapleSimConstants.SHOOTER_HEIGHT_METERS),
+                      MetersPerSecond.of(projectileSpeedMps),
+                      Radians.of(Math.PI / 2 - getLaunchAngleRadians()))
+                  // Set the target center to the Rebbuilt Hub of the current alliance
+                  .withTargetPosition(
+                      () ->
+                          new Translation3d(
+                              FieldConstants.Hub.hubPosition().getX(),
+                              FieldConstants.Hub.hubPosition().getY(),
+                              FieldConstants.Hub.hubHeight))
+                  // Set the tolerance around the rebuilt hub target opening
+                  .withTargetTolerance(
+                      new Translation3d(Units.feetToMeters(2), Units.feetToMeters(2), 0.1))
+                  // Set a callback to run when the fuel hits the target
+                  .withHitTargetCallBack(
+                      () -> SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel()))
+                  // Configure callbacks to visualize the flight trajectory of the projectile
+                  .withProjectileTrajectoryDisplayCallBack(
+                      // Callback for when the fuel will eventually hit the target (if configured)
+                      (pose3ds) ->
+                          Logger.recordOutput(
+                              "Flywheel/FuelProjectileSuccessfulShot",
+                              pose3ds.toArray(Pose3d[]::new)),
+                      // Callback for when the fuel will eventually miss the target, or if no target
+                      // is configured
+                      (pose3ds) ->
+                          Logger.recordOutput(
+                              "Flywheel/FuelProjectileUnsuccessfulShot",
+                              pose3ds.toArray(Pose3d[]::new))));
+      launchedFuelCount++;
+    }
+
+    if (launchedFuelCount == 0) {
       return;
     }
 
-    SimulatedArena.getInstance()
-        .addGamePieceProjectile(
-            new RebuiltFuelOnFly(
-                    drive.getPose().getTranslation(),
-                    MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT,
-                    ChassisSpeeds.fromRobotRelativeSpeeds(
-                        drive.getChassisSpeeds(), drive.getRotation()),
-                    drive.getRotation().plus(MapleSimConstants.SHOOTER_YAW_OFFSET),
-                    Meters.of(MapleSimConstants.SHOOTER_HEIGHT_METERS),
-                    MetersPerSecond.of(projectileSpeedMps),
-                    Radians.of(Math.PI / 2 - getLaunchAngleRadians()))
-                // Set the target center to the Rebbuilt Hub of the current alliance
-                .withTargetPosition(
-                    () ->
-                        new Translation3d(
-                            FieldConstants.Hub.hubPosition().getX(),
-                            FieldConstants.Hub.hubPosition().getY(),
-                            FieldConstants.Hub.hubHeight))
-                // Set the tolerance: x: ±0.5m, y: ±1.2m, z: ±0.3m (this is the size of the
-                // speaker's "mouth")
-                .withTargetTolerance(
-                    new Translation3d(Units.feetToMeters(2), Units.feetToMeters(2), 0.1))
-                // Set a callback to run when the fuel hits the target
-                .withHitTargetCallBack(
-                    () -> SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel()))
-                // Configure callbacks to visualize the flight trajectory of the projectile
-                .withProjectileTrajectoryDisplayCallBack(
-                    // Callback for when the fuel will eventually hit the target (if configured)
-                    (pose3ds) ->
-                        Logger.recordOutput(
-                            "Flywheel/FuelProjectileSuccessfulShot",
-                            pose3ds.toArray(Pose3d[]::new)),
-                    // Callback for when the fuel will eventually miss the target, or if no target
-                    // is configured
-                    (pose3ds) ->
-                        Logger.recordOutput(
-                            "Flywheel/FuelProjectileUnsuccessfulShot",
-                            pose3ds.toArray(Pose3d[]::new))));
-
     lastLaunchTimestampSeconds = Timer.getFPGATimestamp();
+    Logger.recordOutput("FieldSimulation/LaunchDebug/LaunchedFuelCount", launchedFuelCount);
     Logger.recordOutput(
         "FieldSimulation/LaunchDebug/LastLaunchTimestampSec", lastLaunchTimestampSeconds);
   }
@@ -137,6 +145,13 @@ public class LaunchedFuelSim {
 
   private double getProjectileSpeedMps() {
     return Math.abs(shooterFlywheel.getVelocity()) * MapleSimConstants.MPS_PER_FLYWHEEL_RPS;
+  }
+
+  private Translation2d getShooterTranslationForBurstIndex(int burstIndex) {
+    double centeredIndex = burstIndex - (MapleSimConstants.FUEL_PER_SHOT - 1) / 2.0;
+    double lateralOffset = centeredIndex * MapleSimConstants.FUEL_BURST_LATERAL_SPACING_METERS;
+    return MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT.plus(
+        new Translation2d(0.0, lateralOffset));
   }
 
   private Translation2d getHubBackSpawnPosition() {
