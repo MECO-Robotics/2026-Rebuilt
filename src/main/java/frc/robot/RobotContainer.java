@@ -254,11 +254,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    Command selectedAuto = autoChooser.get();
-    if (selectedAuto == null) {
-      DriverStation.reportWarning("Auto chooser returned null command.", false);
-    }
-    return selectedAuto;
+    return autoChooser.get();
   }
 
   /** Logs robot and component transforms for the custom Robot_Remy asset. */

@@ -7,15 +7,12 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.revrobotics.util.StatusLogger;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
-import frc.robot.constants.DriveConstants;
 import java.util.Arrays;
 import java.util.Set;
 import org.ironmaple.simulation.SimulatedArena;
@@ -44,24 +41,6 @@ public class Robot extends LoggedRobot {
         || Constants.currentMode == Constants.Mode.REPLAY) {
       SimulatedArena.overrideInstance(
           new org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt(false));
-      DriverStation.reportWarning(
-          "MapleSim timing configured: dt="
-              + SimulatedArena.getSimulationDt()
-              + ", subTicks="
-              + SimulatedArena.getSimulationSubTicksIn1Period(),
-          false);
-      DriverStation.reportWarning(
-          "[AUTO-DBG] ppConfig: maxDriveVelMPS="
-              + DriveConstants.ppConfig.moduleConfig.maxDriveVelocityMPS
-              + ", wheelRadiusM="
-              + DriveConstants.ppConfig.moduleConfig.wheelRadiusMeters
-              + ", driveCurrentLimit="
-              + DriveConstants.ppConfig.moduleConfig.driveCurrentLimit
-              + ", torqueLoss="
-              + DriveConstants.ppConfig.moduleConfig.torqueLoss
-              + ", driveGearRatio="
-              + DriveConstants.driveMotorGearRatio,
-          false);
     }
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
@@ -102,33 +81,6 @@ public class Robot extends LoggedRobot {
     // Initialize URCL
     Logger.registerURCL(URCL.startExternal());
     StatusLogger.disableAutoLogging(); // Disable REVLib's built-in logging
-    CommandScheduler.getInstance()
-        .onCommandInitialize(
-            (command) -> {
-              if (isPathPlannerCommand(command)) {
-                DriverStation.reportWarning(
-                    "[AUTO-DBG] INIT "
-                        + command.getName()
-                        + " ("
-                        + command.getClass().getName()
-                        + ")",
-                    false);
-              }
-            });
-    CommandScheduler.getInstance()
-        .onCommandFinish(
-            (command) -> {
-              if (isPathPlannerCommand(command)) {
-                DriverStation.reportWarning("[AUTO-DBG] FINISH " + command.getName(), false);
-              }
-            });
-    CommandScheduler.getInstance()
-        .onCommandInterrupt(
-            (command) -> {
-              if (isPathPlannerCommand(command)) {
-                DriverStation.reportWarning("[AUTO-DBG] INTERRUPT " + command.getName(), false);
-              }
-            });
 
     // Start AdvantageKit logger
     Logger.start();
@@ -185,81 +137,7 @@ public class Robot extends LoggedRobot {
 
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {
-      DriverStation.reportWarning(
-          "Scheduling autonomous command: "
-              + autonomousCommand.getName()
-              + " ("
-              + autonomousCommand.getClass().getSimpleName()
-              + ")",
-          false);
-      if (autonomousCommand instanceof PathPlannerAuto pathPlannerAuto) {
-        logAutoInternalCommand(pathPlannerAuto);
-        logAutoPathDurations(pathPlannerAuto.getName());
-      }
       CommandScheduler.getInstance().schedule(autonomousCommand);
-    } else {
-      DriverStation.reportWarning(
-          "Autonomous command is null. Check Auto Choices and PathPlanner autos.", false);
-    }
-  }
-
-  private static boolean isPathPlannerCommand(Command command) {
-    String className = command.getClass().getName().toLowerCase();
-    return className.contains("pathplanner");
-  }
-
-  private static void logAutoPathDurations(String autoName) {
-    try {
-      var paths = PathPlannerAuto.getPathGroupFromAutoFile(autoName);
-      if (paths.isEmpty()) {
-        DriverStation.reportWarning("[AUTO-DBG] Auto has no paths: " + autoName, false);
-        return;
-      }
-      for (int i = 0; i < paths.size(); i++) {
-        var path = paths.get(i);
-        int numPoints = path.numPoints();
-        double pathDistance = numPoints > 0 ? path.getPoint(numPoints - 1).distanceAlongPath : 0.0;
-        var idealTrajectory = path.getIdealTrajectory(DriveConstants.ppConfig);
-        if (idealTrajectory.isEmpty()) {
-          DriverStation.reportWarning(
-              "[AUTO-DBG] Path " + i + " (" + path.name + ") has no ideal trajectory.", false);
-          continue;
-        }
-        double totalTime = idealTrajectory.get().getTotalTimeSeconds();
-        DriverStation.reportWarning(
-            "[AUTO-DBG] Path "
-                + i
-                + " ("
-                + path.name
-                + ") points="
-                + numPoints
-                + ", dist="
-                + pathDistance
-                + ", totalTime="
-                + totalTime
-                + ", finite="
-                + Double.isFinite(totalTime),
-            false);
-      }
-    } catch (Exception e) {
-      DriverStation.reportWarning(
-          "[AUTO-DBG] Failed to inspect auto " + autoName + ": " + e.getMessage(), false);
-    }
-  }
-
-  private static void logAutoInternalCommand(PathPlannerAuto auto) {
-    try {
-      var autoCommandField = PathPlannerAuto.class.getDeclaredField("autoCommand");
-      autoCommandField.setAccessible(true);
-      Object wrapped = autoCommandField.get(auto);
-      String wrappedName = wrapped instanceof Command c ? c.getName() : "n/a";
-      String wrappedClass = wrapped == null ? "null" : wrapped.getClass().getName();
-      DriverStation.reportWarning(
-          "[AUTO-DBG] PathPlannerAuto wrapped command: " + wrappedName + " (" + wrappedClass + ")",
-          false);
-    } catch (Exception e) {
-      DriverStation.reportWarning(
-          "[AUTO-DBG] Failed to inspect PathPlannerAuto internals: " + e.getMessage(), false);
     }
   }
 
