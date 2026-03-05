@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
@@ -170,8 +171,12 @@ public class RobotContainer {
         .whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
         .whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
-    controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
-    controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller));
+    controller
+        .leftBumper()
+        .whileTrue(Commands.run(() -> intakeRoller.setVoltage(10), intakeRoller));
+
+    // controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+    // controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller));
   }
 
   public void updateDashboardOutputs() {
