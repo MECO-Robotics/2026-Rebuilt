@@ -9,7 +9,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -145,24 +144,24 @@ public class RobotContainer {
             drive,
             () -> controller.getLeftY(),
             () -> controller.getLeftX(),
-            () -> controller.getRightX()));
+            () -> -controller.getRightX()));
 
     // Lock to 0° when A button is held
-    controller
-        .x()
-        .whileTrue(
-            DriveCommands.joystickDriveAtAngle(
-                drive,
-                () -> -controller.getLeftY(),
-                () -> -controller.getLeftX(),
-                () -> Rotation2d.kZero));
+    // controller
+    //     .x()
+    //     .whileTrue(
+    //         DriveCommands.joystickDriveAtAngle(
+    //             drive,
+    //             () -> -controller.getLeftY(),
+    //             () -> -controller.getLeftX(),
+    //             () -> Rotation2d.kZero));
 
     // Auto-aim to hub when Y button is held
     controller
         .y()
         .whileTrue(
             DriveCommands.joystickAimToHub(
-                    drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
+                    drive, () -> controller.getLeftY(), () -> controller.getLeftX())
                 .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
 
     // * INTAKE BINDS */
