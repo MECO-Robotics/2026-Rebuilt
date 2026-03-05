@@ -154,6 +154,8 @@ public class RobotContainer {
         "FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
     NamedCommands.registerCommand(
         "IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+    NamedCommands.registerCommand(
+        "Flywheel", ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
