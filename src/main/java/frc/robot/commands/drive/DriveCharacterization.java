@@ -1,10 +1,5 @@
 package frc.robot.commands.drive;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.LinkedList;
-import java.util.List;
-
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -15,6 +10,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.constants.drive.DriveConstants;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.LinkedList;
+import java.util.List;
 
 public class DriveCharacterization {
   private static final LoggedTunableNumber FF_START_DELAY =
@@ -160,6 +159,7 @@ public class DriveCharacterization {
                               + " inches");
                     })));
   }
+
   private static class WheelRadiusCharacterizationState {
     double[] positions = new double[4];
     Rotation2d lastAngle = new Rotation2d();

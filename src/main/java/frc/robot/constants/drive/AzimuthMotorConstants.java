@@ -83,5 +83,5 @@ public class AzimuthMotorConstants {
           canBusName);
 
   public static final AzimuthMotorGains AZIMUTH_MOTOR_GAINS =
-      new AzimuthMotorGains(100, 0, 0, 0.25, 2, 0);
+      new AzimuthMotorGains(25, 0, 0, 0.25, 2, 0);
 }
