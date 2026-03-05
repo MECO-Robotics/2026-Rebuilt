@@ -456,10 +456,9 @@ public class Drive extends SubsystemBase {
         kMaxDriveDeceleration,
         kMaxSteeringVelocity);
 
-    // In sim, log Maple's ground-truth pose for comparison but avoid overriding odometry each loop.
+    // Keep estimator pose exactly aligned with Maple's physics pose in simulation.
     if (Constants.currentMode == Mode.SIM && swerveDriveSimulation != null) {
-      Logger.recordOutput(
-          "Drive/Odometry/MapleGroundTruth", swerveDriveSimulation.getSimulatedDriveTrainPose());
+      setPose(swerveDriveSimulation.getSimulatedDriveTrainPose());
     }
   }
 
