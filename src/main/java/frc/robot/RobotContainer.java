@@ -145,7 +145,7 @@ public class RobotContainer {
             drive,
             () -> controller.getLeftY(),
             () -> controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> controller.getRightX()));
 
     // Lock to 0° when A button is held
     // controller
@@ -173,7 +173,8 @@ public class RobotContainer {
 
     controller
         .leftBumper()
-        .whileTrue(Commands.run(() -> intakeRoller.setVoltage(10), intakeRoller));
+        .whileTrue(Commands.run(() -> intakeRoller.setVoltage(10), intakeRoller))
+        .whileFalse(Commands.run(() -> intakeRoller.setVoltage(0), intakeRoller));
 
     // controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
     // controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller));
