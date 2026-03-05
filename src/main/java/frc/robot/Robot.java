@@ -127,6 +127,7 @@ public class Robot extends LoggedRobot {
   public void autonomousInit() {
     autonomousCommand = robotContainer.getAutonomousCommand();
     robotContainer.resetSimulationScoreCounter();
+    robotContainer.resetSimulationPoseToAutonomousInitialPose(autonomousCommand);
 
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {

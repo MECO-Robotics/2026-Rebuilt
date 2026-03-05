@@ -9,6 +9,9 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.util.FlippingUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -264,5 +267,27 @@ public class RobotContainer {
   /** Returns the simulated successful score counter. */
   public int getSimulationScoreCounter() {
     return launchedFuelSim.getSuccessfulScoreCount();
+  }
+
+  /**
+   * Resets MapleSim drive pose to the selected autonomous initial PathPlanner pose, if available.
+   */
+  public void resetSimulationPoseToAutonomousInitialPose(Command autonomousCommand) {
+    if (Constants.currentMode != Constants.Mode.SIM || drive.getSimulation() == null) {
+      return;
+    }
+    if (!(autonomousCommand instanceof PathPlannerAuto pathPlannerAuto)) {
+      return;
+    }
+
+    Pose2d startingPose = pathPlannerAuto.getStartingPose();
+    if (startingPose == null) {
+      return;
+    }
+
+    Pose2d allianceAdjustedPose =
+        Constants.isAllianceRed() ? FlippingUtil.flipFieldPose(startingPose) : startingPose;
+    drive.getSimulation().setSimulationWorldPose(allianceAdjustedPose);
+    drive.setPose(allianceAdjustedPose);
   }
 }
