@@ -9,10 +9,6 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.util.FlippingUtil;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -30,9 +26,7 @@ import frc.robot.constants.drive.AzimuthMotorConstants;
 import frc.robot.constants.drive.DriveMotorConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
-import frc.robot.simulation.Hopper;
-import frc.robot.simulation.IntakeSim;
-import frc.robot.simulation.LaunchedFuelSim;
+import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
@@ -43,7 +37,6 @@ import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.util.HubShiftUtil;
-import frc.robot.util.visualization.RobotRemyVisualizer;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -62,10 +55,7 @@ public class RobotContainer {
   private final Flywheel intakeRoller;
   private final PositionJoint intakeRack;
   private final PositionJoint hood;
-  private final RobotRemyVisualizer robotRemyVisualizer;
-  private final IntakeSim intakeSim;
-  private final LaunchedFuelSim launchedFuelSim;
-  private final Hopper hopper;
+  private final RobotSimulation simulation;
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -131,26 +121,8 @@ public class RobotContainer {
             PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
             ShooterConstants.HOOD_GAINS);
 
-    if (drive.getSimulation() != null) {
-      intakeSim = new IntakeSim(drive.getSimulation());
-      launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
-      hopper = new Hopper(intakeSim::getStoredFuelCount, intakeRack::getPosition, drive::getPose);
-    } else {
-      intakeSim = null;
-      launchedFuelSim = null;
-      hopper = null;
-    }
-
-    IntakeCommands.setIntakeSimulation(intakeSim);
-    ShooterCommands.setLaunchedFuelSimulation(launchedFuelSim);
-
-    robotRemyVisualizer =
-        new RobotRemyVisualizer(
-            drive::getPose,
-            hood::getPosition,
-            shooterFlywheel::getPosition,
-            intakeRack::getPosition,
-            () -> 0);
+    simulation = RobotSimulation.create(drive, intakeRack, hood, shooterFlywheel);
+    simulation.bindCommandHooks();
 
     configureAuto();
     // Keep PathPlanner's built-in chooser behavior (default option is "None").
@@ -264,48 +236,16 @@ public class RobotContainer {
 
   /** Logs robot and component transforms for the custom Robot_Remy asset. */
   public void updateVisualization() {
-    if (hopper != null) {
-      hopper.periodic();
-    }
-    robotRemyVisualizer.periodic();
+    simulation.visualizationPeriodic();
   }
 
-  /** Returns field-relative poses of gamepieces currently stored in the simulated hopper. */
-  public Pose3d[] getHopperGamePiecePoses() {
-    return hopper != null ? hopper.getGamePiecePoses() : new Pose3d[0];
+  /** Runs simulation-specific autonomous setup if simulation is active. */
+  public void simulationAutonomousInit(Command autonomousCommand) {
+    simulation.autonomousInit(autonomousCommand);
   }
 
-  /** Resets the simulated successful score counter. */
-  public void resetSimulationScoreCounter() {
-    if (launchedFuelSim != null) {
-      launchedFuelSim.resetSuccessfulScoreCount();
-    }
-  }
-
-  /** Returns the simulated successful score counter. */
-  public int getSimulationScoreCounter() {
-    return launchedFuelSim != null ? launchedFuelSim.getSuccessfulScoreCount() : 0;
-  }
-
-  /**
-   * Resets MapleSim drive pose to the selected autonomous initial PathPlanner pose, if available.
-   */
-  public void resetSimulationPoseToAutonomousInitialPose(Command autonomousCommand) {
-    if (Constants.currentMode != Constants.Mode.SIM || drive.getSimulation() == null) {
-      return;
-    }
-    if (!(autonomousCommand instanceof PathPlannerAuto pathPlannerAuto)) {
-      return;
-    }
-
-    Pose2d startingPose = pathPlannerAuto.getStartingPose();
-    if (startingPose == null) {
-      return;
-    }
-
-    Pose2d allianceAdjustedPose =
-        Constants.isAllianceRed() ? FlippingUtil.flipFieldPose(startingPose) : startingPose;
-    drive.getSimulation().setSimulationWorldPose(allianceAdjustedPose);
-    drive.setPose(allianceAdjustedPose);
+  /** Runs simulation periodic updates and telemetry if simulation is active. */
+  public void simulationPeriodic() {
+    simulation.simulationPeriodic();
   }
 }
