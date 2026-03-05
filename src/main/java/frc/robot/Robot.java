@@ -8,15 +8,11 @@
 package frc.robot;
 
 import com.revrobotics.util.StatusLogger;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
-import java.util.Arrays;
-import java.util.Set;
-import org.ironmaple.simulation.SimulatedArena;
-import org.ironmaple.simulation.gamepieces.GamePieceProjectile;
+import frc.robot.simulation.RobotSimulation;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -36,12 +32,7 @@ public class Robot extends LoggedRobot {
   private RobotContainer robotContainer;
 
   public Robot() {
-
-    if (Constants.currentMode == Constants.Mode.SIM
-        || Constants.currentMode == Constants.Mode.REPLAY) {
-      SimulatedArena.overrideInstance(
-          new org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt(false));
-    }
+    RobotSimulation.configureArenaOverride(Constants.currentMode);
     // Record metadata
     Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
     Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
@@ -126,14 +117,8 @@ public class Robot extends LoggedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
-    if (Constants.currentMode == Constants.Mode.SIM) {
-      // Reset Maple field state before any auto pose reset/scheduling.
-      SimulatedArena.getInstance().resetFieldForAuto();
-    }
-
     autonomousCommand = robotContainer.getAutonomousCommand();
-    robotContainer.resetSimulationScoreCounter();
-    robotContainer.resetSimulationPoseToAutonomousInitialPose(autonomousCommand);
+    robotContainer.simulationAutonomousInit(autonomousCommand);
 
     // schedule the autonomous command (example)
     if (autonomousCommand != null) {
@@ -179,29 +164,6 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically whilst in simulation. */
   @Override
   public void simulationPeriodic() {
-    SimulatedArena.getInstance().simulationPeriodic();
-    Pose3d[] arenaFuelPoses = SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel");
-    Pose3d[] hopperFuelPoses = robotContainer.getHopperGamePiecePoses();
-    Pose3d[] fuelPoses = Arrays.stream(arenaFuelPoses).toArray(Pose3d[]::new);
-    if (hopperFuelPoses.length > 0) {
-      fuelPoses =
-          Arrays.stream(new Pose3d[][] {arenaFuelPoses, hopperFuelPoses})
-              .flatMap(Arrays::stream)
-              .toArray(Pose3d[]::new);
-    }
-    Set<GamePieceProjectile> projectiles = SimulatedArena.getInstance().gamePieceLaunched();
-    Pose3d[] fuelProjectilePoses =
-        projectiles.stream()
-            .filter(projectile -> "Fuel".equals(projectile.getType()))
-            .map(GamePieceProjectile::getPose3d)
-            .toArray(Pose3d[]::new);
-    // Publish to telemetry using AdvantageKit
-    Logger.recordOutput("FieldSimulation/FuelPositions", fuelPoses);
-    Logger.recordOutput("FieldSimulation/HopperFuelPositions", hopperFuelPoses);
-    Logger.recordOutput("FieldSimulation/HopperFuelCount", hopperFuelPoses.length);
-    Logger.recordOutput(
-        "FieldSimulation/SuccessfulScoreCount", robotContainer.getSimulationScoreCounter());
-    Logger.recordOutput("FieldSimulation/FuelProjectilePositions", fuelProjectilePoses);
-    Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
+    robotContainer.simulationPeriodic();
   }
 }
