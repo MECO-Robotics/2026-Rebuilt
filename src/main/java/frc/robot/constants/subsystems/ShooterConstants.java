@@ -1,16 +1,16 @@
-package frc.robot.constants;
+package frc.robot.constants.subsystems;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularVelocityUnit;
 import edu.wpi.first.units.DistanceUnit;
 import edu.wpi.first.units.Units;
-import frc.robot.constants.FlywheelConstants.FlywheelGains;
-import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
-import frc.robot.constants.PositionJointConstants.EncoderType;
-import frc.robot.constants.PositionJointConstants.GravityType;
-import frc.robot.constants.PositionJointConstants.PositionJointGains;
-import frc.robot.constants.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.types.PositionJointConstants.EncoderType;
+import frc.robot.constants.types.PositionJointConstants.GravityType;
+import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.UnitInterpolatingMap;
 
 public final class ShooterConstants {

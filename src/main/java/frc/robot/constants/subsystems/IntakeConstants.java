@@ -1,12 +1,12 @@
-package frc.robot.constants;
+package frc.robot.constants.subsystems;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.constants.FlywheelConstants.FlywheelGains;
-import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
-import frc.robot.constants.PositionJointConstants.EncoderType;
-import frc.robot.constants.PositionJointConstants.GravityType;
-import frc.robot.constants.PositionJointConstants.PositionJointGains;
-import frc.robot.constants.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.types.PositionJointConstants.EncoderType;
+import frc.robot.constants.types.PositionJointConstants.GravityType;
+import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
 
 /** Constants for intake-specific flywheel and position-joint mechanisms. */
 public final class IntakeConstants {
