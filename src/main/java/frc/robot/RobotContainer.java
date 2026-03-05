@@ -163,7 +163,8 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickAimToHub(
                     drive, () -> controller.getLeftY(), () -> controller.getLeftX())
-                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
+                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)))
+        .whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
 
     // * INTAKE BINDS */
     controller

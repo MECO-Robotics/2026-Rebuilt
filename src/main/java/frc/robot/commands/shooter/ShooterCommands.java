@@ -3,8 +3,10 @@ package frc.robot.commands.shooter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
+import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.simulation.LaunchedFuelSim;
 import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
 /** Factory methods for coordinated shooter/indexer/conveyor command groups. */
@@ -24,6 +26,12 @@ public class ShooterCommands {
     public static final LoggedTunableNumber EJECT =
         new LoggedTunableNumber("ConveyorVolts/Eject", 12);
     public static final LoggedTunableNumber STOP = new LoggedTunableNumber("ConveyorVolts/Stop", 0);
+  }
+
+  /** Intake rotation preset positions. */
+  public static final class HOOD_POSITIONS {
+    public static final LoggedTunableNumber STOW =
+        new LoggedTunableNumber("IntakePosition/Stow", 0);
   }
 
   /** Indexer roller preset voltages. */
@@ -68,6 +76,10 @@ public class ShooterCommands {
         launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() : Commands.none());
   }
 
-  static {
+  public static Command stopShooting(Flywheel shooterRoller, PositionJoint hood) {
+
+    return Commands.parallel(
+        new FlywheelVoltageCommand(shooterRoller, SHOOTER_VOLTS.STOP),
+        new PositionJointPositionCommand(hood, HOOD_POSITIONS.STOW));
   }
 }
