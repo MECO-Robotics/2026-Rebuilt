@@ -17,7 +17,7 @@ import com.revrobotics.REVLibError;
 import com.revrobotics.spark.SparkBase;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
-import frc.robot.constants.DriveConstants;
+import frc.robot.constants.drive.DriveConstants;
 import frc.robot.subsystems.drive.Drive;
 import java.util.ArrayList;
 import java.util.List;

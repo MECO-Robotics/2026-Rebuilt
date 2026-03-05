@@ -17,7 +17,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import frc.robot.constants.DriveConstants;
+import frc.robot.constants.drive.DriveConstants;
 import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import java.util.Queue;
 

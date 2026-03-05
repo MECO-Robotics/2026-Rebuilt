@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.flywheel.FlywheelVelocityCommand;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
-import frc.robot.constants.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.util.mechanical_advantage.LinearProfile;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;

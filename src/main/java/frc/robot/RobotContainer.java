@@ -28,8 +28,8 @@ import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.AzimuthMotorConstants;
 import frc.robot.constants.Constants;
 import frc.robot.constants.DriveMotorConstants;
-import frc.robot.constants.FlywheelConstants;
-import frc.robot.constants.PositionJointConstants;
+import frc.robot.constants.IntakeConstants;
+import frc.robot.constants.ShooterConstants;
 import frc.robot.simulation.Hopper;
 import frc.robot.simulation.IntakeSim;
 import frc.robot.simulation.LaunchedFuelSim;
@@ -99,38 +99,38 @@ public class RobotContainer {
 
     topIndexer =
         new Flywheel(
-            FlywheelIO.fromSparkMax("TopIndexer", FlywheelConstants.TOP_INDEXER_ROLLER_CONFIG),
-            FlywheelConstants.INDEXER_ROLLER_GAINS);
+            FlywheelIO.fromSparkMax("TopIndexer", ShooterConstants.TOP_INDEXER_ROLLER_CONFIG),
+            ShooterConstants.INDEXER_ROLLER_GAINS);
 
     bottomIndexer =
         new Flywheel(
             FlywheelIO.fromSparkMax(
-                "BottomIndexer", FlywheelConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
-            FlywheelConstants.INDEXER_ROLLER_GAINS);
+                "BottomIndexer", ShooterConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
+            ShooterConstants.INDEXER_ROLLER_GAINS);
 
     conveyor =
         new Flywheel(
-            FlywheelIO.fromSparkMax("Conveyor", FlywheelConstants.CONVEYOR_CONFIG),
-            FlywheelConstants.CONVEYOR_GAINS);
+            FlywheelIO.fromSparkMax("Conveyor", ShooterConstants.CONVEYOR_CONFIG),
+            ShooterConstants.CONVEYOR_GAINS);
 
     shooterFlywheel =
         new Flywheel(
-            FlywheelIO.fromTalonFX("ShooterFlywheel", FlywheelConstants.FLYWHEEL_ROLLER_CONFIG),
-            FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+            FlywheelIO.fromTalonFX("ShooterFlywheel", ShooterConstants.FLYWHEEL_ROLLER_CONFIG),
+            ShooterConstants.FLYWHEEL_ROLLER_GAINS);
 
     intakeRoller =
         new Flywheel(
-            FlywheelIO.fromSparkMax("IntakeRoller", FlywheelConstants.INTAKE_ROLLER_CONFIG),
-            FlywheelConstants.FLYWHEEL_ROLLER_GAINS);
+            FlywheelIO.fromSparkMax("IntakeRoller", IntakeConstants.INTAKE_ROLLER_CONFIG),
+            IntakeConstants.INTAKE_ROLLER_GAINS);
 
     intakeRack =
         new PositionJoint(
-            PositionJointIO.fromSparkMax("IntakeRack", PositionJointConstants.INTAKE_RACK_CONFIG),
-            PositionJointConstants.INTAKE_RACK_GAINS);
+            PositionJointIO.fromSparkMax("IntakeRack", IntakeConstants.INTAKE_RACK_CONFIG),
+            IntakeConstants.INTAKE_RACK_GAINS);
     hood =
         new PositionJoint(
-            PositionJointIO.fromSparkMax("Hood", PositionJointConstants.HOOD_CONFIG),
-            PositionJointConstants.HOOD_GAINS);
+            PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
+            ShooterConstants.HOOD_GAINS);
 
     intakeSim = new IntakeSim(drive.getSimulation());
     launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);

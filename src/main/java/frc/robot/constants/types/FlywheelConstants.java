@@ -1,4 +1,4 @@
-package frc.robot.constants;
+package frc.robot.constants.types;
 
 /** Shared constants and configuration records for flywheel/roller mechanisms. */
 public class FlywheelConstants {
@@ -43,44 +43,4 @@ public class FlywheelConstants {
   /** Reference gains used as a template when adding new flywheels. */
   public static final FlywheelGains EXAMPLE_GAINS =
       new FlywheelGains(0.2, 0.0, 0.0, 0.35, 0.065, 0.0, 1.0, 1.0);
-
-  // -----------
-  // Conveyor Constants
-  // -----------
-  public static final FlywheelHardwareConfig CONVEYOR_CONFIG =
-      new FlywheelHardwareConfig(new int[] {23}, new boolean[] {false}, 1, 0.025, 40, "");
-  public static final FlywheelGains CONVEYOR_GAINS =
-      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
-
-  // -----------
-  // Intake Constants
-  // -----------
-  public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {22}, new boolean[] {false}, 1.5, 0.025, 40, "");
-  public static final FlywheelGains INTAKE_ROLLER_GAINS =
-      new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 0.0, 0.0);
-
-  // ------------
-  // Indexer Constants
-  // ------------
-  public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 0.025, 40, "");
-  public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(new int[] {31}, new boolean[] {false}, 1, 0.025, 40, "");
-  public static final FlywheelGains INDEXER_ROLLER_GAINS =
-      new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
-
-  // ------------
-  // Shooter Constants
-  // ------------
-  public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG =
-      new FlywheelHardwareConfig(
-          new int[] {34, 35},
-          new boolean[] {false, true},
-          22.0 / 14,
-          0.006421,
-          60,
-          "MECO CANIvore");
-  public static final FlywheelGains FLYWHEEL_ROLLER_GAINS =
-      new FlywheelGains(0.3, 0.0, 0.0, 0.25, 0.2, 0.0, 2.5, 1.0);
 }

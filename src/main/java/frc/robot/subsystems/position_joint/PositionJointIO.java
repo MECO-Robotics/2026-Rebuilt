@@ -1,8 +1,9 @@
 package frc.robot.subsystems.position_joint;
 
 import frc.robot.constants.Constants;
-import frc.robot.constants.PositionJointConstants.PositionJointGains;
-import frc.robot.constants.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
+
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 

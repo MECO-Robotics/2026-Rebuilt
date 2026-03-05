@@ -7,8 +7,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.constants.FlywheelConstants.FlywheelGains;
-import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
 /** Physics-simulation implementation of {@link FlywheelIO}. */

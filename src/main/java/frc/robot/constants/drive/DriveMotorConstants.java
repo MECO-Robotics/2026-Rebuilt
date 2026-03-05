@@ -1,4 +1,4 @@
-package frc.robot.constants;
+package frc.robot.constants.drive;
 
 /** Constants and hardware mappings for drivetrain wheel motors. */
 public class DriveMotorConstants {

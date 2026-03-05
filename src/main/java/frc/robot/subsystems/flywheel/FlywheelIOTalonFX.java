@@ -24,8 +24,9 @@ import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.constants.FlywheelConstants.FlywheelGains;
-import frc.robot.constants.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
+import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
+
 import java.util.ArrayList;
 
 /** TalonFX-backed implementation of {@link FlywheelIO}. */

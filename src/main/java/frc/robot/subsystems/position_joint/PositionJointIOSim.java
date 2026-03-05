@@ -7,8 +7,8 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.constants.PositionJointConstants.PositionJointGains;
-import frc.robot.constants.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
+import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.feedforwards.PositionJointFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 

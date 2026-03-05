@@ -16,8 +16,8 @@ import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
-import frc.robot.constants.DriveMotorConstants.DriveMotorGains;
-import frc.robot.constants.DriveMotorConstants.DriveMotorHardwareConfig;
+import frc.robot.constants.drive.DriveMotorConstants.DriveMotorGains;
+import frc.robot.constants.drive.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.odometry_threads.SparkOdometryThread;
 import java.util.Queue;
 

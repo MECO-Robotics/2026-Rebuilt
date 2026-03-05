@@ -1,4 +1,4 @@
-package frc.robot.constants;
+package frc.robot.constants.types;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 
@@ -93,45 +93,4 @@ public class PositionJointConstants {
           11,
           Rotation2d.fromRotations(0.5),
           "");
-
-  // -----------
-  // Intake Constants
-  // -----------
-  public static final PositionJointGains INTAKE_RACK_GAINS =
-      new PositionJointGains(10, 0.0, 0.0, 0.5, 1.0, 2.0, 0.0, 10.0, 20.0, 0.0, 0.21, 0.2, 0.0);
-  public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG =
-      new PositionJointHardwareConfig(
-          new int[] {21},
-          new boolean[] {true},
-          ((48 / 16) * (26 / 16)) / (((Math.PI * 10) / 10) * 0.0254),
-          0.01,
-          40,
-          GravityType.COSINE,
-          EncoderType.INTERNAL,
-          0,
-          Rotation2d.fromRotations(0),
-          "");
-
-  // -----------
-  // Hood
-  // -----------
-  public static final PositionJointGains HOOD_GAINS =
-      new PositionJointGains(30, 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 2, 0.0, 0.064, 0.2, 0.0);
-  public static final PositionJointHardwareConfig HOOD_CONFIG =
-      new PositionJointHardwareConfig(
-          new int[] {33},
-          new boolean[] {false},
-          (21 / 1),
-          0.01,
-          40,
-          GravityType.COSINE,
-          EncoderType.INTERNAL,
-          0,
-          Rotation2d.fromRotations(0),
-          "");
-
-  // ------------
-  // Climber Constants TODO
-  // ------------
-
 }
