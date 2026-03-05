@@ -145,7 +145,7 @@ public class RobotContainer {
             drive,
             () -> controller.getLeftY(),
             () -> controller.getLeftX(),
-            () -> -controller.getRightX()));
+            () -> controller.getRightX()));
 
     // Lock to 0° when A button is held
     // controller
@@ -163,7 +163,8 @@ public class RobotContainer {
         .whileTrue(
             DriveCommands.joystickAimToHub(
                     drive, () -> controller.getLeftY(), () -> controller.getLeftX())
-                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)));
+                .alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)))
+        .whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
 
     // * INTAKE BINDS */
     controller
