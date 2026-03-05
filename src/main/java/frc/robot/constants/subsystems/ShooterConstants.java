@@ -20,7 +20,8 @@ public final class ShooterConstants {
       new FlywheelHardwareConfig(new int[] {32}, new boolean[] {false}, 1, 0.025, 40, "");
   public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG =
       new FlywheelHardwareConfig(new int[] {31}, new boolean[] {false}, 1, 0.025, 40, "");
-  public static final FlywheelGains INDEXER_ROLLER_GAINS = new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
+  public static final FlywheelGains INDEXER_ROLLER_GAINS =
+      new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
 
   public static final FlywheelHardwareConfig CONVEYOR_CONFIG =
       new FlywheelHardwareConfig(new int[] {23}, new boolean[] {false}, 1, 0.025, 40, "");

@@ -29,9 +29,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.Mode;
-import frc.robot.constants.drive.DriveConstants;
 import frc.robot.constants.drive.AzimuthMotorConstants.AzimuthMotorGains;
 import frc.robot.constants.drive.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
+import frc.robot.constants.drive.DriveConstants;
 import frc.robot.constants.drive.DriveMotorConstants.DriveMotorGains;
 import frc.robot.constants.drive.DriveMotorConstants.DriveMotorHardwareConfig;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
@@ -456,9 +456,10 @@ public class Drive extends SubsystemBase {
         kMaxDriveDeceleration,
         kMaxSteeringVelocity);
 
-    // Keep estimator pose exactly aligned with Maple's physics pose in simulation.
+    // In sim, log Maple's ground-truth pose for comparison but avoid overriding odometry each loop.
     if (Constants.currentMode == Mode.SIM && swerveDriveSimulation != null) {
-      setPose(swerveDriveSimulation.getSimulatedDriveTrainPose());
+      Logger.recordOutput(
+          "Drive/Odometry/MapleGroundTruth", swerveDriveSimulation.getSimulatedDriveTrainPose());
     }
   }
 

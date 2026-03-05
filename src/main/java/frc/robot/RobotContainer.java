@@ -104,8 +104,7 @@ public class RobotContainer {
 
     bottomIndexer =
         new Flywheel(
-            FlywheelIO.fromSparkMax(
-                "BottomIndexer", ShooterConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
+            FlywheelIO.fromSparkMax("BottomIndexer", ShooterConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
             ShooterConstants.INDEXER_ROLLER_GAINS);
 
     conveyor =

@@ -4,7 +4,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.constants.Constants;
 import frc.robot.constants.drive.AzimuthMotorConstants.AzimuthMotorGains;
 import frc.robot.constants.drive.AzimuthMotorConstants.AzimuthMotorHardwareConfig;
-
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 

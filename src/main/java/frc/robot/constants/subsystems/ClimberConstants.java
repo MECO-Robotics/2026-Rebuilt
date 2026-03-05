@@ -1,5 +1,3 @@
 package frc.robot.constants.subsystems;
 
-public class ClimberConstants {
-    
-}
+public class ClimberConstants {}

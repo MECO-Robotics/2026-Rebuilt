@@ -3,7 +3,6 @@ package frc.robot.subsystems.drive.drive_motor;
 import frc.robot.constants.Constants;
 import frc.robot.constants.drive.DriveMotorConstants.DriveMotorGains;
 import frc.robot.constants.drive.DriveMotorConstants.DriveMotorHardwareConfig;
-
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
