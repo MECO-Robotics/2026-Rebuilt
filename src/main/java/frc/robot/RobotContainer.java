@@ -147,20 +147,8 @@ public class RobotContainer {
             intakeRack::getPosition,
             () -> 0);
 
-    NamedCommands.registerCommand(
-        "DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
-    NamedCommands.registerCommand(
-        "StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller));
-    NamedCommands.registerCommand(
-        "AgitateIntake", IntakeCommands.agitateIntake(intakeRack, intakeRoller));
-    NamedCommands.registerCommand(
-        "FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
-    NamedCommands.registerCommand(
-        "IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
-    NamedCommands.registerCommand(
-        "Flywheel", ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
-
-    // Set up auto routines
+    configureAuto();
+    // Keep PathPlanner's built-in chooser behavior (default option is "None").
     autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
     // Configure the button bindings
@@ -241,13 +229,36 @@ public class RobotContainer {
     // overrideDisconnected.set(!overrides.isConnected());
   }
 
+  public void configureAuto() {
+    NamedCommands.registerCommand(
+        "DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
+    NamedCommands.registerCommand(
+        "StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller));
+    NamedCommands.registerCommand(
+        "AgitateIntake", IntakeCommands.agitateIntake(intakeRack, intakeRoller));
+    NamedCommands.registerCommand(
+        "FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
+    NamedCommands.registerCommand(
+        "IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+    NamedCommands.registerCommand(
+        "Flywheel", ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
+
+    NamedCommands.registerCommand(
+        "AutoSpinUp", ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
+
+    NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drive).withTimeout(2));
+  }
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return autoChooser.get();
+    Command selectedAuto = autoChooser.get();
+    if (selectedAuto == null) {
+      DriverStation.reportWarning("Auto chooser returned null command.", false);
+    }
+    return selectedAuto;
   }
 
   /** Logs robot and component transforms for the custom Robot_Remy asset. */

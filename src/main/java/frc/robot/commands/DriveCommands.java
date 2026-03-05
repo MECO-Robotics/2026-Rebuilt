@@ -210,6 +210,19 @@ public class DriveCommands {
     return joystickDriveAtAngle(drive, xSupplier, ySupplier, angleToHub);
   }
 
+  /** Auto aim to the hub. */
+  public static Command autoAimToHub(Drive drive) {
+    Supplier<Rotation2d> angleToHub =
+        () ->
+            flipRotation2dAlliance(
+                Hub.hubPosition()
+                    .minus(drive.getPose().getTranslation())
+                    .getAngle()
+                    .plus(Rotation2d.fromDegrees(180)));
+
+    return joystickDriveAtAngle(drive, () -> 0.0, () -> 0.0, angleToHub);
+  }
+
   /**
    * Measures the velocity feedforward constants for the drive motors.
    *

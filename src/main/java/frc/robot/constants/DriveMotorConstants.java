@@ -22,19 +22,19 @@ public class DriveMotorConstants {
 
   public static final DriveMotorHardwareConfig FRONT_LEFT_CONFIG =
       new DriveMotorHardwareConfig(
-          new int[] {2}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 40, canBusName);
+          new int[] {2}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 60, canBusName);
 
   public static final DriveMotorHardwareConfig FRONT_RIGHT_CONFIG =
       new DriveMotorHardwareConfig(
-          new int[] {4}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 40, canBusName);
+          new int[] {4}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 60, canBusName);
 
   public static final DriveMotorHardwareConfig BACK_LEFT_CONFIG =
       new DriveMotorHardwareConfig(
-          new int[] {6}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 40, canBusName);
+          new int[] {6}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 60, canBusName);
 
   public static final DriveMotorHardwareConfig BACK_RIGHT_CONFIG =
       new DriveMotorHardwareConfig(
-          new int[] {8}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 40, canBusName);
+          new int[] {8}, new boolean[] {false}, DriveConstants.driveMotorGearRatio, 60, canBusName);
 
   public static final DriveMotorGains DRIVE_MOTOR_GAINS =
       new DriveMotorGains(12, 0, 0, 0.5, 0.71, 0);

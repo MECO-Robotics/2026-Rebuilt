@@ -104,18 +104,7 @@ public class DriveConstants {
   public static final Mass robotMass = Pound.of(80); // Convert kg to pounds
   public static final double robotMOI = 6.883;
   public static final double wheelCOF = 2.255;
-  public static final RobotConfig ppConfig =
-      new RobotConfig(
-          robotMass.in(Kilogram),
-          robotMOI,
-          new ModuleConfig(
-              driveWheelRadiusMeters,
-              maxSpeedAt12Volts.in(MetersPerSecond),
-              wheelCOF,
-              driveGearbox.withReduction(driveMotorGearRatio),
-              driveMotorCurrentLimit,
-              1),
-          moduleTranslations);
+  public static final RobotConfig ppConfig = createPathPlannerConfig();
 
   public static final PIDConstants translationPID = new PIDConstants(5, 0, 0);
   public static final PIDConstants rotationPID = new PIDConstants(5, 0, 0);
@@ -139,4 +128,26 @@ public class DriveConstants {
           .withRobotMass(robotMass)
           .withGyro(COTS.ofPigeon2())
           .withSwerveModule(simModule);
+
+  private static RobotConfig createPathPlannerConfig() {
+    try {
+      // Keep runtime robot config aligned with the PathPlanner GUI settings used to author paths.
+      return RobotConfig.fromGUISettings();
+    } catch (Exception e) {
+      System.err.println(
+          "Failed to load PathPlanner GUI robot config, using DriveConstants fallback: "
+              + e.getMessage());
+      return new RobotConfig(
+          robotMass.in(Kilogram),
+          robotMOI,
+          new ModuleConfig(
+              driveWheelRadiusMeters,
+              maxSpeedAt12Volts.in(MetersPerSecond),
+              wheelCOF,
+              driveGearbox.withReduction(driveMotorGearRatio),
+              driveMotorCurrentLimit,
+              1),
+          moduleTranslations);
+    }
+  }
 }
