@@ -220,7 +220,7 @@ public class AzimuthMotorIOTalonFX implements AzimuthMotorIO {
     for (int i = 1; i < config.canIds().length; i++) {
       motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
       motors[i] = new TalonFX(config.canIds()[i], canBus);
-      motors[i].setControl(new Follower(i, motorval));
+      motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
 
       motorAlerts[i] =
           new Alert(
