@@ -43,7 +43,7 @@ public class IntakeCommands {
     return Commands.parallel(
         new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW),
         new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.STOP),
-        intakeSimulation.stopIntake());
+        intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none());
   }
 
   /**
@@ -54,7 +54,7 @@ public class IntakeCommands {
     return Commands.parallel(
         new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.DEPLOY),
         new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
-        intakeSimulation.startIntake());
+        intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none());
   }
 
   /**

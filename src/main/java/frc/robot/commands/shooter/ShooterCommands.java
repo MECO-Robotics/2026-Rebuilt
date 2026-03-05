@@ -65,7 +65,7 @@ public class ShooterCommands {
         new FlywheelVoltageCommand(bottomIntakingRoller, INDEXER_VOLTS.FEED),
         new FlywheelVoltageCommand(topIntakingRoller, INDEXER_VOLTS.FEEDOTHER),
         new FlywheelVoltageCommand(conveyorRoller, CONVEYOR_VOLTS.FEED),
-        launchedFuelSimulation.launchCommand());
+        launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() : Commands.none());
   }
 
   static {

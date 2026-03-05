@@ -131,9 +131,15 @@ public class RobotContainer {
             PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
             ShooterConstants.HOOD_GAINS);
 
-    intakeSim = new IntakeSim(drive.getSimulation());
-    launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
-    hopper = new Hopper(intakeSim::getStoredFuelCount, intakeRack::getPosition, drive::getPose);
+    if (drive.getSimulation() != null) {
+      intakeSim = new IntakeSim(drive.getSimulation());
+      launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
+      hopper = new Hopper(intakeSim::getStoredFuelCount, intakeRack::getPosition, drive::getPose);
+    } else {
+      intakeSim = null;
+      launchedFuelSim = null;
+      hopper = null;
+    }
 
     IntakeCommands.setIntakeSimulation(intakeSim);
     ShooterCommands.setLaunchedFuelSimulation(launchedFuelSim);
@@ -258,23 +264,27 @@ public class RobotContainer {
 
   /** Logs robot and component transforms for the custom Robot_Remy asset. */
   public void updateVisualization() {
-    hopper.periodic();
+    if (hopper != null) {
+      hopper.periodic();
+    }
     robotRemyVisualizer.periodic();
   }
 
   /** Returns field-relative poses of gamepieces currently stored in the simulated hopper. */
   public Pose3d[] getHopperGamePiecePoses() {
-    return hopper.getGamePiecePoses();
+    return hopper != null ? hopper.getGamePiecePoses() : new Pose3d[0];
   }
 
   /** Resets the simulated successful score counter. */
   public void resetSimulationScoreCounter() {
-    launchedFuelSim.resetSuccessfulScoreCount();
+    if (launchedFuelSim != null) {
+      launchedFuelSim.resetSuccessfulScoreCount();
+    }
   }
 
   /** Returns the simulated successful score counter. */
   public int getSimulationScoreCounter() {
-    return launchedFuelSim.getSuccessfulScoreCount();
+    return launchedFuelSim != null ? launchedFuelSim.getSuccessfulScoreCount() : 0;
   }
 
   /**
