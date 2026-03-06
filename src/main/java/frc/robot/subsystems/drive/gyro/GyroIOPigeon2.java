@@ -23,42 +23,39 @@ import java.util.Queue;
 
 /** IO implementation for Pigeon 2. */
 public class GyroIOPigeon2 implements GyroIO {
-  private final Pigeon2 pigeon;
-  private final StatusSignal<Angle> yaw;
-  private final Queue<Double> yawPositionQueue;
-  private final Queue<Double> yawTimestampQueue;
-  private final StatusSignal<AngularVelocity> yawVelocity;
+	private final Pigeon2 pigeon;
+	private final StatusSignal<Angle> yaw;
+	private final Queue<Double> yawPositionQueue;
+	private final Queue<Double> yawTimestampQueue;
+	private final StatusSignal<AngularVelocity> yawVelocity;
 
-  public GyroIOPigeon2(int canID, String canBusName) {
-    pigeon = new Pigeon2(canID, new CANBus(canBusName));
-    pigeon.getConfigurator().apply(new Pigeon2Configuration());
-    pigeon.getConfigurator().setYaw(0.0);
+	public GyroIOPigeon2(int canID, String canBusName) {
+		pigeon = new Pigeon2(canID, new CANBus(canBusName));
+		pigeon.getConfigurator().apply(new Pigeon2Configuration());
+		pigeon.getConfigurator().setYaw(0.0);
 
-    yaw = pigeon.getYaw();
-    yaw.setUpdateFrequency(DriveConstants.odometryFrequency);
+		yaw = pigeon.getYaw();
+		yaw.setUpdateFrequency(DriveConstants.odometryFrequency);
 
-    yawVelocity = pigeon.getAngularVelocityZWorld();
-    yawVelocity.setUpdateFrequency(50.0);
+		yawVelocity = pigeon.getAngularVelocityZWorld();
+		yawVelocity.setUpdateFrequency(50.0);
 
-    pigeon.optimizeBusUtilization();
+		pigeon.optimizeBusUtilization();
 
-    yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
-    yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(pigeon.getYaw());
-  }
+		yawTimestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+		yawPositionQueue = PhoenixOdometryThread.getInstance().registerSignal(pigeon.getYaw());
+	}
 
-  @Override
-  public void updateInputs(GyroIOInputs inputs) {
-    inputs.connected = BaseStatusSignal.refreshAll(yaw, yawVelocity).equals(StatusCode.OK);
-    inputs.yawPosition = Rotation2d.fromDegrees(yaw.getValueAsDouble());
-    inputs.yawVelocityRadPerSec = Units.degreesToRadians(yawVelocity.getValueAsDouble());
+	@Override
+	public void updateInputs(GyroIOInputs inputs) {
+		inputs.connected = BaseStatusSignal.refreshAll(yaw, yawVelocity).equals(StatusCode.OK);
+		inputs.yawPosition = Rotation2d.fromDegrees(yaw.getValueAsDouble());
+		inputs.yawVelocityRadPerSec = Units.degreesToRadians(yawVelocity.getValueAsDouble());
 
-    inputs.odometryYawTimestamps =
-        yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryYawPositions =
-        yawPositionQueue.stream()
-            .map((Double value) -> Rotation2d.fromDegrees(value))
-            .toArray(Rotation2d[]::new);
-    yawTimestampQueue.clear();
-    yawPositionQueue.clear();
-  }
+		inputs.odometryYawTimestamps = yawTimestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+		inputs.odometryYawPositions = yawPositionQueue.stream().map((Double value) -> Rotation2d.fromDegrees(value))
+				.toArray(Rotation2d[]::new);
+		yawTimestampQueue.clear();
+		yawPositionQueue.clear();
+	}
 }

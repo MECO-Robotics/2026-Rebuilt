@@ -8,24 +8,23 @@ import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
 public class ClimberCommands {
 
-  /** Intake rotation preset positions. */
-  /** Climber rotation preset positions. */
-  public static final class ROTATION_POSITIONS {
-    public static final LoggedTunableNumber STOW =
-        new LoggedTunableNumber("ClimberPosition/Stow", 0);
-    public static final LoggedTunableNumber DEPLOY =
-        new LoggedTunableNumber("ClimberPosition/Deploy", Units.degreesToRotations(95));
-    public static final LoggedTunableNumber SAFE =
-        new LoggedTunableNumber("ClimberPosition/Safe", Units.degreesToRotations(101));
-  }
+	/** Intake rotation preset positions. */
+	/** Climber rotation preset positions. */
+	public static final class ROTATION_POSITIONS {
+		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("ClimberPosition/Stow", 0);
+		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("ClimberPosition/Deploy",
+				Units.degreesToRotations(95));
+		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("ClimberPosition/Safe",
+				Units.degreesToRotations(101));
+	}
 
-  /** Stows the climber by moving the rotation motor to the stow position. */
-  public static Command stowClimber(PositionJoint rotationMotorJoint) {
-    return new PositionJointPositionCommand(rotationMotorJoint, ROTATION_POSITIONS.STOW);
-  }
+	/** Stows the climber by moving the rotation motor to the stow position. */
+	public static Command stowClimber(PositionJoint rotationMotorJoint) {
+		return new PositionJointPositionCommand(rotationMotorJoint, ROTATION_POSITIONS.STOW);
+	}
 
-  /** Deploy the climber by moving the rotation motor to the Deploy position. */
-  public static Command deployClimber(PositionJoint rotationMotorJoint) {
-    return new PositionJointPositionCommand(rotationMotorJoint, ROTATION_POSITIONS.DEPLOY);
-  }
+	/** Deploy the climber by moving the rotation motor to the Deploy position. */
+	public static Command deployClimber(PositionJoint rotationMotorJoint) {
+		return new PositionJointPositionCommand(rotationMotorJoint, ROTATION_POSITIONS.DEPLOY);
+	}
 }

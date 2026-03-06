@@ -4,26 +4,26 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import frc.robot.constants.sensors.DigitalSensorConstants.DigitalSensorConfig;
 
 public class DigitalSensorIODigitalInput implements DigitalSensorIO {
-  private final String name;
+	private final String name;
 
-  private final DigitalInput digitalSensor;
+	private final DigitalInput digitalSensor;
 
-  private final boolean invert;
+	private final boolean invert;
 
-  public DigitalSensorIODigitalInput(String name, DigitalSensorConfig config) {
-    this.name = name;
+	public DigitalSensorIODigitalInput(String name, DigitalSensorConfig config) {
+		this.name = name;
 
-    digitalSensor = new DigitalInput(config.id());
-    invert = config.invert();
-  }
+		digitalSensor = new DigitalInput(config.id());
+		invert = config.invert();
+	}
 
-  @Override
-  public void updateInputs(DigitalSensorIOInputs inputs) {
-    inputs.sensorActive = digitalSensor.get() ^ invert; // XOR
-  }
+	@Override
+	public void updateInputs(DigitalSensorIOInputs inputs) {
+		inputs.sensorActive = digitalSensor.get() ^ invert; // XOR
+	}
 
-  @Override
-  public String getName() {
-    return name;
-  }
+	@Override
+	public String getName() {
+		return name;
+	}
 }

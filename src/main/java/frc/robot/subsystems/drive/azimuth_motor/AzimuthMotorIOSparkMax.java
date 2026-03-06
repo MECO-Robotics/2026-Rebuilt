@@ -30,267 +30,218 @@ import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 import java.util.Queue;
 
 public class AzimuthMotorIOSparkMax implements AzimuthMotorIO {
-  private final String name;
+	private final String name;
 
-  private final AzimuthMotorHardwareConfig hardwareConfig;
+	private final AzimuthMotorHardwareConfig hardwareConfig;
 
-  private final SparkMax[] motors;
-  private final SparkBaseConfig leaderConfig;
+	private final SparkMax[] motors;
+	private final SparkBaseConfig leaderConfig;
 
-  private final IAbsoluteEncoder externalEncoder;
+	private final IAbsoluteEncoder externalEncoder;
 
-  private final boolean[] motorsConnected;
-  private boolean encoderConnected;
+	private final boolean[] motorsConnected;
+	private boolean encoderConnected;
 
-  private final double[] motorPositions;
-  private final double[] motorVelocities;
+	private final double[] motorPositions;
+	private final double[] motorVelocities;
 
-  private final double[] motorVoltages;
-  private final double[] motorCurrents;
+	private final double[] motorVoltages;
+	private final double[] motorCurrents;
 
-  private final Alert[] motorAlerts;
-  private final Alert encoderAlert;
+	private final Alert[] motorAlerts;
+	private final Alert encoderAlert;
 
-  private final TunableSimpleMotorFeedforward feedforward;
+	private final TunableSimpleMotorFeedforward feedforward;
 
-  private double currentPosition = 0.0;
-  private double positionSetpoint = 0.0;
-  private double velocitySetpoint = 0.0;
+	private double currentPosition = 0.0;
+	private double positionSetpoint = 0.0;
+	private double velocitySetpoint = 0.0;
 
-  // Queue inputs from odometry thread
-  private final Queue<Double> timestampQueue;
-  private final Queue<Double> turnPositionQueue;
+	// Queue inputs from odometry thread
+	private final Queue<Double> timestampQueue;
+	private final Queue<Double> turnPositionQueue;
 
-  public AzimuthMotorIOSparkMax(String name, AzimuthMotorHardwareConfig config) {
-    this.name = name;
-    hardwareConfig = config;
+	public AzimuthMotorIOSparkMax(String name, AzimuthMotorHardwareConfig config) {
+		this.name = name;
+		hardwareConfig = config;
 
-    assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
+		assert config.canIds().length > 0 && (config.canIds().length == config.reversed().length);
 
-    motors = new SparkMax[config.canIds().length];
-    motorsConnected = new boolean[config.canIds().length];
-    motorPositions = new double[config.canIds().length];
-    motorVelocities = new double[config.canIds().length];
-    motorVoltages = new double[config.canIds().length];
-    motorCurrents = new double[config.canIds().length];
-    motorAlerts = new Alert[config.canIds().length];
+		motors = new SparkMax[config.canIds().length];
+		motorsConnected = new boolean[config.canIds().length];
+		motorPositions = new double[config.canIds().length];
+		motorVelocities = new double[config.canIds().length];
+		motorVoltages = new double[config.canIds().length];
+		motorCurrents = new double[config.canIds().length];
+		motorAlerts = new Alert[config.canIds().length];
 
-    motors[0] = new SparkMax(config.canIds()[0], MotorType.kBrushless);
-    leaderConfig =
-        new SparkMaxConfig()
-            .inverted(config.reversed()[0])
-            .idleMode(IdleMode.kBrake)
-            .apply(
-                new EncoderConfig()
-                    .positionConversionFactor(1.0 / config.gearRatio())
-                    .velocityConversionFactor(1.0 / (60.0 * config.gearRatio())));
+		motors[0] = new SparkMax(config.canIds()[0], MotorType.kBrushless);
+		leaderConfig = new SparkMaxConfig().inverted(config.reversed()[0]).idleMode(IdleMode.kBrake)
+				.apply(new EncoderConfig().positionConversionFactor(1.0 / config.gearRatio())
+						.velocityConversionFactor(1.0 / (60.0 * config.gearRatio())));
 
-    switch (config.encoderType()) {
-      case INTERNAL:
-        externalEncoder = new IAbsoluteEncoder() {};
+		switch (config.encoderType()) {
+			case INTERNAL :
+				externalEncoder = new IAbsoluteEncoder() {
+				};
 
-        encoderAlert =
-            new Alert(name, name + " does not use an external encoder 💀", AlertType.kInfo);
+				encoderAlert = new Alert(name, name + " does not use an external encoder 💀", AlertType.kInfo);
 
-        motors[0].configure(
-            leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        break;
-      case EXTERNAL_CANCODER:
-        externalEncoder =
-            new AbsoluteCancoder(
-                config.encoderID(),
-                config.canBus(),
-                new CANcoderConfiguration()
-                    .withMagnetSensor(
-                        new MagnetSensorConfigs()
-                            .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
-                            .withMagnetOffset(config.encoderOffset().getMeasure())));
+				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				break;
+			case EXTERNAL_CANCODER :
+				externalEncoder = new AbsoluteCancoder(config.encoderID(), config.canBus(),
+						new CANcoderConfiguration().withMagnetSensor(new MagnetSensorConfigs()
+								.withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+								.withMagnetOffset(config.encoderOffset().getMeasure())));
 
-        encoderAlert =
-            new Alert(
-                name,
-                name + " CANCoder Disconnected! CAN ID: " + config.encoderID(),
-                AlertType.kError);
+				encoderAlert = new Alert(name, name + " CANCoder Disconnected! CAN ID: " + config.encoderID(),
+						AlertType.kError);
 
-        motors[0].configure(
-            leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        motors[0].getEncoder().setPosition(externalEncoder.getAbsoluteAngle().getRotations());
-        break;
-      case EXTERNAL_CANCODER_PRO:
-        throw new IllegalArgumentException("EXTERNAL_CANCODER_PRO not supported on SparkMax");
-      case EXTERNAL_DIO:
-        externalEncoder = new AbsoluteMagEncoder(config.encoderID());
+				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				motors[0].getEncoder().setPosition(externalEncoder.getAbsoluteAngle().getRotations());
+				break;
+			case EXTERNAL_CANCODER_PRO :
+				throw new IllegalArgumentException("EXTERNAL_CANCODER_PRO not supported on SparkMax");
+			case EXTERNAL_DIO :
+				externalEncoder = new AbsoluteMagEncoder(config.encoderID());
 
-        encoderAlert =
-            new Alert(
-                name,
-                name + " DIO Encoder Disconnected! DIO ID: " + config.encoderID(),
-                AlertType.kWarning);
+				encoderAlert = new Alert(name, name + " DIO Encoder Disconnected! DIO ID: " + config.encoderID(),
+						AlertType.kWarning);
 
-        motors[0].configure(
-            leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        motors[0]
-            .getEncoder()
-            .setPosition(
-                externalEncoder.getAbsoluteAngle().plus(config.encoderOffset()).getRotations());
-        break;
-      case EXTERNAL_SPARK:
-        externalEncoder = new IAbsoluteEncoder() {};
+				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				motors[0].getEncoder()
+						.setPosition(externalEncoder.getAbsoluteAngle().plus(config.encoderOffset()).getRotations());
+				break;
+			case EXTERNAL_SPARK :
+				externalEncoder = new IAbsoluteEncoder() {
+				};
 
-        encoderAlert =
-            new Alert(name, name + " Internal SPARK Encoder Disconnected", AlertType.kWarning);
+				encoderAlert = new Alert(name, name + " Internal SPARK Encoder Disconnected", AlertType.kWarning);
 
-        leaderConfig.apply(
-            new AbsoluteEncoderConfig()
-                .positionConversionFactor(1.0)
-                .velocityConversionFactor(1.0)
-                .zeroOffset(config.encoderOffset().getRotations())
-                .averageDepth(2));
+				leaderConfig
+						.apply(new AbsoluteEncoderConfig().positionConversionFactor(1.0).velocityConversionFactor(1.0)
+								.zeroOffset(config.encoderOffset().getRotations()).averageDepth(2));
 
-        motors[0].configure(
-            leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        motors[0]
-            .getEncoder()
-            .setPosition(
-                motors[0].getAbsoluteEncoder().getPosition()
-                    + config.encoderOffset().getRotations());
-        break;
+				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				motors[0].getEncoder().setPosition(
+						motors[0].getAbsoluteEncoder().getPosition() + config.encoderOffset().getRotations());
+				break;
 
-      default:
-        externalEncoder = new IAbsoluteEncoder() {};
-        encoderAlert =
-            new Alert(name, name + " does not use an external encoder 💀", AlertType.kInfo);
-        break;
-    }
+			default :
+				externalEncoder = new IAbsoluteEncoder() {
+				};
+				encoderAlert = new Alert(name, name + " does not use an external encoder 💀", AlertType.kInfo);
+				break;
+		}
 
-    motorAlerts[0] =
-        new Alert(
-            name,
-            name + " Leader Motor Disconnected! CAN ID: " + config.canIds()[0],
-            AlertType.kError);
+		motorAlerts[0] = new Alert(name, name + " Leader Motor Disconnected! CAN ID: " + config.canIds()[0],
+				AlertType.kError);
 
-    for (int i = 1; i < config.canIds().length; i++) {
-      motors[i] = new SparkMax(config.canIds()[i], MotorType.kBrushless);
-      motors[i].configure(
-          new SparkMaxConfig()
-              .follow(motors[0])
-              .inverted(config.reversed()[i])
-              .idleMode(IdleMode.kBrake),
-          ResetMode.kNoResetSafeParameters,
-          PersistMode.kNoPersistParameters);
+		for (int i = 1; i < config.canIds().length; i++) {
+			motors[i] = new SparkMax(config.canIds()[i], MotorType.kBrushless);
+			motors[i].configure(
+					new SparkMaxConfig().follow(motors[0]).inverted(config.reversed()[i]).idleMode(IdleMode.kBrake),
+					ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
-      motorAlerts[i] =
-          new Alert(
-              name,
-              name + " Follower Motor " + i + " Disconnected! CAN ID: " + config.canIds()[i],
-              AlertType.kError);
-    }
+			motorAlerts[i] = new Alert(name,
+					name + " Follower Motor " + i + " Disconnected! CAN ID: " + config.canIds()[i], AlertType.kError);
+		}
 
-    feedforward = new TunableSimpleMotorFeedforward(0, 0, 0);
+		feedforward = new TunableSimpleMotorFeedforward(0, 0, 0);
 
-    timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
+		timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
 
-    turnPositionQueue =
-        SparkOdometryThread.getInstance()
-            .registerSignal(motors[0], motors[0].getEncoder()::getPosition);
-  }
+		turnPositionQueue = SparkOdometryThread.getInstance().registerSignal(motors[0],
+				motors[0].getEncoder()::getPosition);
+	}
 
-  @Override
-  public void updateInputs(AzimuthMotorIOInputs inputs) {
-    currentPosition = motors[0].getEncoder().getPosition();
+	@Override
+	public void updateInputs(AzimuthMotorIOInputs inputs) {
+		currentPosition = motors[0].getEncoder().getPosition();
 
-    inputs.outputPositionRotations = currentPosition;
-    inputs.rotorPositionRotations = currentPosition * hardwareConfig.gearRatio();
-    inputs.desiredPositionRotations = positionSetpoint;
+		inputs.outputPositionRotations = currentPosition;
+		inputs.rotorPositionRotations = currentPosition * hardwareConfig.gearRatio();
+		inputs.desiredPositionRotations = positionSetpoint;
 
-    inputs.velocityRotationsPerSecond = motors[0].getEncoder().getVelocity();
-    inputs.desiredVelocityRotationsPerSecond = velocitySetpoint;
+		inputs.velocityRotationsPerSecond = motors[0].getEncoder().getVelocity();
+		inputs.desiredVelocityRotationsPerSecond = velocitySetpoint;
 
-    for (int i = 0; i < motors.length; i++) {
-      motorsConnected[i] = motors[i].getLastError() == REVLibError.kOk;
+		for (int i = 0; i < motors.length; i++) {
+			motorsConnected[i] = motors[i].getLastError() == REVLibError.kOk;
 
-      motorPositions[i] = motors[i].getEncoder().getPosition();
-      motorVelocities[i] = motors[i].getEncoder().getVelocity();
+			motorPositions[i] = motors[i].getEncoder().getPosition();
+			motorVelocities[i] = motors[i].getEncoder().getVelocity();
 
-      motorVoltages[i] = motors[i].getAppliedOutput() * RobotController.getBatteryVoltage();
-      motorCurrents[i] = motors[i].getOutputCurrent();
+			motorVoltages[i] = motors[i].getAppliedOutput() * RobotController.getBatteryVoltage();
+			motorCurrents[i] = motors[i].getOutputCurrent();
 
-      motorAlerts[i].set(!motorsConnected[i]);
-    }
+			motorAlerts[i].set(!motorsConnected[i]);
+		}
 
-    inputs.motorsConnected = motorsConnected;
+		inputs.motorsConnected = motorsConnected;
 
-    inputs.motorPositions = motorPositions;
-    inputs.motorVelocities = motorVelocities;
+		inputs.motorPositions = motorPositions;
+		inputs.motorVelocities = motorVelocities;
 
-    inputs.motorVoltages = motorVoltages;
-    inputs.motorCurrents = motorCurrents;
+		inputs.motorVoltages = motorVoltages;
+		inputs.motorCurrents = motorCurrents;
 
-    switch (hardwareConfig.encoderType()) {
-      case INTERNAL:
-        encoderConnected = false;
-        break;
-      case EXTERNAL_CANCODER:
-        encoderConnected = externalEncoder.isConnected();
-        break;
-      case EXTERNAL_CANCODER_PRO:
-        encoderConnected = false;
-        break;
-      case EXTERNAL_DIO:
-        encoderConnected = externalEncoder.isConnected();
-        break;
-      case EXTERNAL_SPARK:
-        encoderConnected = motors[0].getLastError() == REVLibError.kOk;
-        break;
-    }
+		switch (hardwareConfig.encoderType()) {
+			case INTERNAL :
+				encoderConnected = false;
+				break;
+			case EXTERNAL_CANCODER :
+				encoderConnected = externalEncoder.isConnected();
+				break;
+			case EXTERNAL_CANCODER_PRO :
+				encoderConnected = false;
+				break;
+			case EXTERNAL_DIO :
+				encoderConnected = externalEncoder.isConnected();
+				break;
+			case EXTERNAL_SPARK :
+				encoderConnected = motors[0].getLastError() == REVLibError.kOk;
+				break;
+		}
 
-    encoderAlert.set(!encoderConnected);
-    inputs.encoderConnected = encoderConnected;
+		encoderAlert.set(!encoderConnected);
+		inputs.encoderConnected = encoderConnected;
 
-    inputs.odometryTimestamps =
-        timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryTurnPositions =
-        turnPositionQueue.stream()
-            .map((Double value) -> new Rotation2d(value))
-            .toArray(Rotation2d[]::new);
-    timestampQueue.clear();
-    turnPositionQueue.clear();
-  }
+		inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+		inputs.odometryTurnPositions = turnPositionQueue.stream().map((Double value) -> new Rotation2d(value))
+				.toArray(Rotation2d[]::new);
+		timestampQueue.clear();
+		turnPositionQueue.clear();
+	}
 
-  @Override
-  public void setPosition(double desiredPosition, double desiredVelocity) {
-    positionSetpoint = desiredPosition;
+	@Override
+	public void setPosition(double desiredPosition, double desiredVelocity) {
+		positionSetpoint = desiredPosition;
 
-    motors[0]
-        .getClosedLoopController()
-        .setSetpoint(
-            positionSetpoint,
-            ControlType.kPosition,
-            ClosedLoopSlot.kSlot0,
-            feedforward.calculate(velocitySetpoint, desiredVelocity));
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kPosition, ClosedLoopSlot.kSlot0,
+				feedforward.calculate(velocitySetpoint, desiredVelocity));
 
-    velocitySetpoint = desiredVelocity;
-  }
+		velocitySetpoint = desiredVelocity;
+	}
 
-  @Override
-  public void setVoltage(double voltage) {
-    motors[0].setVoltage(voltage);
-  }
+	@Override
+	public void setVoltage(double voltage) {
+		motors[0].setVoltage(voltage);
+	}
 
-  @Override
-  public void setGains(AzimuthMotorGains gains) {
-    feedforward.setGains(gains.kS(), gains.kV(), gains.kA());
+	@Override
+	public void setGains(AzimuthMotorGains gains) {
+		feedforward.setGains(gains.kS(), gains.kV(), gains.kA());
 
-    motors[0].configure(
-        leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())),
-        ResetMode.kNoResetSafeParameters,
-        PersistMode.kNoPersistParameters);
+		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())),
+				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
-    System.out.println(name + " gains set to " + gains);
-  }
+		System.out.println(name + " gains set to " + gains);
+	}
 
-  @Override
-  public String getName() {
-    return name;
-  }
+	@Override
+	public String getName() {
+		return name;
+	}
 }

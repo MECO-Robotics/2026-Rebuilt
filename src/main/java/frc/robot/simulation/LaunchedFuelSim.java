@@ -25,225 +25,202 @@ import org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnField;
 import org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnFly;
 import org.littletonrobotics.junction.Logger;
 
-/** Launches held fuel from the intake simulation into Maple's projectile simulation. */
+/**
+ * Launches held fuel from the intake simulation into Maple's projectile
+ * simulation.
+ */
 public class LaunchedFuelSim {
-  private final Drive drive;
-  private final IntakeSim intakeSim;
-  private final PositionJoint hood;
-  private final Flywheel shooterFlywheel;
-  private int successfulScoreCount = 0;
+	private final Drive drive;
+	private final IntakeSim intakeSim;
+	private final PositionJoint hood;
+	private final Flywheel shooterFlywheel;
+	private int successfulScoreCount = 0;
 
-  private double lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
-  private double nextBurstShotTimestampSeconds = Double.NEGATIVE_INFINITY;
-  private int pendingBurstShots = 0;
-  private int burstShotIndex = 0;
+	private double lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
+	private double nextBurstShotTimestampSeconds = Double.NEGATIVE_INFINITY;
+	private int pendingBurstShots = 0;
+	private int burstShotIndex = 0;
 
-  public LaunchedFuelSim(
-      Drive drive, IntakeSim intakeSim, PositionJoint hood, Flywheel shooterFlywheel) {
-    this.drive = drive;
-    this.intakeSim = intakeSim;
-    this.hood = hood;
-    this.shooterFlywheel = shooterFlywheel;
-  }
+	public LaunchedFuelSim(Drive drive, IntakeSim intakeSim, PositionJoint hood, Flywheel shooterFlywheel) {
+		this.drive = drive;
+		this.intakeSim = intakeSim;
+		this.hood = hood;
+		this.shooterFlywheel = shooterFlywheel;
+	}
 
-  /** Attempts to launch a staggered burst of fuel from robot storage into the simulated arena. */
-  public void tryLaunch() {
-    double nowSeconds = Timer.getFPGATimestamp();
-    boolean inSim = Constants.currentMode == Constants.Mode.SIM && drive.getSimulation() != null;
-    boolean hasVelocity = hasLaunchVelocity();
-    boolean cooldownReady = pastCooldown();
-    int storedFuel = intakeSim.getStoredFuelCount();
-    double projectileSpeedMps = getProjectileSpeedMps();
+	/**
+	 * Attempts to launch a staggered burst of fuel from robot storage into the
+	 * simulated arena.
+	 */
+	public void tryLaunch() {
+		double nowSeconds = Timer.getFPGATimestamp();
+		boolean inSim = Constants.currentMode == Constants.Mode.SIM && drive.getSimulation() != null;
+		boolean hasVelocity = hasLaunchVelocity();
+		boolean cooldownReady = pastCooldown();
+		int storedFuel = intakeSim.getStoredFuelCount();
+		double projectileSpeedMps = getProjectileSpeedMps();
 
-    Logger.recordOutput("FieldSimulation/LaunchDebug/InSim", inSim);
-    Logger.recordOutput("FieldSimulation/LaunchDebug/HasLaunchVelocity", hasVelocity);
-    Logger.recordOutput("FieldSimulation/LaunchDebug/CooldownReady", cooldownReady);
-    Logger.recordOutput("FieldSimulation/LaunchDebug/StoredFuelCount", storedFuel);
-    Logger.recordOutput("FieldSimulation/LaunchDebug/ProjectileSpeedMps", projectileSpeedMps);
-    Logger.recordOutput("FieldSimulation/LaunchDebug/PendingBurstShots", pendingBurstShots);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/InSim", inSim);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/HasLaunchVelocity", hasVelocity);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/CooldownReady", cooldownReady);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/StoredFuelCount", storedFuel);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/ProjectileSpeedMps", projectileSpeedMps);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/PendingBurstShots", pendingBurstShots);
 
-    if (!inSim || !hasVelocity) {
-      return;
-    }
+		if (!inSim || !hasVelocity) {
+			return;
+		}
 
-    if (pendingBurstShots == 0 && cooldownReady) {
-      beginBurst(nowSeconds);
-    }
+		if (pendingBurstShots == 0 && cooldownReady) {
+			beginBurst(nowSeconds);
+		}
 
-    if (pendingBurstShots == 0 || nowSeconds < nextBurstShotTimestampSeconds) {
-      return;
-    }
+		if (pendingBurstShots == 0 || nowSeconds < nextBurstShotTimestampSeconds) {
+			return;
+		}
 
-    int launchedFuelCount = 0;
-    while (pendingBurstShots > 0 && nowSeconds >= nextBurstShotTimestampSeconds) {
-      if (!intakeSim.launchFuel()) {
-        pendingBurstShots = 0;
-        break;
-      }
+		int launchedFuelCount = 0;
+		while (pendingBurstShots > 0 && nowSeconds >= nextBurstShotTimestampSeconds) {
+			if (!intakeSim.launchFuel()) {
+				pendingBurstShots = 0;
+				break;
+			}
 
-      launchSingleFuel(burstShotIndex, projectileSpeedMps);
-      launchedFuelCount++;
-      burstShotIndex++;
-      pendingBurstShots--;
+			launchSingleFuel(burstShotIndex, projectileSpeedMps);
+			launchedFuelCount++;
+			burstShotIndex++;
+			pendingBurstShots--;
 
-      if (pendingBurstShots > 0) {
-        nextBurstShotTimestampSeconds += getRandomStaggerDelaySeconds();
-      }
-    }
+			if (pendingBurstShots > 0) {
+				nextBurstShotTimestampSeconds += getRandomStaggerDelaySeconds();
+			}
+		}
 
-    if (launchedFuelCount == 0) {
-      return;
-    }
+		if (launchedFuelCount == 0) {
+			return;
+		}
 
-    Logger.recordOutput("FieldSimulation/LaunchDebug/LaunchedFuelCount", launchedFuelCount);
-    Logger.recordOutput("FieldSimulation/LaunchDebug/LastLaunchTimestampSec", nowSeconds);
-  }
+		Logger.recordOutput("FieldSimulation/LaunchDebug/LaunchedFuelCount", launchedFuelCount);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/LastLaunchTimestampSec", nowSeconds);
+	}
 
-  public Command launchCommand() {
-    return Commands.run(this::tryLaunch);
-  }
+	public Command launchCommand() {
+		return Commands.run(this::tryLaunch);
+	}
 
-  /** Resets the simulated successful score counter. */
-  public void resetSuccessfulScoreCount() {
-    successfulScoreCount = 0;
-    Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
-  }
+	/** Resets the simulated successful score counter. */
+	public void resetSuccessfulScoreCount() {
+		successfulScoreCount = 0;
+		Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
+	}
 
-  /** Returns the simulated successful score counter. */
-  public int getSuccessfulScoreCount() {
-    return successfulScoreCount;
-  }
+	/** Returns the simulated successful score counter. */
+	public int getSuccessfulScoreCount() {
+		return successfulScoreCount;
+	}
 
-  private boolean hasLaunchVelocity() {
-    return Math.abs(shooterFlywheel.getVelocity()) >= MapleSimConstants.MIN_FLYWHEEL_RPS_FOR_SHOT;
-  }
+	private boolean hasLaunchVelocity() {
+		return Math.abs(shooterFlywheel.getVelocity()) >= MapleSimConstants.MIN_FLYWHEEL_RPS_FOR_SHOT;
+	}
 
-  private boolean pastCooldown() {
-    return Timer.getFPGATimestamp() - lastBurstTimestampSeconds
-        >= MapleSimConstants.SHOT_COOLDOWN_SECONDS;
-  }
+	private boolean pastCooldown() {
+		return Timer.getFPGATimestamp() - lastBurstTimestampSeconds >= MapleSimConstants.SHOT_COOLDOWN_SECONDS;
+	}
 
-  private void beginBurst(double nowSeconds) {
-    pendingBurstShots = MapleSimConstants.FUEL_PER_SHOT;
-    burstShotIndex = 0;
-    nextBurstShotTimestampSeconds = nowSeconds;
-    lastBurstTimestampSeconds = nowSeconds;
-  }
+	private void beginBurst(double nowSeconds) {
+		pendingBurstShots = MapleSimConstants.FUEL_PER_SHOT;
+		burstShotIndex = 0;
+		nextBurstShotTimestampSeconds = nowSeconds;
+		lastBurstTimestampSeconds = nowSeconds;
+	}
 
-  private double getRandomStaggerDelaySeconds() {
-    double averageDelay = MapleSimConstants.SHOT_COOLDOWN_SECONDS / MapleSimConstants.FUEL_PER_SHOT;
-    double jitterAmplitude = averageDelay * MapleSimConstants.SHOT_STAGGER_RANDOMNESS_RATIO;
-    double randomizedDelay = averageDelay + (Math.random() * 2.0 - 1.0) * jitterAmplitude;
-    return Math.max(MapleSimConstants.MIN_SHOT_STAGGER_SECONDS, randomizedDelay);
-  }
+	private double getRandomStaggerDelaySeconds() {
+		double averageDelay = MapleSimConstants.SHOT_COOLDOWN_SECONDS / MapleSimConstants.FUEL_PER_SHOT;
+		double jitterAmplitude = averageDelay * MapleSimConstants.SHOT_STAGGER_RANDOMNESS_RATIO;
+		double randomizedDelay = averageDelay + (Math.random() * 2.0 - 1.0) * jitterAmplitude;
+		return Math.max(MapleSimConstants.MIN_SHOT_STAGGER_SECONDS, randomizedDelay);
+	}
 
-  private void launchSingleFuel(int burstIndex, double projectileSpeedMps) {
-    double randomizedAngleRadians = getRandomizedLaunchAngleRadians();
-    double randomizedSpeedMps = getRandomizedProjectileSpeedMps(projectileSpeedMps);
+	private void launchSingleFuel(int burstIndex, double projectileSpeedMps) {
+		double randomizedAngleRadians = getRandomizedLaunchAngleRadians();
+		double randomizedSpeedMps = getRandomizedProjectileSpeedMps(projectileSpeedMps);
 
-    SimulatedArena.getInstance()
-        .addGamePieceProjectile(
-            new RebuiltFuelOnFly(
-                    drive.getPose().getTranslation(),
-                    getShooterTranslationForBurstIndex(burstIndex),
-                    ChassisSpeeds.fromRobotRelativeSpeeds(
-                        drive.getChassisSpeeds(), drive.getRotation()),
-                    drive.getRotation().plus(MapleSimConstants.SHOOTER_YAW_OFFSET),
-                    Meters.of(MapleSimConstants.SHOOTER_HEIGHT_METERS),
-                    MetersPerSecond.of(randomizedSpeedMps),
-                    Radians.of(Math.PI / 2 - randomizedAngleRadians))
-                // Set the target center to the Rebbuilt Hub of the current alliance
-                .withTargetPosition(
-                    () ->
-                        new Translation3d(
-                            FieldConstants.Hub.hubPosition().getX(),
-                            FieldConstants.Hub.hubPosition().getY(),
-                            FieldConstants.Hub.hubHeight))
-                // Set the tolerance around the rebuilt hub target opening
-                .withTargetTolerance(
-                    new Translation3d(Units.feetToMeters(2), Units.feetToMeters(2), 0.1))
-                // Set a callback to run when the fuel hits the target
-                .withHitTargetCallBack(
-                    () -> {
-                      successfulScoreCount++;
-                      Logger.recordOutput(
-                          "FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
-                      SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel());
-                    })
-                // Configure callbacks to visualize the flight trajectory of the projectile
-                .withProjectileTrajectoryDisplayCallBack(
-                    // Callback for when the fuel will eventually hit the target (if configured)
-                    (pose3ds) ->
-                        Logger.recordOutput(
-                            "Flywheel/FuelProjectileSuccessfulShot",
-                            pose3ds.toArray(Pose3d[]::new)),
-                    // Callback for when the fuel will eventually miss the target, or if no target
-                    // is configured
-                    (pose3ds) ->
-                        Logger.recordOutput(
-                            "Flywheel/FuelProjectileUnsuccessfulShot",
-                            pose3ds.toArray(Pose3d[]::new))));
-  }
+		SimulatedArena.getInstance()
+				.addGamePieceProjectile(new RebuiltFuelOnFly(drive.getPose().getTranslation(),
+						getShooterTranslationForBurstIndex(burstIndex),
+						ChassisSpeeds.fromRobotRelativeSpeeds(drive.getChassisSpeeds(), drive.getRotation()),
+						drive.getRotation().plus(MapleSimConstants.SHOOTER_YAW_OFFSET),
+						Meters.of(MapleSimConstants.SHOOTER_HEIGHT_METERS), MetersPerSecond.of(randomizedSpeedMps),
+						Radians.of(Math.PI / 2 - randomizedAngleRadians))
+								// Set the target center to the Rebbuilt Hub of the current alliance
+								.withTargetPosition(() -> new Translation3d(FieldConstants.Hub.hubPosition().getX(),
+										FieldConstants.Hub.hubPosition().getY(), FieldConstants.Hub.hubHeight))
+								// Set the tolerance around the rebuilt hub target opening
+								.withTargetTolerance(
+										new Translation3d(Units.feetToMeters(2), Units.feetToMeters(2), 0.1))
+								// Set a callback to run when the fuel hits the target
+								.withHitTargetCallBack(() -> {
+									successfulScoreCount++;
+									Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
+									SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel());
+								})
+								// Configure callbacks to visualize the flight trajectory of the projectile
+								.withProjectileTrajectoryDisplayCallBack(
+										// Callback for when the fuel will eventually hit the target (if configured)
+										(pose3ds) -> Logger.recordOutput("Flywheel/FuelProjectileSuccessfulShot",
+												pose3ds.toArray(Pose3d[]::new)),
+										// Callback for when the fuel will eventually miss the target, or if no target
+										// is configured
+										(pose3ds) -> Logger.recordOutput("Flywheel/FuelProjectileUnsuccessfulShot",
+												pose3ds.toArray(Pose3d[]::new))));
+	}
 
-  private double getRandomizedLaunchAngleRadians() {
-    double baseAngleRadians = getLaunchAngleRadians();
-    double jitterRadians =
-        (Math.random() * 2.0 - 1.0) * MapleSimConstants.SHOT_ANGLE_RANDOMNESS_RADIANS;
-    double randomizedAngleRadians = baseAngleRadians + jitterRadians;
-    return MathUtil.clamp(
-        randomizedAngleRadians,
-        MapleSimConstants.MIN_LAUNCH_ANGLE_RADIANS,
-        MapleSimConstants.MAX_LAUNCH_ANGLE_RADIANS);
-  }
+	private double getRandomizedLaunchAngleRadians() {
+		double baseAngleRadians = getLaunchAngleRadians();
+		double jitterRadians = (Math.random() * 2.0 - 1.0) * MapleSimConstants.SHOT_ANGLE_RANDOMNESS_RADIANS;
+		double randomizedAngleRadians = baseAngleRadians + jitterRadians;
+		return MathUtil.clamp(randomizedAngleRadians, MapleSimConstants.MIN_LAUNCH_ANGLE_RADIANS,
+				MapleSimConstants.MAX_LAUNCH_ANGLE_RADIANS);
+	}
 
-  private double getRandomizedProjectileSpeedMps(double baseSpeedMps) {
-    double jitterScale =
-        1.0 + (Math.random() * 2.0 - 1.0) * MapleSimConstants.SHOT_VELOCITY_RANDOMNESS_RATIO;
-    return baseSpeedMps * jitterScale;
-  }
+	private double getRandomizedProjectileSpeedMps(double baseSpeedMps) {
+		double jitterScale = 1.0 + (Math.random() * 2.0 - 1.0) * MapleSimConstants.SHOT_VELOCITY_RANDOMNESS_RATIO;
+		return baseSpeedMps * jitterScale;
+	}
 
-  private double getLaunchAngleRadians() {
-    double hoodAngle =
-        Rotation2d.fromRotations(hood.getPosition()).getRadians()
-            + MapleSimConstants.HOOD_ANGLE_OFFSET_RADIANS;
-    return MathUtil.clamp(
-        hoodAngle,
-        MapleSimConstants.MIN_LAUNCH_ANGLE_RADIANS,
-        MapleSimConstants.MAX_LAUNCH_ANGLE_RADIANS);
-  }
+	private double getLaunchAngleRadians() {
+		double hoodAngle = Rotation2d.fromRotations(hood.getPosition()).getRadians()
+				+ MapleSimConstants.HOOD_ANGLE_OFFSET_RADIANS;
+		return MathUtil.clamp(hoodAngle, MapleSimConstants.MIN_LAUNCH_ANGLE_RADIANS,
+				MapleSimConstants.MAX_LAUNCH_ANGLE_RADIANS);
+	}
 
-  private double getProjectileSpeedMps() {
-    return Math.abs(shooterFlywheel.getVelocity()) * MapleSimConstants.MPS_PER_FLYWHEEL_RPS;
-  }
+	private double getProjectileSpeedMps() {
+		return Math.abs(shooterFlywheel.getVelocity()) * MapleSimConstants.MPS_PER_FLYWHEEL_RPS;
+	}
 
-  private Translation2d getShooterTranslationForBurstIndex(int burstIndex) {
-    double centeredIndex = burstIndex - (MapleSimConstants.FUEL_PER_SHOT - 1) / 2.0;
-    double lateralOffset = centeredIndex * MapleSimConstants.FUEL_BURST_LATERAL_SPACING_METERS;
-    return MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT.plus(
-        new Translation2d(0.0, lateralOffset));
-  }
+	private Translation2d getShooterTranslationForBurstIndex(int burstIndex) {
+		double centeredIndex = burstIndex - (MapleSimConstants.FUEL_PER_SHOT - 1) / 2.0;
+		double lateralOffset = centeredIndex * MapleSimConstants.FUEL_BURST_LATERAL_SPACING_METERS;
+		return MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT.plus(new Translation2d(0.0, lateralOffset));
+	}
 
-  private Translation2d getHubBackSpawnPosition() {
-    double backDirection = Constants.isAllianceRed() ? -1.0 : 1.0;
-    return FieldConstants.Hub.hubPosition()
-        .plus(
-            new Translation2d(
-                backDirection * MapleSimConstants.HUB_BACK_SPAWN_X_OFFSET_METERS, 0.0));
-  }
+	private Translation2d getHubBackSpawnPosition() {
+		double backDirection = Constants.isAllianceRed() ? -1.0 : 1.0;
+		return FieldConstants.Hub.hubPosition()
+				.plus(new Translation2d(backDirection * MapleSimConstants.HUB_BACK_SPAWN_X_OFFSET_METERS, 0.0));
+	}
 
-  private RebuiltFuelOnField createHubBackSpawnFuel() {
-    double backDirection = Constants.isAllianceRed() ? -1.0 : 1.0;
-    double baseHeadingRadians = backDirection > 0.0 ? 0.0 : Math.PI;
-    double randomHeadingOffsetRadians =
-        (Math.random() * 2.0 - 1.0)
-            * Math.toRadians(MapleSimConstants.HUB_BACK_SPAWN_DIRECTION_RNG_DEG);
-    double randomizedHeadingRadians = baseHeadingRadians + randomHeadingOffsetRadians;
-    double velocityX =
-        MapleSimConstants.HUB_BACK_SPAWN_SPEED_MPS * Math.cos(randomizedHeadingRadians);
-    double velocityY =
-        MapleSimConstants.HUB_BACK_SPAWN_SPEED_MPS * Math.sin(randomizedHeadingRadians);
-    RebuiltFuelOnField spawnedFuel = new RebuiltFuelOnField(getHubBackSpawnPosition());
-    spawnedFuel.setVelocity(new ChassisSpeeds(velocityX, velocityY, 0.0));
-    return spawnedFuel;
-  }
+	private RebuiltFuelOnField createHubBackSpawnFuel() {
+		double backDirection = Constants.isAllianceRed() ? -1.0 : 1.0;
+		double baseHeadingRadians = backDirection > 0.0 ? 0.0 : Math.PI;
+		double randomHeadingOffsetRadians = (Math.random() * 2.0 - 1.0)
+				* Math.toRadians(MapleSimConstants.HUB_BACK_SPAWN_DIRECTION_RNG_DEG);
+		double randomizedHeadingRadians = baseHeadingRadians + randomHeadingOffsetRadians;
+		double velocityX = MapleSimConstants.HUB_BACK_SPAWN_SPEED_MPS * Math.cos(randomizedHeadingRadians);
+		double velocityY = MapleSimConstants.HUB_BACK_SPAWN_SPEED_MPS * Math.sin(randomizedHeadingRadians);
+		RebuiltFuelOnField spawnedFuel = new RebuiltFuelOnField(getHubBackSpawnPosition());
+		spawnedFuel.setVelocity(new ChassisSpeeds(velocityX, velocityY, 0.0));
+		return spawnedFuel;
+	}
 }

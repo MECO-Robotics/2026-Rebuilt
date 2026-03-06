@@ -191,8 +191,7 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         toggleOffOn()
-        googleJavaFormat()
-        removeUnusedImports()
+        eclipse().configFile(".vscode/eclipse-formatter.xml")
         trimTrailingWhitespace()
         endWithNewline()
     }

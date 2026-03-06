@@ -33,189 +33,164 @@ import java.util.ArrayList;
 import java.util.Queue;
 
 public class DriveMotorIOTalonFX implements DriveMotorIO {
-  private final String name;
+	private final String name;
 
-  private final TalonFX[] motors;
-  private final TalonFXConfiguration leaderConfig;
+	private final TalonFX[] motors;
+	private final TalonFXConfiguration leaderConfig;
 
-  private final VoltageOut voltageRequest = new VoltageOut(0);
-  private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+	private final VoltageOut voltageRequest = new VoltageOut(0);
+	private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
 
-  private final StatusSignal<AngularVelocity> velocity;
-  private final StatusSignal<Angle> position;
+	private final StatusSignal<AngularVelocity> velocity;
+	private final StatusSignal<Angle> position;
 
-  private final ArrayList<StatusSignal<Angle>> positions = new ArrayList<>();
-  private final ArrayList<StatusSignal<AngularVelocity>> velocities = new ArrayList<>();
+	private final ArrayList<StatusSignal<Angle>> positions = new ArrayList<>();
+	private final ArrayList<StatusSignal<AngularVelocity>> velocities = new ArrayList<>();
 
-  private final ArrayList<StatusSignal<Voltage>> voltages = new ArrayList<>();
-  private final ArrayList<StatusSignal<Current>> currents = new ArrayList<>();
+	private final ArrayList<StatusSignal<Voltage>> voltages = new ArrayList<>();
+	private final ArrayList<StatusSignal<Current>> currents = new ArrayList<>();
 
-  private final boolean[] motorsConnected;
+	private final boolean[] motorsConnected;
 
-  private final double[] motorPositions;
-  private final double[] motorVelocities;
+	private final double[] motorPositions;
+	private final double[] motorVelocities;
 
-  private final double[] motorVoltages;
-  private final double[] motorCurrents;
+	private final double[] motorVoltages;
+	private final double[] motorCurrents;
 
-  private final Alert[] motorAlerts;
+	private final Alert[] motorAlerts;
 
-  private double velocitySetpoint = 0.0;
+	private double velocitySetpoint = 0.0;
 
-  private final Queue<Double> timestampQueue;
-  private final Queue<Double> drivePositionQueue;
+	private final Queue<Double> timestampQueue;
+	private final Queue<Double> drivePositionQueue;
 
-  private MotorAlignmentValue motorval;
+	private MotorAlignmentValue motorval;
 
-  public DriveMotorIOTalonFX(String name, DriveMotorHardwareConfig config) {
-    this.name = name;
-    CANBus canBus = new CANBus(config.canBus());
-    int numMotors = config.canIds().length;
+	public DriveMotorIOTalonFX(String name, DriveMotorHardwareConfig config) {
+		this.name = name;
+		CANBus canBus = new CANBus(config.canBus());
+		int numMotors = config.canIds().length;
 
-    assert numMotors > 0 && (numMotors == config.reversed().length);
+		assert numMotors > 0 && (numMotors == config.reversed().length);
 
-    motors = new TalonFX[numMotors];
-    motorsConnected = new boolean[numMotors];
-    motorPositions = new double[numMotors];
-    motorVelocities = new double[numMotors];
-    motorVoltages = new double[numMotors];
-    motorCurrents = new double[numMotors];
-    motorAlerts = new Alert[numMotors];
+		motors = new TalonFX[numMotors];
+		motorsConnected = new boolean[numMotors];
+		motorPositions = new double[numMotors];
+		motorVelocities = new double[numMotors];
+		motorVoltages = new double[numMotors];
+		motorCurrents = new double[numMotors];
+		motorAlerts = new Alert[numMotors];
 
-    motors[0] = new TalonFX(config.canIds()[0], canBus);
-    leaderConfig =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs()
-                    .withNeutralMode(NeutralModeValue.Brake)
-                    .withInverted(
-                        config.reversed()[0]
-                            ? InvertedValue.Clockwise_Positive
-                            : InvertedValue.CounterClockwise_Positive))
-            .withFeedback(
-                new FeedbackConfigs()
-                    .withSensorToMechanismRatio(config.gearRatio())
-                    .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor))
-            .withCurrentLimits(
-                new CurrentLimitsConfigs()
-                    .withSupplyCurrentLimit(config.currentLimit())
-                    .withSupplyCurrentLimitEnable(true));
+		motors[0] = new TalonFX(config.canIds()[0], canBus);
+		leaderConfig = new TalonFXConfiguration()
+				.withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake)
+						.withInverted(config.reversed()[0]
+								? InvertedValue.Clockwise_Positive
+								: InvertedValue.CounterClockwise_Positive))
+				.withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(config.gearRatio())
+						.withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor))
+				.withCurrentLimits(new CurrentLimitsConfigs().withSupplyCurrentLimit(config.currentLimit())
+						.withSupplyCurrentLimitEnable(true));
 
-    tryUntilOk(5, () -> motors[0].getConfigurator().apply(leaderConfig));
+		tryUntilOk(5, () -> motors[0].getConfigurator().apply(leaderConfig));
 
-    velocity = motors[0].getVelocity();
-    position = motors[0].getPosition();
+		velocity = motors[0].getVelocity();
+		position = motors[0].getPosition();
 
-    positions.add(motors[0].getPosition());
-    velocities.add(motors[0].getVelocity());
+		positions.add(motors[0].getPosition());
+		velocities.add(motors[0].getVelocity());
 
-    voltages.add(motors[0].getSupplyVoltage());
-    currents.add(motors[0].getStatorCurrent());
+		voltages.add(motors[0].getSupplyVoltage());
+		currents.add(motors[0].getStatorCurrent());
 
-    motorAlerts[0] =
-        new Alert(
-            name,
-            name + " Leader Motor Disconnected! CAN ID: " + config.canIds()[0],
-            AlertType.kError);
+		motorAlerts[0] = new Alert(name, name + " Leader Motor Disconnected! CAN ID: " + config.canIds()[0],
+				AlertType.kError);
 
-    for (int i = 1; i < config.canIds().length; i++) {
-      motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
-      motors[i] = new TalonFX(config.canIds()[i], canBus);
-      motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
+		for (int i = 1; i < config.canIds().length; i++) {
+			motorval = config.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
+			motors[i] = new TalonFX(config.canIds()[i], canBus);
+			motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
 
-      motorAlerts[i] =
-          new Alert(
-              name,
-              name + " Follower Motor " + i + " Disconnected! CAN ID: " + config.canIds()[i],
-              AlertType.kError);
+			motorAlerts[i] = new Alert(name,
+					name + " Follower Motor " + i + " Disconnected! CAN ID: " + config.canIds()[i], AlertType.kError);
 
-      positions.add(motors[i].getPosition());
-      velocities.add(motors[i].getVelocity());
+			positions.add(motors[i].getPosition());
+			velocities.add(motors[i].getVelocity());
 
-      voltages.add(motors[i].getSupplyVoltage());
-      currents.add(motors[i].getStatorCurrent());
-    }
+			voltages.add(motors[i].getSupplyVoltage());
+			currents.add(motors[i].getStatorCurrent());
+		}
 
-    timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
+		timestampQueue = PhoenixOdometryThread.getInstance().makeTimestampQueue();
 
-    drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(position);
+		drivePositionQueue = PhoenixOdometryThread.getInstance().registerSignal(position);
 
-    BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryFrequency, position);
-  }
+		BaseStatusSignal.setUpdateFrequencyForAll(DriveConstants.odometryFrequency, position);
+	}
 
-  @Override
-  public void updateInputs(DriveMotorIOInputs inputs) {
-    BaseStatusSignal.refreshAll(velocity, position);
+	@Override
+	public void updateInputs(DriveMotorIOInputs inputs) {
+		BaseStatusSignal.refreshAll(velocity, position);
 
-    inputs.velocityRotationsPerSecond = velocity.getValueAsDouble();
-    inputs.desiredVelocityRotationsPerSecond = velocitySetpoint;
+		inputs.velocityRotationsPerSecond = velocity.getValueAsDouble();
+		inputs.desiredVelocityRotationsPerSecond = velocitySetpoint;
 
-    inputs.positionRotations = position.getValueAsDouble();
+		inputs.positionRotations = position.getValueAsDouble();
 
-    for (int i = 0; i < motors.length; i++) {
-      motorsConnected[i] =
-          BaseStatusSignal.refreshAll(
-                  positions.get(i), velocities.get(i), voltages.get(i), currents.get(i))
-              .isOK();
+		for (int i = 0; i < motors.length; i++) {
+			motorsConnected[i] = BaseStatusSignal
+					.refreshAll(positions.get(i), velocities.get(i), voltages.get(i), currents.get(i)).isOK();
 
-      motorPositions[i] = positions.get(i).getValueAsDouble();
-      motorVelocities[i] = velocities.get(i).getValueAsDouble();
+			motorPositions[i] = positions.get(i).getValueAsDouble();
+			motorVelocities[i] = velocities.get(i).getValueAsDouble();
 
-      motorVoltages[i] = voltages.get(i).getValueAsDouble();
-      motorCurrents[i] = motors[i].getStatorCurrent().getValueAsDouble();
+			motorVoltages[i] = voltages.get(i).getValueAsDouble();
+			motorCurrents[i] = motors[i].getStatorCurrent().getValueAsDouble();
 
-      motorAlerts[i].set(motorsConnected[i]);
-    }
+			motorAlerts[i].set(motorsConnected[i]);
+		}
 
-    inputs.motorsConnected = motorsConnected;
+		inputs.motorsConnected = motorsConnected;
 
-    inputs.motorPositions = motorPositions;
-    inputs.motorVelocities = motorVelocities;
+		inputs.motorPositions = motorPositions;
+		inputs.motorVelocities = motorVelocities;
 
-    inputs.motorVoltages = motorVoltages;
-    inputs.motorCurrents = motorCurrents;
+		inputs.motorVoltages = motorVoltages;
+		inputs.motorCurrents = motorCurrents;
 
-    inputs.odometryTimestamps =
-        timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
-    inputs.odometryDrivePositionsRad =
-        drivePositionQueue.stream()
-            .mapToDouble((Double value) -> Units.rotationsToRadians(value))
-            .toArray();
+		inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
+		inputs.odometryDrivePositionsRad = drivePositionQueue.stream()
+				.mapToDouble((Double value) -> Units.rotationsToRadians(value)).toArray();
 
-    timestampQueue.clear();
-    drivePositionQueue.clear();
-  }
+		timestampQueue.clear();
+		drivePositionQueue.clear();
+	}
 
-  @Override
-  public void setVelocity(double velocity) {
-    velocitySetpoint = velocity;
+	@Override
+	public void setVelocity(double velocity) {
+		velocitySetpoint = velocity;
 
-    motors[0].setControl(velocityRequest.withVelocity(velocity));
-  }
+		motors[0].setControl(velocityRequest.withVelocity(velocity));
+	}
 
-  @Override
-  public void setVoltage(double voltage) {
-    motors[0].setControl(voltageRequest.withOutput(voltage));
-  }
+	@Override
+	public void setVoltage(double voltage) {
+		motors[0].setControl(voltageRequest.withOutput(voltage));
+	}
 
-  @Override
-  public void setGains(DriveMotorGains gains) {
-    Slot0Configs slot0Configs =
-        new Slot0Configs()
-            .withKP(gains.kP())
-            .withKI(gains.kI())
-            .withKD(gains.kD())
-            .withKV(gains.kV())
-            .withKA(gains.kA())
-            .withKS(gains.kS());
+	@Override
+	public void setGains(DriveMotorGains gains) {
+		Slot0Configs slot0Configs = new Slot0Configs().withKP(gains.kP()).withKI(gains.kI()).withKD(gains.kD())
+				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS());
 
-    tryUntilOk(5, () -> motors[0].getConfigurator().apply(slot0Configs));
+		tryUntilOk(5, () -> motors[0].getConfigurator().apply(slot0Configs));
 
-    System.out.println(name + " gains set to " + gains);
-  }
+		System.out.println(name + " gains set to " + gains);
+	}
 
-  @Override
-  public String getName() {
-    return name;
-  }
+	@Override
+	public String getName() {
+		return name;
+	}
 }
