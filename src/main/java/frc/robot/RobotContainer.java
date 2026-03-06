@@ -7,6 +7,10 @@
 
 package frc.robot;
 
+import static frc.robot.constants.vision.VisionConstants.arducamName;
+import static frc.robot.constants.vision.VisionConstants.robotToArducam;
+import static frc.robot.constants.vision.VisionConstants.robotToQuest;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -36,6 +40,11 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -55,6 +64,7 @@ public class RobotContainer {
   private final Flywheel intakeRoller;
   private final PositionJoint intakeRack;
   private final PositionJoint hood;
+  private final Vision vision;
   private final RobotSimulation simulation;
 
   // Controller
@@ -120,6 +130,18 @@ public class RobotContainer {
         new PositionJoint(
             PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
             ShooterConstants.HOOD_GAINS);
+
+    vision =
+        switch (Constants.currentMode) {
+          case REAL -> new Vision(
+              drive::addVisionMeasurement,
+              new VisionIOQuestNav(
+                  robotToQuest, new VisionIOPhotonVision(arducamName, robotToArducam)));
+          case SIM -> new Vision(
+              drive::addVisionMeasurement,
+              new VisionIOPhotonVisionSim(arducamName, robotToQuest, drive::getPose));
+          case REPLAY -> new Vision(drive::addVisionMeasurement, new VisionIO() {});
+        };
 
     simulation = RobotSimulation.create(drive, intakeRack, hood, shooterFlywheel);
     simulation.bindCommandHooks();
