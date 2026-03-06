@@ -39,6 +39,7 @@ public class VisionConstants {
           new Rotation3d(0.0, Units.degreesToRadians(-35), 0));
 
   // Basic filtering thresholds
+  public static int minTagCountForOdometry = 2;
   public static double maxAmbiguity = 0.3;
   public static double maxZError = 0.75;
 
