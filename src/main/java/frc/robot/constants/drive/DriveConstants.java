@@ -25,7 +25,7 @@ import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
  * drivetrain.
  */
 public class DriveConstants {
-	public static double spinMultipler = 0.75; // Multiplier for max spin speed, used to reduce spin speed for better
+	public static double spinMultipler = 0.50; // Multiplier for max spin speed, used to reduce spin speed for better
 												// control during
 	// testing
 	public static final double odometryFrequency = new CANBus(DriveMotorConstants.canBusName).isNetworkFD()
@@ -53,8 +53,8 @@ public class DriveConstants {
 	public static final double kSteerInertia = 0.004;
 	public static final double kDriveInertia = 0.025;
 
-	public static final LinearVelocity maxSpeedAt12Volts = FeetPerSecond.of(15); // MK4i 16.5 ft/s L3 Kraken FOC With
-	// 14t pinion
+	public static final LinearVelocity maxSpeedAt12Volts = FeetPerSecond.of(15); // X2i 16.89
+	// 11t pinion
 
 	// Sim motor config
 	public static final DCMotor driveGearbox = DCMotor.getKrakenX60Foc(1);
@@ -85,8 +85,9 @@ public class DriveConstants {
 	public static final double turnEncoderVelocityFactor = (2 * Math.PI) / 60.0 / steerMotorGearRatio; // RPM -> Rad/Sec
 
 	// PathPlanner configuration
-	public static final Mass robotMass = Pound.of(80); // Convert kg to pounds
-	public static final double robotMOI = 6.883;
+	public static final Mass robotMass = Pound.of(80); // Convert pounds to kg
+	public static final double robotMoiLbInSq = 10124.402142;
+	public static final double robotMOI = Units.lbsToKilograms(robotMoiLbInSq) * Math.pow(Units.inchesToMeters(1.0), 2);
 	public static final double wheelCOF = 2.255;
 	public static final RobotConfig ppConfig = createPathPlannerConfig();
 
