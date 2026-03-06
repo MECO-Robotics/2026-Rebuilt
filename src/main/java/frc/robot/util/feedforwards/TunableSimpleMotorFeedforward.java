@@ -1,7 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.util.feedforwards;
 
 import edu.wpi.first.math.controller.proto.SimpleMotorFeedforwardProto;
@@ -20,7 +16,7 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	/** The velocity gain, in V/(units/s). */
 	private double kv;
 
-	/** The acceleration gain, in V/(units/s²). */
+	/** The acceleration gain, in V/(units/sÂ²). */
 	private double ka;
 
 	/** The period, in seconds. */
@@ -38,7 +34,7 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	 * @param kv
 	 *            The velocity gain in V/(units/s).
 	 * @param ka
-	 *            The acceleration gain in V/(units/s²).
+	 *            The acceleration gain in V/(units/sÂ²).
 	 * @param dtSeconds
 	 *            The period in seconds.
 	 * @throws IllegalArgumentException
@@ -77,7 +73,7 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	 * @param kv
 	 *            The velocity gain in V/(units/s).
 	 * @param ka
-	 *            The acceleration gain in V/(units/s²).
+	 *            The acceleration gain in V/(units/sÂ²).
 	 * @throws IllegalArgumentException
 	 *             for kv &lt; zero.
 	 * @throws IllegalArgumentException
@@ -129,13 +125,13 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	}
 
 	/**
-	 * Returns the acceleration gain in V/(units/s²).
+	 * Returns the acceleration gain in V/(units/sÂ²).
 	 *
 	 * <p>
 	 * The units should be radians for angular systems and meters for linear
 	 * systems.
 	 *
-	 * @return The acceleration gain in V/(units/s²).
+	 * @return The acceleration gain in V/(units/sÂ²).
 	 */
 	public double getKa() {
 		return ka;
@@ -216,7 +212,7 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	 * @param maxVoltage
 	 *            The maximum voltage that can be supplied to the motor, in volts.
 	 * @param acceleration
-	 *            The acceleration of the motor, in (units/s²).
+	 *            The acceleration of the motor, in (units/sÂ²).
 	 * @return The maximum possible velocity in (units/s) at the given acceleration.
 	 */
 	public double maxAchievableVelocity(double maxVoltage, double acceleration) {
@@ -238,7 +234,7 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	 * @param maxVoltage
 	 *            The maximum voltage that can be supplied to the motor, in volts.
 	 * @param acceleration
-	 *            The acceleration of the motor, in (units/s²).
+	 *            The acceleration of the motor, in (units/sÂ²).
 	 * @return The maximum possible velocity in (units/s) at the given acceleration.
 	 */
 	public double minAchievableVelocity(double maxVoltage, double acceleration) {
@@ -261,7 +257,7 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	 *            The maximum voltage that can be supplied to the motor, in volts.
 	 * @param velocity
 	 *            The velocity of the motor, in (units/s).
-	 * @return The maximum possible acceleration in (units/s²) at the given
+	 * @return The maximum possible acceleration in (units/sÂ²) at the given
 	 *         velocity.
 	 */
 	public double maxAchievableAcceleration(double maxVoltage, double velocity) {
@@ -283,7 +279,7 @@ public class TunableSimpleMotorFeedforward implements ProtobufSerializable, Stru
 	 *            The maximum voltage that can be supplied to the motor, in volts.
 	 * @param velocity
 	 *            The velocity of the motor, in (units/s).
-	 * @return The maximum possible acceleration in (units/s²) at the given
+	 * @return The maximum possible acceleration in (units/sÂ²) at the given
 	 *         velocity.
 	 */
 	public double minAchievableAcceleration(double maxVoltage, double velocity) {

@@ -1,10 +1,3 @@
-// Copyright (c) 2021-2026 Littleton Robotics
-// http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by a BSD
-// license that can be found in the LICENSE file
-// at the root directory of this project.
-
 package frc.robot;
 
 import static frc.robot.constants.vision.VisionConstants.arducamName;
@@ -144,7 +137,7 @@ public class RobotContainer {
 		drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> controller.getLeftY(),
 				() -> controller.getLeftX(), () -> controller.getRightX()));
 
-		// Lock to 0° when A button is held
+		// Lock to 0Â° when A button is held
 		// controller
 		// .x()
 		// .whileTrue(

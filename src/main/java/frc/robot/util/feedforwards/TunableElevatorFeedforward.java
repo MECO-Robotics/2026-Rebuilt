@@ -1,7 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.util.feedforwards;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -28,7 +24,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	/** The velocity gain, in V/(m/s). */
 	private double kv;
 
-	/** The acceleration gain, in V/(m/s²). */
+	/** The acceleration gain, in V/(m/sÂ²). */
 	private double ka;
 
 	/** The period, in seconds. */
@@ -44,7 +40,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	 * @param kv
 	 *            The velocity gain in V/(m/s).
 	 * @param ka
-	 *            The acceleration gain in V/(m/s²).
+	 *            The acceleration gain in V/(m/sÂ²).
 	 * @param dtSeconds
 	 *            The period in seconds.
 	 * @throws IllegalArgumentException
@@ -82,7 +78,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	 * @param kv
 	 *            The velocity gain in V/(m/s).
 	 * @param ka
-	 *            The acceleration gain in V/(m/s²).
+	 *            The acceleration gain in V/(m/sÂ²).
 	 * @throws IllegalArgumentException
 	 *             for kv &lt; zero.
 	 * @throws IllegalArgumentException
@@ -141,7 +137,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	}
 
 	/**
-	 * Returns the acceleration gain in V/(m/s²).
+	 * Returns the acceleration gain in V/(m/sÂ²).
 	 *
 	 * @return The acceleration gain.
 	 */
@@ -264,7 +260,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	 *            The maximum voltage that can be supplied to the elevator, in
 	 *            volts.
 	 * @param acceleration
-	 *            The acceleration of the elevator, in (m/s²).
+	 *            The acceleration of the elevator, in (m/sÂ²).
 	 * @return The maximum possible velocity in (m/s) at the given acceleration.
 	 */
 	public double maxAchievableVelocity(double maxVoltage, double acceleration) {
@@ -283,7 +279,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	 *            The maximum voltage that can be supplied to the elevator, in
 	 *            volts.
 	 * @param acceleration
-	 *            The acceleration of the elevator, in (m/s²).
+	 *            The acceleration of the elevator, in (m/sÂ²).
 	 * @return The maximum possible velocity in (m/s) at the given acceleration.
 	 */
 	public double minAchievableVelocity(double maxVoltage, double acceleration) {
@@ -303,7 +299,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	 *            volts.
 	 * @param velocity
 	 *            The velocity of the elevator, in (m/s)
-	 * @return The maximum possible acceleration in (m/s²) at the given velocity.
+	 * @return The maximum possible acceleration in (m/sÂ²) at the given velocity.
 	 */
 	public double maxAchievableAcceleration(double maxVoltage, double velocity) {
 		return (maxVoltage - ks * Math.signum(velocity) - kg - velocity * kv) / ka;
@@ -321,7 +317,7 @@ public class TunableElevatorFeedforward implements PositionJointFeedforward, Pro
 	 *            volts.
 	 * @param velocity
 	 *            The velocity of the elevator, in (m/s)
-	 * @return The maximum possible acceleration in (m/s²) at the given velocity.
+	 * @return The maximum possible acceleration in (m/sÂ²) at the given velocity.
 	 */
 	public double minAchievableAcceleration(double maxVoltage, double velocity) {
 		return maxAchievableAcceleration(-maxVoltage, velocity);

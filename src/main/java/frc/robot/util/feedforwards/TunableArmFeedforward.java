@@ -1,7 +1,3 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot.util.feedforwards;
 
 import static edu.wpi.first.units.Units.Radians;
@@ -31,7 +27,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	/** The velocity gain, in V/(rad/s). */
 	private double kv;
 
-	/** The acceleration gain, in V/(rad/s²). */
+	/** The acceleration gain, in V/(rad/sÂ²). */
 	private double ka;
 
 	/** The period, in seconds. */
@@ -47,7 +43,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	 * @param kv
 	 *            The velocity gain in V/(rad/s).
 	 * @param ka
-	 *            The acceleration gain in V/(rad/s²).
+	 *            The acceleration gain in V/(rad/sÂ²).
 	 * @param dtSeconds
 	 *            The period in seconds.
 	 * @throws IllegalArgumentException
@@ -85,7 +81,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	 * @param kv
 	 *            The velocity gain in V/(rad/s).
 	 * @param ka
-	 *            The acceleration gain in V/(rad/s²).
+	 *            The acceleration gain in V/(rad/sÂ²).
 	 * @throws IllegalArgumentException
 	 *             for kv &lt; zero.
 	 * @throws IllegalArgumentException
@@ -143,7 +139,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	}
 
 	/**
-	 * Returns the acceleration gain in V/(rad/s²).
+	 * Returns the acceleration gain in V/(rad/sÂ²).
 	 *
 	 * @return The acceleration gain.
 	 */
@@ -273,7 +269,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	 *            should be parallel with the floor). If your encoder does not
 	 *            follow this convention, an offset should be added.
 	 * @param acceleration
-	 *            The acceleration of the arm, in (rad/s²).
+	 *            The acceleration of the arm, in (rad/sÂ²).
 	 * @return The maximum possible velocity in (rad/s) at the given acceleration
 	 *         and angle.
 	 */
@@ -297,7 +293,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	 *            should be parallel with the floor). If your encoder does not
 	 *            follow this convention, an offset should be added.
 	 * @param acceleration
-	 *            The acceleration of the arm, in (rad/s²).
+	 *            The acceleration of the arm, in (rad/sÂ²).
 	 * @return The minimum possible velocity in (rad/s) at the given acceleration
 	 *         and angle.
 	 */
@@ -322,7 +318,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	 *            follow this convention, an offset should be added.
 	 * @param velocity
 	 *            The velocity of the elevator, in (rad/s)
-	 * @return The maximum possible acceleration in (rad/s²) at the given velocity.
+	 * @return The maximum possible acceleration in (rad/sÂ²) at the given velocity.
 	 */
 	public double maxAchievableAcceleration(double maxVoltage, double angle, double velocity) {
 		return (maxVoltage - ks * Math.signum(velocity) - Math.cos(angle) * kg - velocity * kv) / ka;
@@ -344,7 +340,7 @@ public class TunableArmFeedforward implements PositionJointFeedforward, Protobuf
 	 *            follow this convention, an offset should be added.
 	 * @param velocity
 	 *            The velocity of the elevator, in (rad/s)
-	 * @return The maximum possible acceleration in (rad/s²) at the given velocity.
+	 * @return The maximum possible acceleration in (rad/sÂ²) at the given velocity.
 	 */
 	public double minAchievableAcceleration(double maxVoltage, double angle, double velocity) {
 		return maxAchievableAcceleration(-maxVoltage, angle, velocity);
