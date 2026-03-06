@@ -24,9 +24,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.Constants;
 import frc.robot.constants.Constants.Mode;
 import frc.robot.constants.drive.AzimuthMotorConstants.AzimuthMotorGains;
@@ -67,7 +65,6 @@ public class Drive extends SubsystemBase {
 	private SwerveDriveSimulation swerveDriveSimulation;
 	private final GyroIOInputsAutoLogged gyroInputs = new GyroIOInputsAutoLogged();
 	private final Module[] modules = new Module[4]; // FL, FR, BL, BR
-	private final SysIdRoutine sysId;
 	private final Alert gyroDisconnectedAlert = new Alert("Drive", "Disconnected gyro, using kinematics as fallback.",
 			AlertType.kError);
 	private final Alert gyroSampleMismatchAlert = new Alert("Drive",
@@ -261,12 +258,6 @@ public class Drive extends SubsystemBase {
 		PathPlannerLogging.setLogTargetPoseCallback((targetPose) -> {
 			Logger.recordOutput("Drive/Odometry/TrajectorySetpoint", targetPose);
 		});
-
-		// Configure SysId
-		sysId = new SysIdRoutine(
-				new SysIdRoutine.Config(null, null, null,
-						(state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
-				new SysIdRoutine.Mechanism((voltage) -> runCharacterization(voltage.in(Volts)), null, this));
 	}
 
 	@Override
@@ -393,7 +384,14 @@ public class Drive extends SubsystemBase {
 	/** Runs the drive in a straight line with the specified drive output. */
 	public void runCharacterization(double output) {
 		for (int i = 0; i < 4; i++) {
-			modules[i].runCharacterization(output);
+			modules[i].runDriveCharacterization(output);
+		}
+	}
+
+	/** Runs azimuth characterization with zero drive motor output. */
+	public void runAzimuthCharacterization(double output) {
+		for (int i = 0; i < 4; i++) {
+			modules[i].runAzimuthCharacterization(output);
 		}
 	}
 
@@ -414,16 +412,6 @@ public class Drive extends SubsystemBase {
 		}
 		kinematics.resetHeadings(headings);
 		stop();
-	}
-
-	/** Returns a command to run a quasistatic test in the specified direction. */
-	public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-		return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.quasistatic(direction));
-	}
-
-	/** Returns a command to run a dynamic test in the specified direction. */
-	public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-		return run(() -> runCharacterization(0.0)).withTimeout(1.0).andThen(sysId.dynamic(direction));
 	}
 
 	/**
