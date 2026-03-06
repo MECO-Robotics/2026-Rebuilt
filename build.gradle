@@ -184,6 +184,7 @@ createVersionFile.dependsOn(eventDeploy)
 
 // Spotless formatting
 project.compileJava.dependsOn(spotlessApply)
+def eclipseFormatterFile = file(".vscode/eclipse-formatter.xml")
 spotless {
     java {
         target fileTree(".") {
@@ -191,7 +192,12 @@ spotless {
             exclude "**/build/**", "**/build-*/**"
         }
         toggleOffOn()
-        eclipse().configFile(".vscode/eclipse-formatter.xml")
+        if (eclipseFormatterFile.exists()) {
+            eclipse().configFile(eclipseFormatterFile)
+        } else {
+            // CI may not include dot-directories like .vscode; use default formatter.
+            eclipse()
+        }
         trimTrailingWhitespace()
         endWithNewline()
     }
