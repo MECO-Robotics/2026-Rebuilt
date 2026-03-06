@@ -14,8 +14,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.commands.drive.DriveSysIdCommands;
+import frc.robot.commands.flywheel.FlywheelSysIdCommands;
+import frc.robot.commands.position_joint.PositionJointSysIdCommands;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.Constants;
@@ -206,6 +210,87 @@ public class RobotContainer {
 		NamedCommands.registerCommand("AutoSpinUp", ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
 		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drive).withTimeout(2));
+
+		// SysId routines
+		NamedCommands.registerCommand("SysIdDriveQuasistaticForward",
+				DriveSysIdCommands.driveQuasistatic(drive, Direction.kForward));
+		NamedCommands.registerCommand("SysIdDriveQuasistaticReverse",
+				DriveSysIdCommands.driveQuasistatic(drive, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdDriveDynamicForward",
+				DriveSysIdCommands.driveDynamic(drive, Direction.kForward));
+		NamedCommands.registerCommand("SysIdDriveDynamicReverse",
+				DriveSysIdCommands.driveDynamic(drive, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdAzimuthQuasistaticForward",
+				DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kForward));
+		NamedCommands.registerCommand("SysIdAzimuthQuasistaticReverse",
+				DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdAzimuthDynamicForward",
+				DriveSysIdCommands.azimuthDynamic(drive, Direction.kForward));
+		NamedCommands.registerCommand("SysIdAzimuthDynamicReverse",
+				DriveSysIdCommands.azimuthDynamic(drive, Direction.kReverse));
+
+		NamedCommands.registerCommand("SysIdShooterFlywheelQuasistaticForward",
+				FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kForward));
+		NamedCommands.registerCommand("SysIdShooterFlywheelQuasistaticReverse",
+				FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdShooterFlywheelDynamicForward",
+				FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kForward));
+		NamedCommands.registerCommand("SysIdShooterFlywheelDynamicReverse",
+				FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kReverse));
+
+		NamedCommands.registerCommand("SysIdTopIndexerQuasistaticForward",
+				FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kForward));
+		NamedCommands.registerCommand("SysIdTopIndexerQuasistaticReverse",
+				FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdTopIndexerDynamicForward",
+				FlywheelSysIdCommands.dynamic(topIndexer, Direction.kForward));
+		NamedCommands.registerCommand("SysIdTopIndexerDynamicReverse",
+				FlywheelSysIdCommands.dynamic(topIndexer, Direction.kReverse));
+
+		NamedCommands.registerCommand("SysIdBottomIndexerQuasistaticForward",
+				FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kForward));
+		NamedCommands.registerCommand("SysIdBottomIndexerQuasistaticReverse",
+				FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdBottomIndexerDynamicForward",
+				FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kForward));
+		NamedCommands.registerCommand("SysIdBottomIndexerDynamicReverse",
+				FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kReverse));
+
+		NamedCommands.registerCommand("SysIdConveyorQuasistaticForward",
+				FlywheelSysIdCommands.quasistatic(conveyor, Direction.kForward));
+		NamedCommands.registerCommand("SysIdConveyorQuasistaticReverse",
+				FlywheelSysIdCommands.quasistatic(conveyor, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdConveyorDynamicForward",
+				FlywheelSysIdCommands.dynamic(conveyor, Direction.kForward));
+		NamedCommands.registerCommand("SysIdConveyorDynamicReverse",
+				FlywheelSysIdCommands.dynamic(conveyor, Direction.kReverse));
+
+		NamedCommands.registerCommand("SysIdIntakeRollerQuasistaticForward",
+				FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kForward));
+		NamedCommands.registerCommand("SysIdIntakeRollerQuasistaticReverse",
+				FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdIntakeRollerDynamicForward",
+				FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kForward));
+		NamedCommands.registerCommand("SysIdIntakeRollerDynamicReverse",
+				FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kReverse));
+
+		NamedCommands.registerCommand("SysIdIntakeRackQuasistaticForward",
+				PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kForward));
+		NamedCommands.registerCommand("SysIdIntakeRackQuasistaticReverse",
+				PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdIntakeRackDynamicForward",
+				PositionJointSysIdCommands.dynamic(intakeRack, Direction.kForward));
+		NamedCommands.registerCommand("SysIdIntakeRackDynamicReverse",
+				PositionJointSysIdCommands.dynamic(intakeRack, Direction.kReverse));
+
+		NamedCommands.registerCommand("SysIdHoodQuasistaticForward",
+				PositionJointSysIdCommands.quasistatic(hood, Direction.kForward));
+		NamedCommands.registerCommand("SysIdHoodQuasistaticReverse",
+				PositionJointSysIdCommands.quasistatic(hood, Direction.kReverse));
+		NamedCommands.registerCommand("SysIdHoodDynamicForward",
+				PositionJointSysIdCommands.dynamic(hood, Direction.kForward));
+		NamedCommands.registerCommand("SysIdHoodDynamicReverse",
+				PositionJointSysIdCommands.dynamic(hood, Direction.kReverse));
 	}
 	/**
 	 * Use this to pass the autonomous command to the main {@link Robot} class.
