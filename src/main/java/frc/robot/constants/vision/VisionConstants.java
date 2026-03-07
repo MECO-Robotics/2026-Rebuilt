@@ -42,4 +42,14 @@ public class VisionConstants {
 	// Multipliers to apply for MegaTag 2 observations
 	public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
 	public static double angularStdDevMegatag2Factor = Double.POSITIVE_INFINITY; // No rotation data available
+
+	// QuestNav sim tuning
+	public static double questNavSimTranslationNoiseStdDevMetersPerSqrtSec = 0.0025;
+	public static double questNavSimYawNoiseStdDevRadPerSqrtSec = 0.001;
+	public static double questNavSimTranslationDriftXMetersPerSec = 0.0;
+	public static double questNavSimTranslationDriftYMetersPerSec = 0.0;
+	public static double questNavSimYawDriftRadPerSec = 0.0;
+	public static boolean questNavSimEnableAbsoluteCorrection = true;
+	public static double questNavSimTranslationCorrectionAlpha = 0.08;
+	public static double questNavSimYawCorrectionAlpha = 0.08;
 }

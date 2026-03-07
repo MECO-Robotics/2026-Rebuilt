@@ -39,9 +39,6 @@ import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -107,14 +104,8 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		vision = switch (Constants.currentMode) {
-			case REAL -> new Vision(drive::addVisionMeasurement,
-					new VisionIOQuestNav(robotToQuest, new VisionIOPhotonVision(arducamName, robotToArducam)));
-			case SIM -> new Vision(drive::addVisionMeasurement, new VisionIOPhotonVisionSim(arducamName, robotToArducam,
-					() -> drive.getSimulation().getSimulatedDriveTrainPose()));
-			case REPLAY -> new Vision(drive::addVisionMeasurement, new VisionIO() {
-			});
-		};
+		vision = new Vision(drive::addVisionMeasurement, VisionIO.questNavWithPhoton(arducamName, robotToQuest,
+				robotToArducam, () -> drive.getSimulation().getSimulatedDriveTrainPose()));
 
 		simulation = RobotSimulation.create(drive, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
