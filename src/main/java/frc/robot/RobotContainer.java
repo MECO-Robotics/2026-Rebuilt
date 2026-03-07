@@ -110,11 +110,8 @@ public class RobotContainer {
 		vision = switch (Constants.currentMode) {
 			case REAL -> new Vision(drive::addVisionMeasurement,
 					new VisionIOQuestNav(robotToQuest, new VisionIOPhotonVision(arducamName, robotToArducam)));
-			case SIM -> new Vision(drive::addVisionMeasurement,
-					new VisionIOPhotonVisionSim(arducamName, robotToArducam,
-							() -> drive.getSimulation() != null
-									? drive.getSimulation().getSimulatedDriveTrainPose()
-									: drive.getPose()));
+			case SIM -> new Vision(drive::addVisionMeasurement, new VisionIOPhotonVisionSim(arducamName, robotToArducam,
+					() -> drive.getSimulation().getSimulatedDriveTrainPose()));
 			case REPLAY -> new Vision(drive::addVisionMeasurement, new VisionIO() {
 			});
 		};

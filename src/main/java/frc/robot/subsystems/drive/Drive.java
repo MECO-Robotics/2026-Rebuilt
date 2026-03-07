@@ -337,10 +337,10 @@ public class Drive extends SubsystemBase {
 			currentModuleLimits = new ModuleLimits(values[0], values[1], values[2], values[3]);
 		}, kMaxDriveVelocity, kMaxDriveAcceleration, kMaxDriveDeceleration, kMaxSteeringVelocity);
 
-		// Keep estimator pose exactly aligned with Maple's physics pose in simulation.
 		if (Constants.currentMode == Mode.SIM && swerveDriveSimulation != null) {
-			setPose(swerveDriveSimulation.getSimulatedDriveTrainPose());
+			Logger.recordOutput("Drive/Simulation/MaplePose", swerveDriveSimulation.getSimulatedDriveTrainPose());
 		}
+
 	}
 
 	/**
