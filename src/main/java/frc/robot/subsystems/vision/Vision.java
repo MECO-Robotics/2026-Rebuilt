@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -66,6 +67,8 @@ public class Vision extends SubsystemBase {
 
 	@Override
 	public void periodic() {
+		Set<Integer> whitelistedTagIds = getOdometryTagWhitelistForCurrentAlliance();
+
 		for (int i = 0; i < io.length; i++) {
 			io[i].updateInputs(inputs[i]);
 			Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
@@ -87,19 +90,27 @@ public class Vision extends SubsystemBase {
 			List<Pose3d> robotPoses = new LinkedList<>();
 			List<Pose3d> robotPosesAccepted = new LinkedList<>();
 			List<Pose3d> robotPosesRejected = new LinkedList<>();
+			int observedWhitelistedTagCount = 0;
 
 			// Add tag poses
 			for (int tagId : inputs[cameraIndex].tagIds) {
-				var tagPose = aprilTagLayout.getTagPose(tagId);
-				if (tagPose.isPresent()) {
-					tagPoses.add(tagPose.get());
+				if (whitelistedTagIds.isEmpty() || whitelistedTagIds.contains(tagId)) {
+					var tagPose = aprilTagLayout.getTagPose(tagId);
+					if (tagPose.isPresent()) {
+						tagPoses.add(tagPose.get());
+					}
+					observedWhitelistedTagCount++;
 				}
 			}
+			boolean hasEnoughWhitelistedTags = observedWhitelistedTagCount >= minWhitelistedTagCountForOdometry;
+			Logger.recordOutput("Vision/Camera" + Integer.toString(cameraIndex) + "/ObservedWhitelistedTagCount",
+					observedWhitelistedTagCount);
 
 			// Loop over pose observations
 			for (var observation : inputs[cameraIndex].poseObservations) {
 				// Check whether to reject pose
 				boolean rejectPose = observation.tagCount() < minTagCountForOdometry // Must have enough tags
+						|| !hasEnoughWhitelistedTags // Must include enough currently-whitelisted tags
 						|| Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
 
 						// Must be within the field boundaries
