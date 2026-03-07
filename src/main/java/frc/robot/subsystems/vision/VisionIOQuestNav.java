@@ -106,10 +106,10 @@ public class VisionIOQuestNav implements VisionIO {
 		QuestNavData[] data = new QuestNavData[length];
 
 		for (int i = 0; i < length; i++) {
-			data[i] = new QuestNavData(
-					newFrame[i].questPose3d().rotateBy(robotToCamera.getRotation()).plus(robotToCamera.inverse()),
-					battery, newFrame[i].dataTimestamp(), getQuestTranslation(newFrame[i].questPose3d()),
-					getQuestRotation(newFrame[i].questPose3d().getRotation()));
+			Pose3d fieldToCamera = newFrame[i].questPose3d();
+			Pose3d fieldToRobot = fieldToCamera.transformBy(robotToCamera.inverse());
+			data[i] = new QuestNavData(fieldToRobot, battery, newFrame[i].dataTimestamp(),
+					getQuestTranslation(fieldToRobot), getQuestRotation(fieldToRobot.getRotation()));
 		}
 
 		return data;

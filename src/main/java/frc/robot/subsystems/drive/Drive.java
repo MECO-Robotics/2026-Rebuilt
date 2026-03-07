@@ -44,8 +44,6 @@ import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.drive.odometry_threads.SparkOdometryThread;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import frc.robot.util.mechanical_advantage.swerve.ModuleLimits;
-import frc.robot.util.mechanical_advantage.swerve.SwerveSetpoint;
-import frc.robot.util.mechanical_advantage.swerve.SwerveSetpointGenerator;
 import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
 import frc.robot.util.pathplanner.LocalADStarAK;
 import java.util.concurrent.locks.Lock;
@@ -83,11 +81,7 @@ public class Drive extends SubsystemBase {
 	private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation,
 			lastModulePositions, new Pose2d());
 
-	private final SwerveSetpointGenerator setpointGenerator;
 	private ModuleLimits currentModuleLimits = DriveConstants.defaultModuleLimits;
-	private SwerveSetpoint currentSetpoint = new SwerveSetpoint(new ChassisSpeeds(), new SwerveModuleState[]{
-			new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState(), new SwerveModuleState()},
-			new double[4]);
 
 	private final LoggedTunableNumber kMaxDriveVelocity;
 	private final LoggedTunableNumber kMaxDriveAcceleration;
@@ -195,10 +189,6 @@ public class Drive extends SubsystemBase {
 			modulePositionsBuffer[i] = new SwerveModulePosition();
 			moduleDeltasBuffer[i] = new SwerveModulePosition();
 		}
-
-		setpointGenerator = new SwerveSetpointGenerator(kinematics, DriveConstants.moduleTranslations[0],
-				DriveConstants.moduleTranslations[1], DriveConstants.moduleTranslations[2],
-				DriveConstants.moduleTranslations[3]);
 
 		drivekP = new LoggedTunableNumber("Drive/DriveMotors/Gains/kP", driveGains.kP());
 		drivekI = new LoggedTunableNumber("Drive/DriveMotors/Gains/kI", driveGains.kI());
@@ -363,21 +353,18 @@ public class Drive extends SubsystemBase {
 		// Discretize to improve tracking of simultaneous translation + rotation
 		// commands.
 		ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(desaturatedSpeeds, 0.02);
-		currentSetpoint = setpointGenerator.generateSetpoint(currentModuleLimits, currentSetpoint, discreteSpeeds,
-				new Translation2d(), 0.02);
-		// Log unoptimized setpoints and setpoint speeds
-		Logger.recordOutput("Drive/SwerveStates/Setpoints", currentSetpoint.moduleStates());
+		SwerveModuleState[] moduleStates = kinematics.toSwerveModuleStates(discreteSpeeds);
+		SwerveDriveKinematics.desaturateWheelSpeeds(moduleStates, currentModuleLimits.maxDriveVelocity());
+
+		Logger.recordOutput("Drive/SwerveStates/Setpoints", moduleStates);
 		Logger.recordOutput("Drive/SwerveChassisSpeeds/Setpoints", discreteSpeeds);
 
-		Logger.recordOutput("Drive/SwerveStates/AzimuthVelocityFF", currentSetpoint.azimuthVelocityFF());
-
-		// Send setpoints to modules
+		// Send setpoints to modules (no optimization)
 		for (int i = 0; i < 4; i++) {
-			modules[i].runSetpoint(currentSetpoint.moduleStates()[i], currentSetpoint.azimuthVelocityFF()[i]);
+			modules[i].runSetpoint(moduleStates[i], 0.0);
 		}
 
-		// Log optimized setpoints (runSetpoint mutates each state)
-		Logger.recordOutput("Drive/SwerveStates/SetpointsOptimized", currentSetpoint.moduleStates());
+		Logger.recordOutput("Drive/SwerveStates/SetpointsOptimized", moduleStates);
 	}
 
 	/**

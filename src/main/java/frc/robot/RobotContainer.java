@@ -37,6 +37,7 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.vision.VisionIOPhotonVisionTrig;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -114,7 +115,6 @@ public class RobotContainer {
 			case REPLAY -> new Vision(drive::addVisionMeasurement, new VisionIO() {
 			});
 		};
-
 		simulation = RobotSimulation.create(drive, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
 
@@ -161,10 +161,8 @@ public class RobotContainer {
 		controller.leftBumper().whileTrue(Commands.run(() -> intakeRoller.setVoltage(10), intakeRoller))
 				.whileFalse(Commands.run(() -> intakeRoller.setVoltage(0), intakeRoller));
 
-		// controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack,
-		// intakeRoller));
-		// controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack,
-		// intakeRoller));
+		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller));
 	}
 
 	public void updateDashboardOutputs() {

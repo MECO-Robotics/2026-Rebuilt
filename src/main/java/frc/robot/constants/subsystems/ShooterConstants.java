@@ -25,7 +25,7 @@ public final class ShooterConstants {
 
 	public static final FlywheelHardwareConfig CONVEYOR_CONFIG = new FlywheelHardwareConfig(new int[]{23},
 			new boolean[]{false}, 1, 0.025, 40, "");
-	public static final FlywheelGains CONVEYOR_GAINS = new FlywheelGains(0.2, 0.0, 0.0, 0.0, 0.065, 0.0, 1.0, 1.0);
+	public static final FlywheelGains CONVEYOR_GAINS = new FlywheelGains(0.0, 0.0, 0.0, 0.0, 0.065, 0.0, 0.0, 0.0);
 
 	public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{34, 35},
 			new boolean[]{false, true}, 22.0 / 14, 0.006421, 60, "MECO CANIvore");
@@ -35,7 +35,7 @@ public final class ShooterConstants {
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(30, 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 2,
 			0.0, 0.064, 0.2, 0.0);
 	public static final PositionJointHardwareConfig HOOD_CONFIG = new PositionJointHardwareConfig(new int[]{33},
-			new boolean[]{false}, (21 / 1), 0.01, 40, GravityType.COSINE, EncoderType.INTERNAL, 0,
+			new boolean[]{false}, (21 / 1), 0.01, 60, GravityType.COSINE, EncoderType.INTERNAL, 0,
 			Rotation2d.fromRotations(0), "");
 
 	public static final UnitInterpolatingMap<DistanceUnit, AngleUnit> hoodMap = new UnitInterpolatingMap<>(Units.Meters,

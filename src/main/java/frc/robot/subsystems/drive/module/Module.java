@@ -13,7 +13,6 @@ import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
 import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOInputsAutoLogged;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
 import frc.robot.subsystems.drive.drive_motor.DriveMotorIOInputsAutoLogged;
-import frc.robot.util.OnboardModuleState;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
@@ -150,14 +149,10 @@ public class Module {
 	}
 
 	/**
-	 * Runs the module with the specified setpoint state. Mutates the state to
-	 * optimize it.
+	 * Runs the module with the specified setpoint state.
 	 */
 	public void runSetpoint(SwerveModuleState state, double azimuthVelocityFF) {
-		// Optimize velocity setpoint
-		state = OnboardModuleState.optimize(state, getAngle());
 		Logger.recordOutput("Drive/" + azimuthName + "/goal", state.angle.getRotations());
-		state.cosineScale(Rotation2d.fromRotations(azimuthInputs.outputPositionRotations));
 
 		driveMotor.setVelocity(
 				Units.radiansToRotations(state.speedMetersPerSecond / DriveConstants.driveWheelRadiusMeters));
