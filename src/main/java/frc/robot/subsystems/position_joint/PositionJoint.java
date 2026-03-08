@@ -138,6 +138,11 @@ public class PositionJoint extends SubsystemBase {
 		return inputs.outputPosition;
 	}
 
+	/** Returns current measured mechanism velocity. */
+	public double getVelocity() {
+		return inputs.velocity;
+	}
+
 	/** Returns the last requested position setpoint reported by the IO layer. */
 	public double getDesiredPosition() {
 		return inputs.desiredPosition;

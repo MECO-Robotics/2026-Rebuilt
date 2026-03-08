@@ -458,6 +458,24 @@ public class Drive extends SubsystemBase {
 		return output;
 	}
 
+	/** Returns the average azimuth position in rotations across all modules. */
+	public double getAverageAzimuthPositionRotations() {
+		double output = 0.0;
+		for (int i = 0; i < 4; i++) {
+			output += modules[i].getAngle().getRotations() / 4.0;
+		}
+		return output;
+	}
+
+	/** Returns the average azimuth velocity in rotations/sec across all modules. */
+	public double getAverageAzimuthVelocityRotationsPerSecond() {
+		double output = 0.0;
+		for (int i = 0; i < 4; i++) {
+			output += modules[i].getAzimuthVelocityRotationsPerSecond() / 4.0;
+		}
+		return output;
+	}
+
 	/** Returns the current odometry pose. */
 	@AutoLogOutput(key = "Drive/Odometry/Robot")
 	public Pose2d getPose() {

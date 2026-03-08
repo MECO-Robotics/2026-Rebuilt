@@ -189,6 +189,11 @@ public class Module {
 		return Rotation2d.fromRotations(azimuthInputs.outputPositionRotations);
 	}
 
+	/** Returns the current azimuth velocity of the module in rotations/sec. */
+	public double getAzimuthVelocityRotationsPerSecond() {
+		return azimuthInputs.velocityRotationsPerSecond;
+	}
+
 	/** Returns the current drive position of the module in meters. */
 	public double getPositionMeters() {
 		return Units.rotationsToRadians(driveInputs.positionRotations) * DriveConstants.driveWheelRadiusMeters;
