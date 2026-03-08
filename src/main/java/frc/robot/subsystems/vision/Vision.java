@@ -109,10 +109,13 @@ public class Vision extends SubsystemBase {
 			// Loop over pose observations
 			for (var observation : inputs[cameraIndex].poseObservations) {
 				boolean isQuestNav = observation.type() == PoseObservationType.QUESTNAV;
+				boolean enforceWhitelistedTagMinimum = !isQuestNav && !whitelistedTagIds.isEmpty()
+						&& minWhitelistedTagCountForOdometry > 0;
 				// Check whether to reject pose
 				boolean rejectPose = (!isQuestNav && observation.tagCount() < minTagCountForOdometry) // Must have
 																										// enough tags
-						|| !hasEnoughWhitelistedTags // Must include enough currently-whitelisted tags
+						|| (enforceWhitelistedTagMinimum && !hasEnoughWhitelistedTags) // Must include enough
+																						// currently-whitelisted tags
 						|| Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
 
 						// Must be within the field boundaries
