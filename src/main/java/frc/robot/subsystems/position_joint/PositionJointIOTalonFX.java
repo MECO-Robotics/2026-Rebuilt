@@ -218,7 +218,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		inputs.rotorPosition = rotorPosition.getValueAsDouble();
 		inputs.velocity = velocity.getValueAsDouble();
 
-		inputs.desiredVelocity = positionSetpoint;
+		inputs.desiredPosition = positionSetpoint;
 		inputs.desiredVelocity = velocitySetpoint;
 
 		for (int i = 0; i < motors.length; i++) {

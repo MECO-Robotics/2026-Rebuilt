@@ -108,8 +108,10 @@ public class Vision extends SubsystemBase {
 
 			// Loop over pose observations
 			for (var observation : inputs[cameraIndex].poseObservations) {
+				boolean isQuestNav = observation.type() == PoseObservationType.QUESTNAV;
 				// Check whether to reject pose
-				boolean rejectPose = observation.tagCount() < minTagCountForOdometry // Must have enough tags
+				boolean rejectPose = (!isQuestNav && observation.tagCount() < minTagCountForOdometry) // Must have
+																										// enough tags
 						|| !hasEnoughWhitelistedTags // Must include enough currently-whitelisted tags
 						|| Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
 
@@ -133,9 +135,16 @@ public class Vision extends SubsystemBase {
 				}
 
 				// Calculate standard deviations
-				double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-				double linearStdDev = linearStdDevBaseline * stdDevFactor;
-				double angularStdDev = angularStdDevBaseline * stdDevFactor;
+				double linearStdDev;
+				double angularStdDev;
+				if (isQuestNav) {
+					linearStdDev = linearStdDevBaseline;
+					angularStdDev = angularStdDevBaseline;
+				} else {
+					double stdDevFactor = Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+					linearStdDev = linearStdDevBaseline * stdDevFactor;
+					angularStdDev = angularStdDevBaseline * stdDevFactor;
+				}
 				if (observation.type() == PoseObservationType.MEGATAG_2) {
 					linearStdDev *= linearStdDevMegatag2Factor;
 					angularStdDev *= angularStdDevMegatag2Factor;
@@ -145,8 +154,14 @@ public class Vision extends SubsystemBase {
 					angularStdDev *= cameraStdDevFactors[cameraIndex];
 				}
 
-				// Send vision observation
-				consumer.accept(observation.pose().toPose2d(), observation.timestamp(),
+				// Send vision observation (optionally flip QuestNav about field center)
+				Pose2d visionPose2d = observation.pose().toPose2d();
+				if (observation.type() == PoseObservationType.QUESTNAV && flipQuestNavPose) {
+					visionPose2d = new Pose2d(aprilTagLayout.getFieldLength() - visionPose2d.getX(),
+							aprilTagLayout.getFieldWidth() - visionPose2d.getY(),
+							visionPose2d.getRotation().plus(Rotation2d.kPi));
+				}
+				consumer.accept(visionPose2d, observation.timestamp(),
 						VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
 			}
 

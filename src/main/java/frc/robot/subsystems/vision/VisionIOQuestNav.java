@@ -58,8 +58,15 @@ public class VisionIOQuestNav implements VisionIO {
 		inputs.poseObservations = new PoseObservation[questNavData.length];
 
 		if (absoluteInputs.poseObservations.length > 0 && questNavData.length > 0) {
-			questNavRawToFieldCoordinateSystemQueue[idx] = absoluteInputs.poseObservations[0].pose().getTranslation()
-					.minus(questNavData[0].pose.getTranslation().rotateBy(gyroResetAngle));
+			Pose3d absolutePose = absoluteInputs.poseObservations[0].pose();
+			Pose3d questPose = questNavData[0].pose;
+
+			Rotation2d absoluteYaw = new Rotation2d(absolutePose.getRotation().getZ());
+			Rotation2d questYaw = new Rotation2d(questPose.getRotation().getZ());
+			gyroResetAngle = new Rotation3d(0.0, 0.0, absoluteYaw.minus(questYaw).getRadians());
+
+			questNavRawToFieldCoordinateSystemQueue[idx] = absolutePose.getTranslation()
+					.minus(questPose.getTranslation().rotateBy(gyroResetAngle));
 			count += 1;
 			idx += 1;
 			if (idx == questNavRawToFieldCoordinateSystemQueue.length) {
