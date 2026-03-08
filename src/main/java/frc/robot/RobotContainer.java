@@ -104,9 +104,11 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		vision = new Vision(drive::addVisionMeasurement, VisionIO.questNavWithPhoton(arducamName, robotToQuest,
-				robotToArducam, () -> drive.getSimulation() != null ? drive.getSimulation().getSimulatedDriveTrainPose()
-						: drive.getPose()));
+		vision = new Vision(drive::addVisionMeasurement,
+				VisionIO.questNavWithPhoton(arducamName, robotToQuest, robotToArducam,
+						() -> drive.getSimulation() != null
+								? drive.getSimulation().getSimulatedDriveTrainPose()
+								: drive.getPose()));
 		simulation = RobotSimulation.create(drive, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
 
