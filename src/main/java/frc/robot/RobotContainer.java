@@ -37,7 +37,6 @@ import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionTrig;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -149,9 +148,9 @@ public class RobotContainer {
 
 		// Auto-aim to hub when Y button is held
 		controller.y()
-				.whileTrue(
-						DriveCommands.joystickAimToHub(drive, () -> controller.getLeftY(), () -> controller.getLeftX())
-								.alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)))
+				.whileTrue(DriveCommands
+						.joystickAimToHub(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
+						.alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)))
 				.whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
 
 		// * INTAKE BINDS */
