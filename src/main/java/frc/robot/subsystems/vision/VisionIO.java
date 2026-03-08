@@ -1,7 +1,11 @@
 package frc.robot.subsystems.vision;
 
+import frc.robot.constants.Constants;
+import java.util.function.Supplier;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for vision cameras and pose-estimation pipelines. */
@@ -34,5 +38,42 @@ public interface VisionIO {
 
 	/** Refreshes all camera and estimation inputs. */
 	public default void updateInputs(VisionIOInputs inputs) {
+	}
+
+	/** Creates a replay vision IO supplier. */
+	public static Supplier<VisionIO> replayFactory() {
+		return () -> new VisionIO() {
+		};
+	}
+
+	/**
+	 * Creates a mode-appropriate vision IO.
+	 *
+	 * <p>
+	 * Returns the supplied real implementation on real hardware, supplied sim
+	 * implementation in sim, and replay IO during log replay.
+	 */
+	public static VisionIO fromMode(Supplier<VisionIO> realSupplier, Supplier<VisionIO> simSupplier) {
+		return switch (Constants.currentMode) {
+			case REAL -> realSupplier.get();
+			case SIM -> simSupplier.get();
+			default -> replayFactory().get();
+		};
+	}
+
+	/**
+	 * Creates mode-appropriate QuestNav + PhotonVision composition.
+	 *
+	 * <p>
+	 * Real mode uses hardware QuestNav anchored by PhotonVision. Sim mode uses a
+	 * QuestNav inertial simulator anchored by PhotonVision simulation.
+	 */
+	public static VisionIO questNavWithPhoton(String photonCameraName, Transform3d robotToQuest,
+			Transform3d robotToPhotonCamera, Supplier<Pose2d> simPoseSupplier) {
+		return fromMode(
+				() -> new VisionIOQuestNav(robotToQuest,
+						new VisionIOPhotonVision(photonCameraName, robotToPhotonCamera)),
+				() -> new VisionIOQuestNavSim(simPoseSupplier,
+						new VisionIOPhotonVisionSim(photonCameraName, robotToPhotonCamera, simPoseSupplier)));
 	}
 }

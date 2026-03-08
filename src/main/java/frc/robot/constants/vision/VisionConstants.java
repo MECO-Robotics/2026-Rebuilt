@@ -91,4 +91,14 @@ public class VisionConstants {
 		}
 		return mirrored;
 	}
+
+	// QuestNav sim tuning
+	public static double questNavSimTranslationNoiseStdDevMetersPerSqrtSec = 0.0025;
+	public static double questNavSimYawNoiseStdDevRadPerSqrtSec = 0.001;
+	public static double questNavSimTranslationDriftXMetersPerSec = 0.0;
+	public static double questNavSimTranslationDriftYMetersPerSec = 0.0;
+	public static double questNavSimYawDriftRadPerSec = 0.0;
+	public static boolean questNavSimEnableAbsoluteCorrection = true;
+	public static double questNavSimTranslationCorrectionAlpha = 0.08;
+	public static double questNavSimYawCorrectionAlpha = 0.08;
 }

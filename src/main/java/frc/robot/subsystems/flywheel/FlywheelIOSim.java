@@ -113,7 +113,8 @@ public class FlywheelIOSim implements FlywheelIO {
 	@Override
 	public void setGains(FlywheelGains gains) {
 		controller.setPID(gains.kP(), gains.kI(), gains.kD());
-		feedforward.setGains(gains.kS(), gains.kV(), gains.kA());
+		// Sim plant does not model static friction; ignore kS in sim feedforward.
+		feedforward.setGains(0.0, gains.kV(), gains.kA());
 
 		System.out.println(name + " gains set to " + gains);
 	}

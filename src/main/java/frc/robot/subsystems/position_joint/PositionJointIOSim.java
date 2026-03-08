@@ -121,7 +121,8 @@ public class PositionJointIOSim implements PositionJointIO {
 	@Override
 	public void setGains(PositionJointGains gains) {
 		controller.setPID(gains.kP(), gains.kI(), gains.kD());
-		feedforward.setGains(gains.kS(), gains.kG(), gains.kV(), gains.kA());
+		// Sim plant does not model static friction; ignore kS in sim feedforward.
+		feedforward.setGains(0.0, gains.kG(), gains.kV(), gains.kA());
 
 		System.out.println(name + " gains set to " + gains);
 	}

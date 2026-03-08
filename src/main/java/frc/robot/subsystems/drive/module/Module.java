@@ -165,11 +165,17 @@ public class Module {
 	}
 
 	/**
-	 * Runs the module with the specified output while controlling to zero degrees.
+	 * Runs drive-motor characterization while holding azimuth at zero rotations.
 	 */
-	public void runCharacterization(double output) {
+	public void runDriveCharacterization(double output) {
 		driveMotor.setVoltage(output);
 		azimuthMotor.setPosition(0.0, 0.0);
+	}
+
+	/** Runs azimuth-motor characterization while holding drive output at zero. */
+	public void runAzimuthCharacterization(double output) {
+		driveMotor.setVoltage(0.0);
+		azimuthMotor.setVoltage(output);
 	}
 
 	/** Disables all outputs to motors. */

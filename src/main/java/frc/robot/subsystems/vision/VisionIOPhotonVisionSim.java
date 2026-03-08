@@ -3,8 +3,12 @@ package frc.robot.subsystems.vision;
 import static frc.robot.constants.vision.VisionConstants.aprilTagLayout;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
@@ -44,5 +48,12 @@ public class VisionIOPhotonVisionSim extends VisionIOPhotonVision {
 	public void updateInputs(VisionIOInputs inputs) {
 		visionSim.update(poseSupplier.get());
 		super.updateInputs(inputs);
+
+		List<Pose3d> observedTagPoses = new ArrayList<>(inputs.tagIds.length);
+		for (int tagId : inputs.tagIds) {
+			var tagPose = aprilTagLayout.getTagPose(tagId);
+			tagPose.ifPresent(observedTagPoses::add);
+		}
+		Logger.recordOutput("Vision/FieldTagPoses", observedTagPoses.toArray(new Pose3d[0]));
 	}
 }
