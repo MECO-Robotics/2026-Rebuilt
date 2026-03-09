@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class HubShiftUtil {
 	public enum ShiftState {
-		BLUE_ACTIVE, RED_ACTIVE
+		BLUE_ACTIVE, RED_ACTIVE, TRANSITION
 	}
 
 	public record ShiftInfo(double matchTime, double remainingTime, boolean active, ShiftState currentShift,
@@ -13,6 +13,8 @@ public class HubShiftUtil {
 	}
 
 	private static final double PERIOD_LENGTH_SECS = 20.0;
+	private static final double TRANSITION_LENGTH_SECS = 10.0;
+	private static final double TELEOP_DURATION = 135.0;
 
 	/** Returns the current state of the hub shift. */
 	public static ShiftInfo getShiftedShiftInfo() {
@@ -22,20 +24,33 @@ public class HubShiftUtil {
 			matchTime = 0.0;
 		}
 
-		// Calculate remaining time in current period
-		// Match time counts down, so modulo gives us the remainder of the current block
-		double remainingTime = matchTime % PERIOD_LENGTH_SECS;
+		double remainingTime;
+		ShiftState state;
+		boolean isActive = false;
 
-		// Determine active alliance based on period count
-		// (matchTime / periodLength) roughly gives the number of periods remaining
-		int periodCount = (int) (matchTime / PERIOD_LENGTH_SECS);
-
-		// Alternate based on period count.
-		Alliance activeAlliance = (periodCount % 2 == 0) ? Alliance.Blue : Alliance.Red;
-
-		boolean isActive = DriverStation.getAlliance().isPresent()
-				&& DriverStation.getAlliance().get() == activeAlliance;
-		ShiftState state = (activeAlliance == Alliance.Blue) ? ShiftState.BLUE_ACTIVE : ShiftState.RED_ACTIVE;
+		if (DriverStation.isTeleop()) {
+			if (matchTime > TELEOP_DURATION - TRANSITION_LENGTH_SECS) {
+				state = ShiftState.TRANSITION;
+				remainingTime = matchTime - (TELEOP_DURATION - TRANSITION_LENGTH_SECS);
+				isActive = false;
+			} else {
+				double shiftTime = (TELEOP_DURATION - TRANSITION_LENGTH_SECS) - matchTime;
+				remainingTime = PERIOD_LENGTH_SECS - (shiftTime % PERIOD_LENGTH_SECS);
+				int periodCount = (int) (shiftTime / PERIOD_LENGTH_SECS);
+				Alliance activeAlliance = (periodCount % 2 == 0)
+						? getFirstActiveAlliance()
+						: (getFirstActiveAlliance() == Alliance.Blue ? Alliance.Red : Alliance.Blue);
+				state = (activeAlliance == Alliance.Blue) ? ShiftState.BLUE_ACTIVE : ShiftState.RED_ACTIVE;
+				isActive = DriverStation.getAlliance().isPresent()
+						&& DriverStation.getAlliance().get() == activeAlliance;
+			}
+		} else {
+			remainingTime = matchTime % PERIOD_LENGTH_SECS;
+			int periodCount = (int) (matchTime / PERIOD_LENGTH_SECS);
+			Alliance activeAlliance = (periodCount % 2 == 0) ? Alliance.Blue : Alliance.Red;
+			state = (activeAlliance == Alliance.Blue) ? ShiftState.BLUE_ACTIVE : ShiftState.RED_ACTIVE;
+			isActive = DriverStation.getAlliance().isPresent() && DriverStation.getAlliance().get() == activeAlliance;
+		}
 
 		String matchTimeColor;
 		if (matchTime > 50) {
@@ -52,6 +67,14 @@ public class HubShiftUtil {
 	}
 
 	public static Alliance getFirstActiveAlliance() {
+		String fmsMessage = DriverStation.getGameSpecificMessage();
+		if (fmsMessage != null && !fmsMessage.isEmpty()) {
+			if (fmsMessage.toUpperCase().startsWith("R")) {
+				return Alliance.Red;
+			} else if (fmsMessage.toUpperCase().startsWith("B")) {
+				return Alliance.Blue;
+			}
+		}
 		return Alliance.Blue;
 	}
 }
