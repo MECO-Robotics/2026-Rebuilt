@@ -31,10 +31,10 @@ public final class ShooterConstants {
 			new boolean[]{false, true}, 22.0 / 14, 0.006421, 60, "MECO CANIvore");
 	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.3, 0.0, 0.0, 0.25, 0.2, 0.0, 10, 0.5);
 
-	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(30, 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 2,
-			0.0, 0.064, 0.2, 0.0);
+	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(20, 0.0, 0.0, 0.5, 0.1, 0.0, 0.0, 4.0,
+			8.0, 0.0, 0.049, 0.05, 0.0);
 	public static final PositionJointHardwareConfig HOOD_CONFIG = new PositionJointHardwareConfig(new int[]{33},
-			new boolean[]{false}, (21 / 1), 0.01, 60, GravityType.COSINE, EncoderType.INTERNAL, 0,
+			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, GravityType.COSINE, EncoderType.INTERNAL, 0,
 			Rotation2d.fromRotations(0), "");
 
 	public static final UnitInterpolatingMap<DistanceUnit, AngleUnit> hoodMap = new UnitInterpolatingMap<>(Units.Meters,
