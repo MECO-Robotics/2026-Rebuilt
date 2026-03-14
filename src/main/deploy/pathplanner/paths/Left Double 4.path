@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.757656177619603,
-        "y": 6.788694297196227
+        "x": 2.347823529411765,
+        "y": 6.6569159663865545
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.790950704225352,
-        "y": 5.088908450704225
+        "x": 4.276151260504202,
+        "y": 5.688941176470589
       },
       "isLocked": false,
-      "linkedName": "Left Rush 1 End"
+      "linkedName": "Left Double 3 end"
     },
     {
       "anchor": {
-        "x": 7.805067226890758,
-        "y": 4.538042016806722
+        "x": 7.515436974789916,
+        "y": 4.301764705882353
       },
       "prevControl": {
-        "x": 7.789098917031604,
-        "y": 6.709732157651793
+        "x": 6.052042016806723,
+        "y": 5.117302521008403
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left Rush 2 End"
+      "linkedName": "Left Double 4 end"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.4460268317853372,
+      "rotationDegrees": -26.179580301070978
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -88.14040066125443
+    "rotation": -12.875001559612551
   },
   "reversed": false,
-  "folder": "Left Rush",
+  "folder": "Left Double",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -90.81073521926237
+    "rotation": -48.36646066342988
   },
   "useDefaultConstraints": true
 }
