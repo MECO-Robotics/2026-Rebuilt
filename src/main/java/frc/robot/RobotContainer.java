@@ -133,8 +133,8 @@ public class RobotContainer {
 	 */
 	private void configureButtonBindings() {
 		// Default command, normal field-relative drive
-		drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -ps4Controller.getLeftY(),
-				() -> -ps4Controller.getLeftX(), () -> ps4Controller.getRightX()));
+		drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -controller.getLeftY(),
+				() -> -controller.getLeftX(), () -> controller.getRightX()));
 
 		// Lock to 0Â° when A button is held
 		// controller
@@ -147,9 +147,9 @@ public class RobotContainer {
 		// () -> Rotation2d.kZero));
 
 		// Auto-aim to hub when Y button is held
-		ps4Controller.triangle()
+		controller.y()
 				.whileTrue(DriveCommands
-						.joystickAimToHub(drive, () -> -ps4Controller.getLeftY(), () -> -ps4Controller.getLeftX())
+						.joystickAimToHub(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
 						.alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)))
 				.whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
 
