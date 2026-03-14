@@ -22,7 +22,7 @@ public final class MapleSimConstants {
 	public static final double MPS_PER_FLYWHEEL_RPS = 4.0 * Math.PI * 0.0254; // 4" diameter wheel
 
 	/** Minimum flywheel speed before a shot can launch in simulation. */
-	public static final double MIN_FLYWHEEL_RPS_FOR_SHOT = 15.0;
+	public static final double MIN_FLYWHEEL_RPS_FOR_SHOT = 5.0;
 
 	/** Minimum time between simulated burst starts while feeding. */
 	public static final double SHOT_COOLDOWN_SECONDS = 0.20;

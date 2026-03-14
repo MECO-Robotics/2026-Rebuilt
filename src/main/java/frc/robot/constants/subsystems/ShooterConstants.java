@@ -29,8 +29,7 @@ public final class ShooterConstants {
 
 	public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{34, 35},
 			new boolean[]{false, true}, 22.0 / 14, 0.006421, 60, "MECO CANIvore");
-	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.3, 0.0, 0.0, 0.25, 0.2, 0.0, 2.5,
-			1.0);
+	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.3, 0.0, 0.0, 0.25, 0.2, 0.0, 10, 0.5);
 
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(30, 0.0, 0.0, 0.5, 1.0, 0.0, 0.0, 1.0, 2,
 			0.0, 0.064, 0.2, 0.0);

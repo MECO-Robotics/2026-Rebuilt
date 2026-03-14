@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.IntakeCommands;
@@ -64,6 +65,7 @@ public class RobotContainer {
 
 	// Controller
 	private final CommandXboxController controller = new CommandXboxController(0);
+	private final CommandPS4Controller ps4Controller = new CommandPS4Controller(1);
 
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
@@ -131,8 +133,8 @@ public class RobotContainer {
 	 */
 	private void configureButtonBindings() {
 		// Default command, normal field-relative drive
-		drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -controller.getLeftY(),
-				() -> -controller.getLeftX(), () -> controller.getRightX()));
+		drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -ps4Controller.getLeftY(),
+				() -> -ps4Controller.getLeftX(), () -> ps4Controller.getRightX()));
 
 		// Lock to 0Â° when A button is held
 		// controller
@@ -145,9 +147,9 @@ public class RobotContainer {
 		// () -> Rotation2d.kZero));
 
 		// Auto-aim to hub when Y button is held
-		controller.y()
+		ps4Controller.triangle()
 				.whileTrue(DriveCommands
-						.joystickAimToHub(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
+						.joystickAimToHub(drive, () -> -ps4Controller.getLeftY(), () -> -ps4Controller.getLeftX())
 						.alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)))
 				.whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
 

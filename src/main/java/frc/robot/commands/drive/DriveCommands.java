@@ -137,6 +137,9 @@ public class DriveCommands {
 
 		// Construct command
 		return Commands.run(() -> {
+			angleController.setPID(ANGLE_KP.get(), 0, ANGLE_KD.get());
+			angleController.setConstraints(
+					new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY.get(), ANGLE_MAX_ACCELERATION.get()));
 			// Get linear velocity
 			Translation2d linearVelocity = getLinearVelocityFromJoysticks(xSupplier.getAsDouble(),
 					ySupplier.getAsDouble());
