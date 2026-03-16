@@ -30,19 +30,26 @@ public class ShooterCalculator {
 
 	public static final Translation2d robotToShooter = new Translation2d(-.19, 0);
 
-	public static Command calculateAndShoot(Drive drive, PositionJoint hood, Flywheel shooter) {
-		Supplier<Distance> distance = () -> {
-			Pose2d shooterPosition = drive.getPose().transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
-			Distance distanceToHub = Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
-			Logger.recordOutput("Shooter/DistanceToHubMeters", distanceToHub.in(Units.Meters));
-			return distanceToHub;
-		};
+	// public static Command calculateAndShoot(Drive drive, PositionJoint hood,
+	// Flywheel shooter) {
+	// Supplier<Distance> distance = () -> {
+	// Pose2d shooterPosition = drive.getPose().transformBy(new
+	// Transform2d(robotToShooter, Rotation2d.kZero));
+	// Distance distanceToHub =
+	// Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+	// Logger.recordOutput("Shooter/DistanceToHubMeters",
+	// distanceToHub.in(Units.Meters));
+	// return distanceToHub;
+	// };
 
-		DoubleSupplier hoodPosition = () -> ShooterConstants.hoodMap.get(distance.get()).in(Units.Rotations);
+	// DoubleSupplier hoodPosition = () ->
+	// ShooterConstants.hoodMap.get(distance.get()).in(Units.Rotations);
 
-		DoubleSupplier shooterVelocity = () -> ShooterConstants.shooterVelocityMap.get(distance.get())
-				.in(Units.RevolutionsPerSecond);
+	// DoubleSupplier shooterVelocity = () ->
+	// ShooterConstants.shooterVelocityMap.get(distance.get())
+	// .in(Units.RevolutionsPerSecond);
 
-		return PositionJoint.setPosition(hood, hoodPosition).alongWith(Flywheel.setVelocity(shooter, shooterVelocity));
-	}
+	// return PositionJoint.setPosition(hood,
+	// hoodPosition).alongWith(Flywheel.setVelocity(shooter, shooterVelocity));
+	// }
 }

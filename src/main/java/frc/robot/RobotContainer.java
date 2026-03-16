@@ -1,9 +1,14 @@
 package frc.robot;
 
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static frc.robot.constants.vision.VisionConstants.arducamName;
 import static frc.robot.constants.vision.VisionConstants.robotToArducam;
 import static frc.robot.constants.vision.VisionConstants.robotToQuest;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -18,22 +23,18 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.commands.drive.DriveSysIdCommands;
 import frc.robot.commands.flywheel.FlywheelSysIdCommands;
 import frc.robot.commands.position_joint.PositionJointSysIdCommands;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.Constants;
-import frc.robot.constants.drive.AzimuthMotorConstants;
-import frc.robot.constants.drive.DriveMotorConstants;
+import frc.robot.constants.drive.TunerConstants;
+import frc.robot.constants.drive.DEPRECIATED.AzimuthMotorConstants;
+import frc.robot.constants.drive.DEPRECIATED.DriveMotorConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
-import frc.robot.simulation.RobotSimulation;
+// import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIO;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorIO;
-import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
-import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.position_joint.PositionJoint;
@@ -51,8 +52,17 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+	private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
+																						// speed
+	private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
+																						// max angular velocity
+
 	// Subsystems
-	private final Drive drive;
+	public final Drive drivetrain = TunerConstants.createDrivetrain();
+	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.1)
+			.withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
+			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+
 	private final Flywheel shooterFlywheel;
 	private final Flywheel topIndexer;
 	private final Flywheel bottomIndexer;
@@ -60,8 +70,8 @@ public class RobotContainer {
 	private final Flywheel intakeRoller;
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
-	private final Vision vision;
-	private final RobotSimulation simulation;
+	// private final Vision vision;
+	// private final RobotSimulation simulation;
 
 	// Controller
 	private final CommandXboxController controller = new CommandXboxController(0);
@@ -77,13 +87,6 @@ public class RobotContainer {
 	public RobotContainer() {
 		var driveGains = DriveMotorConstants.DRIVE_MOTOR_GAINS;
 		var azimuthGains = AzimuthMotorConstants.AZIMUTH_MOTOR_GAINS;
-		drive = Drive.fromModuleConfigs(() -> new GyroIOPigeon2(13, DriveMotorConstants.canBusName),
-				DriveMotorIO::talonFXFactory, AzimuthMotorIO::talonFXFactory, DriveMotorConstants.FRONT_LEFT_CONFIG,
-				AzimuthMotorConstants.FRONT_LEFT_CONFIG, DriveMotorConstants.FRONT_RIGHT_CONFIG,
-				AzimuthMotorConstants.FRONT_RIGHT_CONFIG, DriveMotorConstants.BACK_LEFT_CONFIG,
-				AzimuthMotorConstants.BACK_LEFT_CONFIG, DriveMotorConstants.BACK_RIGHT_CONFIG,
-				AzimuthMotorConstants.BACK_RIGHT_CONFIG, driveGains, azimuthGains,
-				Constants.currentMode == Constants.Mode.REAL ? PhoenixOdometryThread.getInstance() : null, null);
 
 		topIndexer = new Flywheel(FlywheelIO.fromSparkMax("TopIndexer", ShooterConstants.TOP_INDEXER_ROLLER_CONFIG),
 				ShooterConstants.INDEXER_ROLLER_GAINS);
@@ -107,13 +110,10 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		vision = new Vision(drive::addVisionMeasurement,
-				VisionIO.questNavWithPhoton(arducamName, robotToQuest, robotToArducam,
-						() -> drive.getSimulation() != null
-								? drive.getSimulation().getSimulatedDriveTrainPose()
-								: drive.getPose()));
-		simulation = RobotSimulation.create(drive, intakeRack, hood, shooterFlywheel);
-		simulation.bindCommandHooks();
+		// vision = new Vision(drive::addVisionMeasurement, drivetrain.getpo);
+		// simulation = RobotSimulation.create(drive, intakeRack, hood,
+		// shooterFlywheel);
+		// simulation.bindCommandHooks();
 
 		configureAuto();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
@@ -133,8 +133,15 @@ public class RobotContainer {
 	 */
 	private void configureButtonBindings() {
 		// Default command, normal field-relative drive
-		drive.setDefaultCommand(DriveCommands.joystickDrive(drive, () -> -controller.getLeftY(),
-				() -> -controller.getLeftX(), () -> controller.getRightX()));
+		drivetrain.setDefaultCommand(
+				// Drivetrain will execute this command periodically
+				drivetrain.applyRequest(() -> drive.withVelocityX(-controller.getLeftY() * MaxSpeed) // Drive forward
+																										// with negative
+																										// Y (forward)
+						.withVelocityY(-controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+						.withRotationalRate(controller.getRightX() * MaxAngularRate) // Drive counterclockwise with
+																						// negative X (left)
+				));
 
 		// Lock to 0Â° when A button is held
 		// controller
@@ -147,11 +154,13 @@ public class RobotContainer {
 		// () -> Rotation2d.kZero));
 
 		// Auto-aim to hub when Y button is held
-		controller.y()
-				.whileTrue(DriveCommands
-						.joystickAimToHub(drive, () -> -controller.getLeftY(), () -> -controller.getLeftX())
-						.alongWith(ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel)))
-				.whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
+		// controller.y()
+		// .whileTrue(DriveCommands
+		// .joystickAimToHub(drive, () -> -controller.getLeftY(), () ->
+		// -controller.getLeftX())
+		// .alongWith(ShooterCalculator.calculateAndShoot(drive, hood,
+		// shooterFlywheel)))
+		// .whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
 
 		// * INTAKE BINDS */
 		controller.rightBumper().whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
@@ -198,28 +207,35 @@ public class RobotContainer {
 		NamedCommands.registerCommand("AgitateIntake", IntakeCommands.agitateIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
-		NamedCommands.registerCommand("Flywheel", ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
+		// NamedCommands.registerCommand("Flywheel",
+		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
-		NamedCommands.registerCommand("AutoSpinUp", ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
+		// NamedCommands.registerCommand("AutoSpinUp",
+		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
-		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drive).withTimeout(2));
+		// NamedCommands.registerCommand("AutoAim",
+		// DriveCommands.autoAimToHub(drive).withTimeout(2));
 	}
 
 	public void configureSysIdChooser() {
 		sysIdChooser.addDefaultOption("None", null);
 
-		sysIdChooser.addOption("Drive Quasistatic Forward",
-				DriveSysIdCommands.driveQuasistatic(drive, Direction.kForward));
-		sysIdChooser.addOption("Drive Quasistatic Reverse",
-				DriveSysIdCommands.driveQuasistatic(drive, Direction.kReverse));
-		sysIdChooser.addOption("Drive Dynamic Forward", DriveSysIdCommands.driveDynamic(drive, Direction.kForward));
-		sysIdChooser.addOption("Drive Dynamic Reverse", DriveSysIdCommands.driveDynamic(drive, Direction.kReverse));
-		sysIdChooser.addOption("Azimuth Quasistatic Forward",
-				DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kForward));
-		sysIdChooser.addOption("Azimuth Quasistatic Reverse",
-				DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kReverse));
-		sysIdChooser.addOption("Azimuth Dynamic Forward", DriveSysIdCommands.azimuthDynamic(drive, Direction.kForward));
-		sysIdChooser.addOption("Azimuth Dynamic Reverse", DriveSysIdCommands.azimuthDynamic(drive, Direction.kReverse));
+		// sysIdChooser.addOption("Drive Quasistatic Forward",
+		// DriveSysIdCommands.driveQuasistatic(drive, Direction.kForward));
+		// sysIdChooser.addOption("Drive Quasistatic Reverse",
+		// DriveSysIdCommands.driveQuasistatic(drive, Direction.kReverse));
+		// sysIdChooser.addOption("Drive Dynamic Forward",
+		// DriveSysIdCommands.driveDynamic(drive, Direction.kForward));
+		// sysIdChooser.addOption("Drive Dynamic Reverse",
+		// DriveSysIdCommands.driveDynamic(drive, Direction.kReverse));
+		// sysIdChooser.addOption("Azimuth Quasistatic Forward",
+		// DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kForward));
+		// sysIdChooser.addOption("Azimuth Quasistatic Reverse",
+		// DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kReverse));
+		// sysIdChooser.addOption("Azimuth Dynamic Forward",
+		// DriveSysIdCommands.azimuthDynamic(drive, Direction.kForward));
+		// sysIdChooser.addOption("Azimuth Dynamic Reverse",
+		// DriveSysIdCommands.azimuthDynamic(drive, Direction.kReverse));
 
 		sysIdChooser.addOption("Shooter Flywheel Quasistatic Forward",
 				FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kForward));
@@ -295,16 +311,18 @@ public class RobotContainer {
 
 	/** Logs robot and component transforms for the custom Robot_Remy asset. */
 	public void updateVisualization() {
-		simulation.visualizationPeriodic();
+		// simulation.visualizationPeriodic();
 	}
 
 	/** Runs simulation-specific autonomous setup if simulation is active. */
 	public void simulationAutonomousInit(Command autonomousCommand) {
-		simulation.autonomousInit(autonomousCommand);
+		// simulation.autonomousInit(autonomousCommand);
 	}
 
-	/** Runs simulation periodic updates and telemetry if simulation is active. */
+	/**
+	 * Runs simulation periodic updates and telemetry if simulation is active.
+	 */
 	public void simulationPeriodic() {
-		simulation.simulationPeriodic();
+		// simulation.simulationPeriodic();
 	}
 }

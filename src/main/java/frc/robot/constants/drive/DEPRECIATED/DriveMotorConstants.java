@@ -1,4 +1,4 @@
-package frc.robot.constants.drive;
+package frc.robot.constants.drive.DEPRECIATED;
 
 /** Constants and hardware mappings for drivetrain wheel motors. */
 public class DriveMotorConstants {

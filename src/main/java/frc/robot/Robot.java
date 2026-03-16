@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
-import frc.robot.simulation.RobotSimulation;
+// import frc.robot.simulation.RobotSimulation;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -26,7 +26,7 @@ public class Robot extends LoggedRobot {
 	private RobotContainer robotContainer;
 
 	public Robot() {
-		RobotSimulation.configureArenaOverride(Constants.currentMode);
+		// RobotSimulation.configureArenaOverride(Constants.currentMode);
 		// Record metadata
 		Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
 		Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);

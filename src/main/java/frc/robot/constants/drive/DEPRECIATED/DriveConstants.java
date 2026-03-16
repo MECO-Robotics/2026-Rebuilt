@@ -1,4 +1,4 @@
-package frc.robot.constants.drive;
+package frc.robot.constants.drive.DEPRECIATED;
 
 import static edu.wpi.first.units.Units.FeetPerSecond;
 import static edu.wpi.first.units.Units.Inches;
