@@ -33,14 +33,17 @@ import frc.robot.constants.drive.DEPRECIATED.AzimuthMotorConstants;
 import frc.robot.constants.drive.DEPRECIATED.DriveMotorConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
+import frc.robot.constants.vision.VisionConstants;
 // import frc.robot.simulation.RobotSimulation;
-import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.Drivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIOPhotonVision;
+import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -58,7 +61,7 @@ public class RobotContainer {
 																						// max angular velocity
 
 	// Subsystems
-	public final Drive drivetrain = TunerConstants.createDrivetrain();
+	public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.1)
 			.withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
@@ -70,12 +73,11 @@ public class RobotContainer {
 	private final Flywheel intakeRoller;
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
-	// private final Vision vision;
+	private final Vision vision;
 	// private final RobotSimulation simulation;
 
 	// Controller
 	private final CommandXboxController controller = new CommandXboxController(0);
-	private final CommandPS4Controller ps4Controller = new CommandPS4Controller(1);
 
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
@@ -110,7 +112,7 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		// vision = new Vision(drive::addVisionMeasurement, drivetrain.getpo);
+		vision = new Vision(drivetrain::addVisionMeasurement, new VisionIOQuestNav(VisionConstants.robotToQuest, new VisionIOPhotonVision(VisionConstants.arducamName, robotToArducam)));
 		// simulation = RobotSimulation.create(drive, intakeRack, hood,
 		// shooterFlywheel);
 		// simulation.bindCommandHooks();
