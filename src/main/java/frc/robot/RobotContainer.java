@@ -3,10 +3,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static frc.robot.constants.vision.VisionConstants.arducamName;
 import static frc.robot.constants.vision.VisionConstants.robotToArducam;
-import static frc.robot.constants.vision.VisionConstants.robotToQuest;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -18,28 +15,23 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.flywheel.FlywheelSysIdCommands;
 import frc.robot.commands.position_joint.PositionJointSysIdCommands;
-import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
-import frc.robot.constants.Constants;
 import frc.robot.constants.drive.TunerConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.constants.vision.VisionConstants;
-// import frc.robot.simulation.RobotSimulation;
-import frc.robot.subsystems.drive.Drivetrain;
+import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.HubShiftUtil;
@@ -59,7 +51,7 @@ public class RobotContainer {
 																						// max angular velocity
 
 	// Subsystems
-	public final Drivetrain drivetrain = TunerConstants.createDrivetrain();
+	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.1)
 			.withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
@@ -78,7 +70,7 @@ public class RobotContainer {
 	private final CommandXboxController controller = new CommandXboxController(0);
 
 	// Dashboard inputs
-	// private final LoggedDashboardChooser<Command> autoChooser;
+	private final LoggedDashboardChooser<Command> autoChooser;
 	private final LoggedDashboardChooser<Command> sysIdChooser;
 
 	/**
@@ -115,8 +107,8 @@ public class RobotContainer {
 
 		configureAuto();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
-		// autoChooser = new LoggedDashboardChooser<>("Auto Choices",
-		// AutoBuilder.buildAutoChooser());
+		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+		
 		sysIdChooser = new LoggedDashboardChooser<>("SysId Choices");
 		configureSysIdChooser();
 
@@ -153,10 +145,9 @@ public class RobotContainer {
 		// () -> Rotation2d.kZero));
 
 		// Auto-aim to hub when Y button is held
-		// controller.y()
-		// .whileTrue(DriveCommands
-		// .joystickAimToHub(drive, () -> -controller.getLeftY(), () ->
-		// -controller.getLeftX())
+		controller.y()
+		.whileTrue(DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftY(), () ->
+		-controller.getLeftX(), MaxSpeed));
 		// .alongWith(ShooterCalculator.calculateAndShoot(drive, hood,
 		// shooterFlywheel)))
 		// .whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
@@ -212,8 +203,8 @@ public class RobotContainer {
 		// NamedCommands.registerCommand("AutoSpinUp",
 		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
-		// NamedCommands.registerCommand("AutoAim",
-		// DriveCommands.autoAimToHub(drive).withTimeout(2));
+		NamedCommands.registerCommand("AutoAim",
+		DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
 	}
 
 	public void configureSysIdChooser() {
