@@ -24,7 +24,7 @@ public class IntakeCommands {
 	public static final class INTAKE_POSITIONS {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("IntakePosition/Stow", 0);
 		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("IntakePosition/Deploy", .21);
-		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("IntakePosition/Safe", 0.1);
+		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("IntakePosition/Safe", 0.02);
 	}
 
 	/** Intake roller preset voltages. */
@@ -33,6 +33,12 @@ public class IntakeCommands {
 		public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("IntakeVolts/Slow", 7);
 		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("IntakeVolts/Eject", -10);
 		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IntakeVolts/Stop", 0);
+	}
+
+	public final class INTAKE_VELO {
+		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IntakePosition/Stop", 0);
+		public static final LoggedTunableNumber STOWVELO = new LoggedTunableNumber("IntakePosition/StowVelo", -5);
+		public static final LoggedTunableNumber DEPLOYVELO = new LoggedTunableNumber("IntakePosition/DeployVelo", 5);
 	}
 
 	/**
@@ -66,5 +72,20 @@ public class IntakeCommands {
 				Commands.waitUntil(() -> rotationMotor.getPosition() > INTAKE_POSITIONS.SAFE.get()),
 				PositionJoint.setPosition(rotationMotor, INTAKE_POSITIONS.DEPLOY),
 				Commands.waitUntil(() -> rotationMotor.getPosition() > INTAKE_POSITIONS.DEPLOY.get())).repeatedly());
+	}
+
+	public static Command feedIntake(PositionJoint rotationMotor, Flywheel rollerMotor){
+		return Commands.sequence(
+			Commands.deadline(
+				Commands.waitUntil(() -> rotationMotor.getPosition() == INTAKE_POSITIONS.SAFE.getAsDouble()),
+				Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.INTAKE),
+				PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOWVELO)
+				),
+			Commands.waitUntil(() -> rotationMotor.getPosition() < INTAKE_POSITIONS.SAFE.getAsDouble()),
+			Commands.parallel(
+				Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.STOP),
+			PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOP)
+			)
+		);
 	}
 }
