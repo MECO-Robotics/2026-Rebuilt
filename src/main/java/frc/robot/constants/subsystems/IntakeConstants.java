@@ -21,7 +21,7 @@ public final class IntakeConstants {
 	// PositionJointGains(0, 0.0, 0.0, 0, 0.0, 0.0, 0.0,
 	// 10.0, 10.0, 0.0, 0.21, 0.01, 0.0);
 	public static final PositionJointGains INTAKE_RACK_GAINS = new PositionJointGains(15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-			1.0, 5.0, 0.0, 0.21, 0.01, 0.0);
+			1.0, 5.0, 0.0, 0.21, 0.02, 0.0);
 	public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG = new PositionJointHardwareConfig(new int[]{21},
 			new boolean[]{false}, (5 * (48 / 16) * (26 / 16)) / (((Math.PI * 10) / 10) * 0.0254), 0.01, 60,
 			GravityType.COSINE, EncoderType.INTERNAL, 0, Rotation2d.fromRotations(0), "");
