@@ -32,9 +32,8 @@ public class ShooterCommands {
 
 	/** Indexer roller preset voltages. */
 	public final class INDEXER_VOLTS {
-		public static final LoggedTunableNumber FEED = new LoggedTunableNumber("IndexerVolts/IntakeSpeed", -10);
-		public static final LoggedTunableNumber FEEDOTHER = new LoggedTunableNumber("IndexerVolts/IntakeSpeedOther",
-				10);
+		public static final LoggedTunableNumber FEED = new LoggedTunableNumber("IndexerVolts/IntakeSpeed", -7);
+		public static final LoggedTunableNumber FEEDOTHER = new LoggedTunableNumber("IndexerVolts/IntakeSpeedOther", 7);
 		public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("IndexerVolts/Slow", -4);
 		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("IndexerVolts/Eject", 12);
 		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IndexerVolts/Stop", 0);
@@ -56,7 +55,7 @@ public class ShooterCommands {
 	 */
 	public static Command idleRollers(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller,
 			Flywheel conveyorRoller) {
-		return Commands.parallel(new FlywheelVoltageCommand(bottomIntakingRoller, INDEXER_VOLTS.SLOW),
+		return Commands.parallel(new FlywheelVoltageCommand(bottomIntakingRoller, INDEXER_VOLTS.STOP),
 				new FlywheelVoltageCommand(topIntakingRoller, INDEXER_VOLTS.STOP),
 				new FlywheelVoltageCommand(conveyorRoller, CONVEYOR_VOLTS.STOP));
 	}

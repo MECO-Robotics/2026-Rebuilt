@@ -29,8 +29,6 @@ import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.Constants;
 import frc.robot.constants.drive.TunerConstants;
-import frc.robot.constants.drive.DEPRECIATED.AzimuthMotorConstants;
-import frc.robot.constants.drive.DEPRECIATED.DriveMotorConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.constants.vision.VisionConstants;
@@ -80,16 +78,13 @@ public class RobotContainer {
 	private final CommandXboxController controller = new CommandXboxController(0);
 
 	// Dashboard inputs
-	private final LoggedDashboardChooser<Command> autoChooser;
+	// private final LoggedDashboardChooser<Command> autoChooser;
 	private final LoggedDashboardChooser<Command> sysIdChooser;
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
 	 */
 	public RobotContainer() {
-		var driveGains = DriveMotorConstants.DRIVE_MOTOR_GAINS;
-		var azimuthGains = AzimuthMotorConstants.AZIMUTH_MOTOR_GAINS;
-
 		topIndexer = new Flywheel(FlywheelIO.fromSparkMax("TopIndexer", ShooterConstants.TOP_INDEXER_ROLLER_CONFIG),
 				ShooterConstants.INDEXER_ROLLER_GAINS);
 
@@ -112,14 +107,16 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		vision = new Vision(drivetrain::addVisionMeasurement, new VisionIOQuestNav(VisionConstants.robotToQuest, new VisionIOPhotonVision(VisionConstants.arducamName, robotToArducam)));
+		vision = new Vision(drivetrain::addVisionMeasurement, new VisionIOQuestNav(VisionConstants.robotToQuest,
+				new VisionIOPhotonVision(VisionConstants.arducamName, robotToArducam)));
 		// simulation = RobotSimulation.create(drive, intakeRack, hood,
 		// shooterFlywheel);
 		// simulation.bindCommandHooks();
 
 		configureAuto();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
-		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+		// autoChooser = new LoggedDashboardChooser<>("Auto Choices",
+		// AutoBuilder.buildAutoChooser());
 		sysIdChooser = new LoggedDashboardChooser<>("SysId Choices");
 		configureSysIdChooser();
 
@@ -308,7 +305,7 @@ public class RobotContainer {
 		if (sysIdCommand != null) {
 			return sysIdCommand;
 		}
-		return autoChooser.get();
+		return Commands.none();
 	}
 
 	/** Logs robot and component transforms for the custom Robot_Remy asset. */

@@ -40,8 +40,8 @@ public class IntakeCommands {
 	 * stopping the roller.
 	 */
 	public static Command stowIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
-		return Commands.parallel(new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW),
-				new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.STOP),
+		return Commands.deadline(new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW),
+				new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
 				intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none());
 	}
 
