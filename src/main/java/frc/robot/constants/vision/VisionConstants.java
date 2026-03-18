@@ -25,7 +25,8 @@ public class VisionConstants {
 	// Robot to camera transforms
 	// (Not used by Limelight, configure in web UI instead)
 	public static Transform3d robotToQuest = new Transform3d(Units.inchesToMeters(-(27.0 / 2.0)),
-			Units.inchesToMeters(0), Units.inchesToMeters(8.5), new Rotation3d(Units.degreesToRadians(180), 0.0, 0));
+			Units.inchesToMeters(0), Units.inchesToMeters(8.5),
+			new Rotation3d(Units.degreesToRadians(180), 0.0, Units.degreesToRadians(180)));
 	public static Transform3d robotToArducam = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(-10),
 			Units.inchesToMeters(18.5), new Rotation3d(0.0, Units.degreesToRadians(-20), 0.0));
 
@@ -50,7 +51,6 @@ public class VisionConstants {
 
 	// If true, flip QuestNav poses 180 degrees about the field center
 	// (useful when QuestNav reports the opposite alliance frame).
-	public static boolean flipQuestNavPose = false;
 
 	// Multipliers to apply for MegaTag 2 observations
 	public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve

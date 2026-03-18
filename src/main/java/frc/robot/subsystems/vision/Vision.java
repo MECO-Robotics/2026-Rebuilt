@@ -159,11 +159,6 @@ public class Vision extends SubsystemBase {
 
 				// Send vision observation (optionally flip QuestNav about field center)
 				Pose2d visionPose2d = observation.pose().toPose2d();
-				if (observation.type() == PoseObservationType.QUESTNAV && flipQuestNavPose) {
-					visionPose2d = new Pose2d(aprilTagLayout.getFieldLength() - visionPose2d.getX(),
-							aprilTagLayout.getFieldWidth() - visionPose2d.getY(),
-							visionPose2d.getRotation().plus(Rotation2d.kPi));
-				}
 				consumer.accept(visionPose2d, observation.timestamp(),
 						VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
 			}

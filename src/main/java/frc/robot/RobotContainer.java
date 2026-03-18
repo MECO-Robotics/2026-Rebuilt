@@ -21,6 +21,7 @@ import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.flywheel.FlywheelSysIdCommands;
 import frc.robot.commands.position_joint.PositionJointSysIdCommands;
+import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.drive.TunerConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
@@ -108,7 +109,7 @@ public class RobotContainer {
 		configureAuto();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-		
+
 		sysIdChooser = new LoggedDashboardChooser<>("SysId Choices");
 		configureSysIdChooser();
 
@@ -146,10 +147,12 @@ public class RobotContainer {
 
 		// Auto-aim to hub when Y button is held
 		controller.y()
-		.whileTrue(DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftY(), () ->
-		-controller.getLeftX(), MaxSpeed));
-		// .alongWith(ShooterCalculator.calculateAndShoot(drive, hood,
-		// shooterFlywheel)))
+				.whileTrue(DriveCommands
+						.joystickAimToHub(drivetrain, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
+								MaxSpeed)
+						.alongWith(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)))
+				.whileFalse(Flywheel.setVoltage(shooterFlywheel, () -> 0)
+						.alongWith(PositionJoint.setPosition(hood, () -> 0)));
 		// .whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
 
 		// * INTAKE BINDS */
@@ -160,7 +163,10 @@ public class RobotContainer {
 				.whileFalse(Commands.run(() -> intakeRoller.setVoltage(0), intakeRoller));
 
 		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller));
+		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+		// controller.povRight().whileTrue(IntakeCommands.feedIntake(intakeRack,
+		// intakeRoller));
 	}
 
 	public void updateDashboardOutputs() {
@@ -193,7 +199,7 @@ public class RobotContainer {
 
 	public void configureAuto() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller));
+		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("AgitateIntake", IntakeCommands.agitateIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
@@ -203,8 +209,7 @@ public class RobotContainer {
 		// NamedCommands.registerCommand("AutoSpinUp",
 		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
-		NamedCommands.registerCommand("AutoAim",
-		DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
+		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
 	}
 
 	public void configureSysIdChooser() {
@@ -286,6 +291,7 @@ public class RobotContainer {
 		sysIdChooser.addOption("Hood Dynamic Forward", PositionJointSysIdCommands.dynamic(hood, Direction.kForward));
 		sysIdChooser.addOption("Hood Dynamic Reverse", PositionJointSysIdCommands.dynamic(hood, Direction.kReverse));
 	}
+
 	/**
 	 * Use this to pass the autonomous command to the main {@link Robot} class.
 	 *

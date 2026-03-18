@@ -45,9 +45,9 @@ public class IntakeCommands {
 	 * Stows the intake by moving the rotation motor to the stop position and
 	 * stopping the roller.
 	 */
-	public static Command stowIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
+	public static Command stowIntake(PositionJoint rotationMotor, Flywheel rollerMotor, Flywheel conveyer) {
 		return Commands.deadline(new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW),
-				new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
+				Flywheel.setVelocity(conveyer, () -> 0), new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
 				intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none());
 	}
 
@@ -74,18 +74,15 @@ public class IntakeCommands {
 				Commands.waitUntil(() -> rotationMotor.getPosition() > INTAKE_POSITIONS.DEPLOY.get())).repeatedly());
 	}
 
-	public static Command feedIntake(PositionJoint rotationMotor, Flywheel rollerMotor){
-		return Commands.sequence(
-			Commands.deadline(
-				Commands.waitUntil(() -> rotationMotor.getPosition() == INTAKE_POSITIONS.SAFE.getAsDouble()),
-				Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.INTAKE),
-				PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOWVELO)
-				),
-			Commands.waitUntil(() -> rotationMotor.getPosition() < INTAKE_POSITIONS.SAFE.getAsDouble()),
-			Commands.parallel(
-				Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.STOP),
-			PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOP)
-			)
-		);
+	public static Command feedIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
+		return Commands
+				.sequence(
+						Commands.deadline(
+								Commands.waitUntil(
+										() -> rotationMotor.getPosition() <= INTAKE_POSITIONS.SAFE.getAsDouble()),
+								Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.INTAKE),
+								PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOWVELO)),
+						Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.STOP),
+								PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOP)));
 	}
 }

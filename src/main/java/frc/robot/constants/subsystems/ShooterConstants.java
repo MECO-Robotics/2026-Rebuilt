@@ -44,12 +44,14 @@ public final class ShooterConstants {
 			Units.Meters, Units.RevolutionsPerSecond);
 
 	static {
-		hoodMap.put(Units.Meters.of(1.35), Units.Degrees.of(0.0));
-		hoodMap.put(Units.Meters.of(3.8), Units.Degrees.of(22.0));
-		hoodMap.put(Units.Meters.of(5.6), Units.Degrees.of(22.0));
+		hoodMap.put(Units.Inches.of(58.0), Units.Rotations.of(0.005));
+		hoodMap.put(Units.Inches.of(114.25), Units.Rotations.of(0.025));
+		hoodMap.put(Units.Inches.of(163), Units.Rotations.of(0.035));
+		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
-		shooterVelocityMap.put(Units.Meters.of(1.35), Units.RevolutionsPerSecond.of(20.0));
-		shooterVelocityMap.put(Units.Meters.of(3.8), Units.RevolutionsPerSecond.of(24.5));
-		shooterVelocityMap.put(Units.Meters.of(5.6), Units.RevolutionsPerSecond.of(28));
+		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(30));
+		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(36));
+		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(41.5));
+		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(47.5));
 	}
 }
