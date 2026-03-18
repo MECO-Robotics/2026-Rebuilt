@@ -33,8 +33,7 @@ import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOQuestNav;
+import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -100,8 +99,8 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		vision = new Vision(drivetrain::addVisionMeasurement, new VisionIOQuestNav(VisionConstants.robotToQuest,
-				new VisionIOPhotonVision(VisionConstants.arducamName, robotToArducam)));
+		vision = new Vision(drivetrain::addVisionMeasurement, VisionIO.questNavWithPhoton(VisionConstants.arducamName,
+				VisionConstants.robotToQuest, robotToArducam, () -> drivetrain.getState().Pose));
 		// simulation = RobotSimulation.create(drive, intakeRack, hood,
 		// shooterFlywheel);
 		// simulation.bindCommandHooks();
@@ -302,7 +301,8 @@ public class RobotContainer {
 		if (sysIdCommand != null) {
 			return sysIdCommand;
 		}
-		return Commands.none();
+		Command autoCommand = autoChooser.get();
+		return autoCommand != null ? autoCommand : Commands.none();
 	}
 
 	/** Logs robot and component transforms for the custom Robot_Remy asset. */

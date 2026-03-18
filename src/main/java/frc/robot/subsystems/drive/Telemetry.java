@@ -47,6 +47,8 @@ public class Telemetry {
 	private final StructPublisher<Pose2d> drivePose = driveStateTable.getStructTopic("Pose", Pose2d.struct).publish();
 	private final StructPublisher<ChassisSpeeds> driveSpeeds = driveStateTable
 			.getStructTopic("Speeds", ChassisSpeeds.struct).publish();
+	private final StructPublisher<ChassisSpeeds> driveAutoCommandedSpeeds = driveStateTable
+			.getStructTopic("AutoCommandedSpeeds", ChassisSpeeds.struct).publish();
 	private final StructArrayPublisher<SwerveModuleState> driveModuleStates = driveStateTable
 			.getStructArrayTopic("ModuleStates", SwerveModuleState.struct).publish();
 	private final StructArrayPublisher<SwerveModuleState> driveModuleTargets = driveStateTable
@@ -120,5 +122,10 @@ public class Telemetry {
 			m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
 			m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
 		}
+	}
+
+	public void logAutoCommandedSpeeds(ChassisSpeeds speeds) {
+		driveAutoCommandedSpeeds.set(speeds);
+		SignalLogger.writeStruct("DriveState/AutoCommandedSpeeds", ChassisSpeeds.struct, speeds);
 	}
 }

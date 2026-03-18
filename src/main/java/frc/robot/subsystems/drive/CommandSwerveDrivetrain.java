@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.constants.drive.TunerConstants;
 import frc.robot.constants.drive.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
@@ -52,11 +53,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	/** Swerve request to apply during robot-centric path following */
 	private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+	private final SwerveRequest.Idle m_idleRequest = new SwerveRequest.Idle();
 
 	/* Swerve requests to apply during SysId characterization */
 	private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
 	private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
 	private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+	private final Telemetry telemetry = new Telemetry(TunerConstants.kSpeedAt12Volts.in(MetersPerSecond));
 
 	/*
 	 * SysId routine for characterizing translation. This is used to find PID gains
@@ -190,11 +194,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 					this::resetPose, // Consumer for seeding pose against auto
 					() -> getState().Speeds, // Supplier of current robot speeds
 					// Consumer of ChassisSpeeds and feedforwards to drive the robot
-					(speeds, feedforwards) -> setControl(
-							m_pathApplyRobotSpeeds.withSpeeds(ChassisSpeeds.discretize(speeds, 0.020))
-									.withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-									.withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
-					new PPHolonomicDriveController(
+					(speeds, feedforwards) -> {
+						telemetry.logAutoCommandedSpeeds(speeds);
+						setControl(m_pathApplyRobotSpeeds.withSpeeds(ChassisSpeeds.discretize(speeds, 0.020)));
+					}, new PPHolonomicDriveController(
 							// PID constants for translation
 							new PIDConstants(10, 0, 0),
 							// PID constants for rotation
@@ -221,6 +224,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	 */
 	public Command applyRequest(Supplier<SwerveRequest> request) {
 		return run(() -> this.setControl(request.get()));
+	}
+
+	public void stop() {
+		setControl(m_idleRequest);
 	}
 
 	/**
@@ -265,6 +272,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 				m_hasAppliedOperatorPerspective = true;
 			});
 		}
+		telemetry.telemeterize(getState());
 
 	}
 
