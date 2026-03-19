@@ -71,7 +71,7 @@ public class RobotContainer {
 
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
-	private final LoggedDashboardChooser<Command> sysIdChooser;
+	// private final LoggedDashboardChooser<Command> sysIdChooser;
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -109,7 +109,7 @@ public class RobotContainer {
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 
-		sysIdChooser = new LoggedDashboardChooser<>("SysId Choices");
+		// sysIdChooser = new LoggedDashboardChooser<>("SysId Choices");
 		configureSysIdChooser();
 
 		// Configure the button bindings
@@ -212,7 +212,7 @@ public class RobotContainer {
 	}
 
 	public void configureSysIdChooser() {
-		sysIdChooser.addDefaultOption("None", null);
+		// sysIdChooser.addDefaultOption("None", null);
 
 		// sysIdChooser.addOption("Drive Quasistatic Forward",
 		// DriveSysIdCommands.driveQuasistatic(drive, Direction.kForward));
@@ -301,10 +301,10 @@ public class RobotContainer {
 	 * @return the command to run in autonomous
 	 */
 	public Command getAutonomousCommand() {
-		Command sysIdCommand = sysIdChooser.get();
-		if (sysIdCommand != null) {
-			return sysIdCommand;
-		}
+		// Command sysIdCommand = sysIdChooser.get();
+		// if (sysIdCommand != null) {
+		// 	return sysIdCommand; 
+		// }
 		Command autoCommand = autoChooser.get();
 		return autoCommand != null ? autoCommand : Commands.none();
 	}
