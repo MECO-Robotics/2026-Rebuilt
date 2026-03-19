@@ -231,64 +231,68 @@ public class RobotContainer {
 		// sysIdChooser.addOption("Azimuth Dynamic Reverse",
 		// DriveSysIdCommands.azimuthDynamic(drive, Direction.kReverse));
 
-		sysIdChooser.addOption("Shooter Flywheel Quasistatic Forward",
-				FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kForward));
-		sysIdChooser.addOption("Shooter Flywheel Quasistatic Reverse",
-				FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kReverse));
-		sysIdChooser.addOption("Shooter Flywheel Dynamic Forward",
-				FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kForward));
-		sysIdChooser.addOption("Shooter Flywheel Dynamic Reverse",
-				FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kReverse));
+		// sysIdChooser.addOption("Shooter Flywheel Quasistatic Forward",
+		// FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kForward));
+		// sysIdChooser.addOption("Shooter Flywheel Quasistatic Reverse",
+		// FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kReverse));
+		// sysIdChooser.addOption("Shooter Flywheel Dynamic Forward",
+		// FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kForward));
+		// sysIdChooser.addOption("Shooter Flywheel Dynamic Reverse",
+		// FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kReverse));
 
-		sysIdChooser.addOption("Top Indexer Quasistatic Forward",
-				FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kForward));
-		sysIdChooser.addOption("Top Indexer Quasistatic Reverse",
-				FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kReverse));
-		sysIdChooser.addOption("Top Indexer Dynamic Forward",
-				FlywheelSysIdCommands.dynamic(topIndexer, Direction.kForward));
-		sysIdChooser.addOption("Top Indexer Dynamic Reverse",
-				FlywheelSysIdCommands.dynamic(topIndexer, Direction.kReverse));
+		// sysIdChooser.addOption("Top Indexer Quasistatic Forward",
+		// FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kForward));
+		// sysIdChooser.addOption("Top Indexer Quasistatic Reverse",
+		// FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kReverse));
+		// sysIdChooser.addOption("Top Indexer Dynamic Forward",
+		// FlywheelSysIdCommands.dynamic(topIndexer, Direction.kForward));
+		// sysIdChooser.addOption("Top Indexer Dynamic Reverse",
+		// FlywheelSysIdCommands.dynamic(topIndexer, Direction.kReverse));
 
-		sysIdChooser.addOption("Bottom Indexer Quasistatic Forward",
-				FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kForward));
-		sysIdChooser.addOption("Bottom Indexer Quasistatic Reverse",
-				FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kReverse));
-		sysIdChooser.addOption("Bottom Indexer Dynamic Forward",
-				FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kForward));
-		sysIdChooser.addOption("Bottom Indexer Dynamic Reverse",
-				FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kReverse));
+		// sysIdChooser.addOption("Bottom Indexer Quasistatic Forward",
+		// FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kForward));
+		// sysIdChooser.addOption("Bottom Indexer Quasistatic Reverse",
+		// FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kReverse));
+		// sysIdChooser.addOption("Bottom Indexer Dynamic Forward",
+		// FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kForward));
+		// sysIdChooser.addOption("Bottom Indexer Dynamic Reverse",
+		// FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kReverse));
 
-		sysIdChooser.addOption("Conveyor Quasistatic Forward",
-				FlywheelSysIdCommands.quasistatic(conveyor, Direction.kForward));
-		sysIdChooser.addOption("Conveyor Quasistatic Reverse",
-				FlywheelSysIdCommands.quasistatic(conveyor, Direction.kReverse));
-		sysIdChooser.addOption("Conveyor Dynamic Forward", FlywheelSysIdCommands.dynamic(conveyor, Direction.kForward));
-		sysIdChooser.addOption("Conveyor Dynamic Reverse", FlywheelSysIdCommands.dynamic(conveyor, Direction.kReverse));
+		// sysIdChooser.addOption("Conveyor Quasistatic Forward",
+		// FlywheelSysIdCommands.quasistatic(conveyor, Direction.kForward));
+		// sysIdChooser.addOption("Conveyor Quasistatic Reverse",
+		// FlywheelSysIdCommands.quasistatic(conveyor, Direction.kReverse));
+		// sysIdChooser.addOption("Conveyor Dynamic Forward",
+		// FlywheelSysIdCommands.dynamic(conveyor, Direction.kForward));
+		// sysIdChooser.addOption("Conveyor Dynamic Reverse",
+		// FlywheelSysIdCommands.dynamic(conveyor, Direction.kReverse));
 
-		sysIdChooser.addOption("Intake Roller Quasistatic Forward",
-				FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kForward));
-		sysIdChooser.addOption("Intake Roller Quasistatic Reverse",
-				FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kReverse));
-		sysIdChooser.addOption("Intake Roller Dynamic Forward",
-				FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kForward));
-		sysIdChooser.addOption("Intake Roller Dynamic Reverse",
-				FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kReverse));
+		// sysIdChooser.addOption("Intake Roller Quasistatic Forward",
+		// FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kForward));
+		// sysIdChooser.addOption("Intake Roller Quasistatic Reverse",
+		// FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kReverse));
+		// sysIdChooser.addOption("Intake Roller Dynamic Forward",
+		// FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kForward));
+		// sysIdChooser.addOption("Intake Roller Dynamic Reverse",
+		// FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kReverse));
 
-		sysIdChooser.addOption("Intake Rack Quasistatic Forward",
-				PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kForward));
-		sysIdChooser.addOption("Intake Rack Quasistatic Reverse",
-				PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kReverse));
-		sysIdChooser.addOption("Intake Rack Dynamic Forward",
-				PositionJointSysIdCommands.dynamic(intakeRack, Direction.kForward));
-		sysIdChooser.addOption("Intake Rack Dynamic Reverse",
-				PositionJointSysIdCommands.dynamic(intakeRack, Direction.kReverse));
+		// sysIdChooser.addOption("Intake Rack Quasistatic Forward",
+		// PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kForward));
+		// sysIdChooser.addOption("Intake Rack Quasistatic Reverse",
+		// PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kReverse));
+		// sysIdChooser.addOption("Intake Rack Dynamic Forward",
+		// PositionJointSysIdCommands.dynamic(intakeRack, Direction.kForward));
+		// sysIdChooser.addOption("Intake Rack Dynamic Reverse",
+		// PositionJointSysIdCommands.dynamic(intakeRack, Direction.kReverse));
 
-		sysIdChooser.addOption("Hood Quasistatic Forward",
-				PositionJointSysIdCommands.quasistatic(hood, Direction.kForward));
-		sysIdChooser.addOption("Hood Quasistatic Reverse",
-				PositionJointSysIdCommands.quasistatic(hood, Direction.kReverse));
-		sysIdChooser.addOption("Hood Dynamic Forward", PositionJointSysIdCommands.dynamic(hood, Direction.kForward));
-		sysIdChooser.addOption("Hood Dynamic Reverse", PositionJointSysIdCommands.dynamic(hood, Direction.kReverse));
+		// sysIdChooser.addOption("Hood Quasistatic Forward",
+		// PositionJointSysIdCommands.quasistatic(hood, Direction.kForward));
+		// sysIdChooser.addOption("Hood Quasistatic Reverse",
+		// PositionJointSysIdCommands.quasistatic(hood, Direction.kReverse));
+		// sysIdChooser.addOption("Hood Dynamic Forward",
+		// PositionJointSysIdCommands.dynamic(hood, Direction.kForward));
+		// sysIdChooser.addOption("Hood Dynamic Reverse",
+		// PositionJointSysIdCommands.dynamic(hood, Direction.kReverse));
 	}
 
 	/**
