@@ -47,4 +47,29 @@ public class ShooterCalculator {
 
 		return PositionJoint.setPosition(hood, hoodPosition).alongWith(Flywheel.setVelocity(shooter, shooterVelocity));
 	}
+
+	public static Command calculateAndShootRegression(CommandSwerveDrivetrain drive, PositionJoint hood,
+			Flywheel shooter) {
+		Supplier<Distance> distance = () -> {
+			Pose2d shooterPosition = drive.getState().Pose
+					.transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
+			Distance distanceToHub = Meters.of(Hub.hubPosition().getDistance(shooterPosition.getTranslation()));
+			Logger.recordOutput("Shooter/DistanceToHubMeters", distanceToHub.in(Units.Meters));
+			return distanceToHub;
+		};
+
+		DoubleSupplier hoodPosition = () -> {
+			double x = distance.get().in(Units.Inches);
+			double[] k = ShooterConstants.kHOOODREGCALC;
+			return -k[0] + k[1] * x + k[2] * x * x;
+		};
+
+		DoubleSupplier shooterVelocity = () -> {
+			double x = distance.get().in(Units.Inches);
+			double[] k = ShooterConstants.kSHOOTERVELREGCALC;
+			return k[0] + k[1] * x + k[2] * x * x;
+		};
+
+		return PositionJoint.setPosition(hood, hoodPosition).alongWith(Flywheel.setVelocity(shooter, shooterVelocity));
+	}
 }

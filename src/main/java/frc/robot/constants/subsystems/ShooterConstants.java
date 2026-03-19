@@ -38,6 +38,12 @@ public final class ShooterConstants {
 			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, GravityType.COSINE, EncoderType.INTERNAL, 0,
 			Rotation2d.fromRotations(0), "");
 
+	// Regression constants for hood and shooter velocity. These are used to
+	// calculate the feedforward for the hood and shooter based on distance to
+	// target.
+	public static final double[] kHOOODREGCALC = {0.018, 0.00042, -0.00000676}; // -0.018 + 4.42E-04x + -6.76E-07x^2
+	public static final double[] kSHOOTERVELREGCALC = {22, 0.134, -1.19E-04}; // 22.5 + 0.134x + -1.19E-04x^2
+
 	public static final UnitInterpolatingMap<DistanceUnit, AngleUnit> hoodMap = new UnitInterpolatingMap<>(Units.Meters,
 			Units.Radians);
 	public static final UnitInterpolatingMap<DistanceUnit, AngularVelocityUnit> shooterVelocityMap = new UnitInterpolatingMap<>(
