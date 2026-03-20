@@ -24,14 +24,9 @@ public class IntakeCommands {
 	 * the safe position, then stopping the rollers
 	 */
 	public static Command stowIntake(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
-		return Commands.sequence(
-				Commands.deadline(Commands.waitUntil(() -> rack.getPosition() < RACK_PRESETS.SAFE.get())),
-				PositionJoint.setPosition(rack, RACK_PRESETS.STOW),
-				Flywheel.setVoltage(conveyer, ROLLER_PRESETS.INTAKE),
-				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE),
-				intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none(),
-				Commands.parallel(Flywheel.setVoltage(conveyer, ROLLER_PRESETS.IDLE),
-						Flywheel.setVoltage(roller, ROLLER_PRESETS.IDLE)));
+		return Commands.parallel(PositionJoint.setVelocity(rack, RACK_PRESETS.STOW),
+				Flywheel.setVoltage(conveyer, () -> -ROLLER_PRESETS.INTAKE.getAsDouble()),
+				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE));
 	}
 
 	/**
@@ -39,9 +34,10 @@ public class IntakeCommands {
 	 * setting the roller motor to intake speed.
 	 */
 	public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
-		return Commands.parallel(PositionJoint.setPosition(rotationMotor, RACK_PRESETS.DEPLOY),
-				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE),
-				intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none());
+		return Commands
+				.parallel(PositionJoint.setVelocity(rotationMotor, RACK_PRESETS.DEPLOY).withTimeout(1),
+						Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE))
+				.andThen(PositionJoint.setVelocity(rotationMotor, () -> 0.0).withTimeout(0.0));
 	}
 
 	public static Command spinIntake(Flywheel rollerMotor) {
@@ -50,5 +46,10 @@ public class IntakeCommands {
 
 	public static Command idleIntake(Flywheel rollerMotor) {
 		return Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE);
+	}
+
+	public static Command idle(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
+		return Commands.parallel(PositionJoint.setVelocity(rack, () -> 0), Flywheel.setVoltage(conveyer, () -> 0),
+				Flywheel.setVoltage(roller, () -> 0));
 	}
 }

@@ -127,6 +127,7 @@ public class RobotContainer {
 																						// negative X (left)
 				));
 
+		intakeRack.setDefaultCommand(PositionJoint.setVelocity(intakeRack, () -> 0.0));
 		// Feed shooter
 		controller.rightBumper().whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
 				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
@@ -138,15 +139,17 @@ public class RobotContainer {
 		// Deploy and stow intake
 		controller.povUp().or(coPilot.povUp()).whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
 
-		controller.povDown().or(coPilot.povDown())
-				.whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
+		controller.povDown().or(coPilot.povDown()).onTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
 
 		// Shooter presets
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
 		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));
+		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+
+		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
 	}
 
 	public void updateDashboardOutputs() {
@@ -178,13 +181,17 @@ public class RobotContainer {
 	}
 
 	public void configureAuto() {
-		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
-		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
-		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
-		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
-		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood));
-		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
+		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(15), ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor)));
+		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
+		autoChooser.addOption("Brain Lee", Commands.none());
+		// NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
+		// NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
+		// NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
+		// NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+		// NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
+		// NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood));
+		// NamedCommands.registerCommand("AutoAim",
+		// DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
 	}
 
 	/**

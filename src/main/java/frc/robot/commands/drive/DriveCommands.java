@@ -203,4 +203,8 @@ public class DriveCommands {
 
 	// // public static Command azimuthTuning()
 
+	public static Command resetHeading(CommandSwerveDrivetrain drive) {
+		return Commands.runOnce(() -> drive.resetPose(
+				new Pose2d(drive.getState().Pose.getX(), drive.getState().Pose.getY(), Rotation2d.fromDegrees(0))));
+	}
 }
