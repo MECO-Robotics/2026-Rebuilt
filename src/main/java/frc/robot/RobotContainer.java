@@ -146,7 +146,7 @@ public class RobotContainer {
 
 		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));	
+		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));
 	}
 
 	public void updateDashboardOutputs() {
