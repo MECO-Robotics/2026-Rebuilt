@@ -5,31 +5,19 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "Depot 1"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 5.0
-          }
-        },
-        {
-          "type": "parallel",
+          "type": "deadline",
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Depot 2"
+                  "waitTime": 2.0
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "AutoSpinUp"
+                  "name": "Fender"
                 }
               }
             ]
@@ -48,19 +36,13 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Fender"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoSpinUp"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
                   "name": "FeedRollers"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Fender"
                 }
               }
             ]

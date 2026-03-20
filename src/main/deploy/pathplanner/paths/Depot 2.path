@@ -28,7 +28,12 @@
       "linkedName": "Depot 2 end"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.36982248520710065,
+      "rotationDegrees": -179.16101486070926
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],

@@ -232,6 +232,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
+		NamedCommands.registerCommand("Fender", ShooterCommands.fender(shooterFlywheel, hood));
 		// NamedCommands.registerCommand("Flywheel",
 		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
