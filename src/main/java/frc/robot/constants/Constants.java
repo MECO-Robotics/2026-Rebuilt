@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always
@@ -13,6 +14,8 @@ import java.util.Optional;
 public final class Constants {
 	public static final Mode simMode = Mode.SIM;
 	public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
+
+	public static final DoubleSupplier kZERO_SUPPLY = () -> 0.0;
 
 	public static boolean tuningMode = true;
 

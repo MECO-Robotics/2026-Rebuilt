@@ -7,6 +7,7 @@ import frc.robot.constants.types.PositionJointConstants.EncoderType;
 import frc.robot.constants.types.PositionJointConstants.GravityType;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
 /** Constants for intake-specific flywheel and position-joint mechanisms. */
 public final class IntakeConstants {
@@ -25,4 +26,19 @@ public final class IntakeConstants {
 	public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG = new PositionJointHardwareConfig(new int[]{21},
 			new boolean[]{false}, (5 * (48 / 16) * (26 / 16)) / (((Math.PI * 10) / 10) * 0.0254), 0.01, 60,
 			GravityType.COSINE, EncoderType.INTERNAL, 0, Rotation2d.fromRotations(0), "");
+
+	/** Intake rotation preset positions. */
+	public static final class RACK_PRESETS {
+		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/IntakePosition/Stow", 0);
+		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("Presets/IntakePosition/Deploy", .21);
+		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("Presets/IntakePosition/Safe", 0.10);
+	}
+
+	/** Intake roller preset voltages. */
+	public final class ROLLER_PRESETS {
+		public static final LoggedTunableNumber INTAKE = new LoggedTunableNumber("Presets/IntakeVolts/IntakeSpeed", 10);
+		public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("Presets/IntakeVolts/Slow", 7);
+		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("Presets/IntakeVolts/Eject", -10);
+		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/IntakeVolts/Stop", 0);
+	}
 }

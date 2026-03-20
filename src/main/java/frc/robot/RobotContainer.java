@@ -57,7 +57,7 @@ public class RobotContainer {
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
 	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.2)
 			.withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
-			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
+			.withDriveRequestType(DriveRequestType.Velocity); // Use closed-loop control for drive motors
 
 	private final Flywheel shooterFlywheel;
 	private final Flywheel topIndexer;
@@ -66,7 +66,6 @@ public class RobotContainer {
 	private final Flywheel intakeRoller;
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
-	// private final Vision vision;
 	// private final RobotSimulation simulation;
 
 	// Controller
@@ -75,7 +74,6 @@ public class RobotContainer {
 
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
-	// private final LoggedDashboardChooser<Command> sysIdChooser;
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -103,20 +101,10 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		// vision = new Vision(drivetrain::addVisionMeasurement,
-		// VisionIO.questNavWithPhoton(VisionConstants.arducamName,
-		// VisionConstants.robotToQuest, robotToArducam, () ->
-		// drivetrain.getState().Pose));
-		// simulation = RobotSimulation.create(drive, intakeRack, hood,
-		// shooterFlywheel);
-		// simulation.bindCommandHooks();
 
 		configureAuto();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-
-		// sysIdChooser = new LoggedDashboardChooser<>("SysId Choices");
-		configureSysIdChooser();
 
 		// Configure the button bindings
 		configureButtonBindings();
@@ -140,61 +128,24 @@ public class RobotContainer {
 																						// negative X (left)
 				));
 
-		// Lock to 0Â° when A button is held
-		// controller
-		// .x()
-		// .whileTrue(
-		// DriveCommands.joystickDriveAtAngle(
-		// drive,
-		// () -> -controller.getLeftY(),
-		// () -> -controller.getLeftX(),
-		// () -> Rotation2d.kZero));
-
-		// Auto-aim to hub when Y button is held
-		controller.y().whileTrue(
-				// DriveCommands
-				// .joystickAimToHub(drivetrain, () -> -controller.getLeftY(), () ->
-				// -controller.getLeftX(),
-				// MaxSpeed)
-				(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)))
-				.whileFalse(Flywheel.setVoltage(shooterFlywheel, () -> 0)
-						.alongWith(PositionJoint.setPosition(hood, () -> 0)));
-		// .whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
-
-		// * INTAKE BINDS */
+		// Feed shooter
 		controller.rightBumper().whileTrue(ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
 				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
-		controller.leftBumper().whileTrue(Commands.run(() -> intakeRoller.setVoltage(10), intakeRoller))
-				.whileFalse(Commands.run(() -> intakeRoller.setVoltage(0), intakeRoller));
+		// Run intake
+		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller)).whileFalse(IntakeCommands.idleIntake(intakeRoller));
 
-		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
-				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+		// Deploy and stow intake
+		controller.povUp().or(coPilot.povUp()).whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
 
-		coPilot.y().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		coPilot.a().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
-				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+		controller.povDown().or(coPilot.povDown()).whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 
-		coPilot.b()
-				.whileTrue(Flywheel.setVelocity(shooterFlywheel, () -> 30)
-						.alongWith(PositionJoint.setPosition(hood, () -> 0.001)))
-				.whileFalse(Flywheel.setVelocity(shooterFlywheel, () -> 0)
-						.alongWith(PositionJoint.setPosition(hood, () -> 0)));
+		// Shooter presets
+		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(bottomIndexer, hood));
 
-		controller.x()
-				.whileTrue(Flywheel.setVelocity(shooterFlywheel, () -> 35)
-						.alongWith(PositionJoint.setPosition(hood, () -> 0.049)))
-				.whileFalse(Flywheel.setVelocity(shooterFlywheel, () -> 0)
-						.alongWith(PositionJoint.setPosition(hood, () -> 0)));
+		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(bottomIndexer, hood));
 
-		coPilot.x().whileTrue(ShooterCommands.fender(bottomIndexer, hood))
-				.whileFalse(ShooterCommands.off(bottomIndexer, hood));
-
-		controller.povRight().whileTrue(IntakeCommands.agitateIntake(hood, bottomIndexer, conveyor));
-
-		// controller.povRight().whileTrue(IntakeCommands.feedIntake(intakeRack,
-		// intakeRoller));
+		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));	
 	}
 
 	public void updateDashboardOutputs() {
@@ -227,104 +178,12 @@ public class RobotContainer {
 
 	public void configureAuto() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
-		NamedCommands.registerCommand("AgitateIntake",
-				IntakeCommands.agitateIntake(intakeRack, intakeRoller, conveyor));
+		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
 		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
-		NamedCommands.registerCommand("Fender", ShooterCommands.fender(shooterFlywheel, hood));
-		// NamedCommands.registerCommand("Flywheel",
-		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
-
-		// NamedCommands.registerCommand("AutoSpinUp",
-		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
-
+		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood));
 		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
-	}
-
-	public void configureSysIdChooser() {
-		// sysIdChooser.addDefaultOption("None", null);
-
-		// sysIdChooser.addOption("Drive Quasistatic Forward",
-		// DriveSysIdCommands.driveQuasistatic(drive, Direction.kForward));
-		// sysIdChooser.addOption("Drive Quasistatic Reverse",
-		// DriveSysIdCommands.driveQuasistatic(drive, Direction.kReverse));
-		// sysIdChooser.addOption("Drive Dynamic Forward",
-		// DriveSysIdCommands.driveDynamic(drive, Direction.kForward));
-		// sysIdChooser.addOption("Drive Dynamic Reverse",
-		// DriveSysIdCommands.driveDynamic(drive, Direction.kReverse));
-		// sysIdChooser.addOption("Azimuth Quasistatic Forward",
-		// DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kForward));
-		// sysIdChooser.addOption("Azimuth Quasistatic Reverse",
-		// DriveSysIdCommands.azimuthQuasistatic(drive, Direction.kReverse));
-		// sysIdChooser.addOption("Azimuth Dynamic Forward",
-		// DriveSysIdCommands.azimuthDynamic(drive, Direction.kForward));
-		// sysIdChooser.addOption("Azimuth Dynamic Reverse",
-		// DriveSysIdCommands.azimuthDynamic(drive, Direction.kReverse));
-
-		// sysIdChooser.addOption("Shooter Flywheel Quasistatic Forward",
-		// FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kForward));
-		// sysIdChooser.addOption("Shooter Flywheel Quasistatic Reverse",
-		// FlywheelSysIdCommands.quasistatic(shooterFlywheel, Direction.kReverse));
-		// sysIdChooser.addOption("Shooter Flywheel Dynamic Forward",
-		// FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kForward));
-		// sysIdChooser.addOption("Shooter Flywheel Dynamic Reverse",
-		// FlywheelSysIdCommands.dynamic(shooterFlywheel, Direction.kReverse));
-
-		// sysIdChooser.addOption("Top Indexer Quasistatic Forward",
-		// FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kForward));
-		// sysIdChooser.addOption("Top Indexer Quasistatic Reverse",
-		// FlywheelSysIdCommands.quasistatic(topIndexer, Direction.kReverse));
-		// sysIdChooser.addOption("Top Indexer Dynamic Forward",
-		// FlywheelSysIdCommands.dynamic(topIndexer, Direction.kForward));
-		// sysIdChooser.addOption("Top Indexer Dynamic Reverse",
-		// FlywheelSysIdCommands.dynamic(topIndexer, Direction.kReverse));
-
-		// sysIdChooser.addOption("Bottom Indexer Quasistatic Forward",
-		// FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kForward));
-		// sysIdChooser.addOption("Bottom Indexer Quasistatic Reverse",
-		// FlywheelSysIdCommands.quasistatic(bottomIndexer, Direction.kReverse));
-		// sysIdChooser.addOption("Bottom Indexer Dynamic Forward",
-		// FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kForward));
-		// sysIdChooser.addOption("Bottom Indexer Dynamic Reverse",
-		// FlywheelSysIdCommands.dynamic(bottomIndexer, Direction.kReverse));
-
-		// sysIdChooser.addOption("Conveyor Quasistatic Forward",
-		// FlywheelSysIdCommands.quasistatic(conveyor, Direction.kForward));
-		// sysIdChooser.addOption("Conveyor Quasistatic Reverse",
-		// FlywheelSysIdCommands.quasistatic(conveyor, Direction.kReverse));
-		// sysIdChooser.addOption("Conveyor Dynamic Forward",
-		// FlywheelSysIdCommands.dynamic(conveyor, Direction.kForward));
-		// sysIdChooser.addOption("Conveyor Dynamic Reverse",
-		// FlywheelSysIdCommands.dynamic(conveyor, Direction.kReverse));
-
-		// sysIdChooser.addOption("Intake Roller Quasistatic Forward",
-		// FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kForward));
-		// sysIdChooser.addOption("Intake Roller Quasistatic Reverse",
-		// FlywheelSysIdCommands.quasistatic(intakeRoller, Direction.kReverse));
-		// sysIdChooser.addOption("Intake Roller Dynamic Forward",
-		// FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kForward));
-		// sysIdChooser.addOption("Intake Roller Dynamic Reverse",
-		// FlywheelSysIdCommands.dynamic(intakeRoller, Direction.kReverse));
-
-		// sysIdChooser.addOption("Intake Rack Quasistatic Forward",
-		// PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kForward));
-		// sysIdChooser.addOption("Intake Rack Quasistatic Reverse",
-		// PositionJointSysIdCommands.quasistatic(intakeRack, Direction.kReverse));
-		// sysIdChooser.addOption("Intake Rack Dynamic Forward",
-		// PositionJointSysIdCommands.dynamic(intakeRack, Direction.kForward));
-		// sysIdChooser.addOption("Intake Rack Dynamic Reverse",
-		// PositionJointSysIdCommands.dynamic(intakeRack, Direction.kReverse));
-
-		// sysIdChooser.addOption("Hood Quasistatic Forward",
-		// PositionJointSysIdCommands.quasistatic(hood, Direction.kForward));
-		// sysIdChooser.addOption("Hood Quasistatic Reverse",
-		// PositionJointSysIdCommands.quasistatic(hood, Direction.kReverse));
-		// sysIdChooser.addOption("Hood Dynamic Forward",
-		// PositionJointSysIdCommands.dynamic(hood, Direction.kForward));
-		// sysIdChooser.addOption("Hood Dynamic Reverse",
-		// PositionJointSysIdCommands.dynamic(hood, Direction.kReverse));
 	}
 
 	/**

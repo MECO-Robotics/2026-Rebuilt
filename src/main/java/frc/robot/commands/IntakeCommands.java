@@ -2,12 +2,12 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.commands.position_joint.PositionJointPositionCommand;
+import frc.robot.constants.subsystems.IntakeConstants.RACK_PRESETS;
+import frc.robot.constants.subsystems.IntakeConstants.ROLLER_PRESETS;
 import frc.robot.simulation.IntakeSim;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
-import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
 /**
  * Factory methods for coordinated intake-rack and intake-roller command groups.
@@ -20,38 +20,20 @@ public class IntakeCommands {
 		intakeSimulation = sim;
 	}
 
-	/** Intake rotation preset positions. */
-	public static final class INTAKE_POSITIONS {
-		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("IntakePosition/Stow", 0);
-		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("IntakePosition/Deploy", .21);
-		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("IntakePosition/Safe", 0.02);
-	}
-
-	/** Intake roller preset voltages. */
-	public final class ROLLER_VOLTS {
-		public static final LoggedTunableNumber INTAKE = new LoggedTunableNumber("IntakeVolts/IntakeSpeed", 10);
-		public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("IntakeVolts/Slow", 7);
-		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("IntakeVolts/Eject", -10);
-		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IntakeVolts/Stop", 0);
-	}
-
-	public final class INTAKE_VELO {
-		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IntakePosition/Stop", 0);
-		public static final LoggedTunableNumber STOWVELO = new LoggedTunableNumber("IntakePosition/StowVelo", -5);
-		public static final LoggedTunableNumber DEPLOYVELO = new LoggedTunableNumber("IntakePosition/DeployVelo", 5);
-		public static final LoggedTunableNumber CONVEYORAGG = new LoggedTunableNumber("Aggitate Index", 15);
-	}
-
 	/**
-	 * Stows the intake by moving the rotation motor to the stop position and
-	 * stopping the roller.
+	 * Stows the intake by intaking and running conveyer until the intake is above the safe position, then stopping the rollers
 	 */
-	public static Command stowIntake(PositionJoint rotationMotor, Flywheel rollerMotor, Flywheel conveyer) {
-		return Commands.deadline(
-				new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW)
-						.andThen(Commands.waitSeconds(2.0)),
-				Flywheel.setVelocity(conveyer, () -> 6), new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
-				intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none());
+	public static Command stowIntake(PositionJoint rackMotor, Flywheel rollerMotor, Flywheel conveyer) {
+		return Commands.sequence(
+					Commands.deadline(
+						Commands.waitUntil(() -> rackMotor.getPosition() < RACK_PRESETS.SAFE.get())),
+						PositionJoint.setPosition(rackMotor, RACK_PRESETS.STOW),
+						Flywheel.setVoltage(conveyer, ROLLER_PRESETS.INTAKE), 
+						Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE),
+						intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none(),
+					Commands.parallel(
+						Flywheel.setVoltage(conveyer, ROLLER_PRESETS.IDLE),
+						Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE)));
 	}
 
 	/**
@@ -59,40 +41,16 @@ public class IntakeCommands {
 	 * setting the roller motor to intake speed.
 	 */
 	public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
-		return Commands.parallel(new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.DEPLOY),
-				new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.STOP),
+		return Commands.parallel(new PositionJointPositionCommand(rotationMotor, RACK_PRESETS.DEPLOY),
+				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE),
 				intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none());
 	}
 
-	/**
-	 * Spins the wheels to intake, and moves the rotation motor repeatedly up and
-	 * down for feeding stuck balls to the shooter.
-	 */
-	public static Command agitateIntake(PositionJoint rotationMotor, Flywheel rollerMotor, Flywheel conveyor) {
-		return Commands.parallel(new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.EJECT), Commands.sequence(
-				// TODO: need to fix depending if positions are positive or negative
-				PositionJoint.setPosition(rotationMotor, INTAKE_POSITIONS.SAFE),
-				// Commands.waitUntil(() -> rotationMotor.getPosition() >
-				// INTAKE_POSITIONS.SAFE.get()),
-				PositionJoint.setPosition(rotationMotor, INTAKE_POSITIONS.DEPLOY),
-				Flywheel.setVelocity(conveyor, INTAKE_VELO.CONVEYORAGG)));
-		// Commands.waitUntil(() -> rotationMotor.getPosition() >
-		// INTAKE_POSITIONS.DEPLOY.get())).repeatedly());
-	}
-
-	public static Command feedIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
-		return Commands
-				.sequence(
-						Commands.deadline(
-								Commands.waitUntil(
-										() -> rotationMotor.getPosition() <= INTAKE_POSITIONS.SAFE.getAsDouble()),
-								Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.INTAKE),
-								PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOWVELO)),
-						Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.STOP),
-								PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOP)));
-	}
-
 	public static Command spinIntake(Flywheel rollerMotor) {
-		return new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE);
+		return Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE);
+	}
+
+	public static Command idleIntake(Flywheel rollerMotor) {
+		return Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE);
 	}
 }
