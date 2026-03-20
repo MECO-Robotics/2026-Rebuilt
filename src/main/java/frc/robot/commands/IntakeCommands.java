@@ -39,6 +39,7 @@ public class IntakeCommands {
 		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IntakePosition/Stop", 0);
 		public static final LoggedTunableNumber STOWVELO = new LoggedTunableNumber("IntakePosition/StowVelo", -5);
 		public static final LoggedTunableNumber DEPLOYVELO = new LoggedTunableNumber("IntakePosition/DeployVelo", 5);
+		public static final LoggedTunableNumber CONVEYORAGG = new LoggedTunableNumber("Aggitate Index", 15);
 	}
 
 	/**
@@ -46,8 +47,10 @@ public class IntakeCommands {
 	 * stopping the roller.
 	 */
 	public static Command stowIntake(PositionJoint rotationMotor, Flywheel rollerMotor, Flywheel conveyer) {
-		return Commands.deadline(new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW),
-				Flywheel.setVelocity(conveyer, () -> 0), new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
+		return Commands.deadline(
+				new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.STOW)
+						.andThen(Commands.waitSeconds(2.0)),
+				Flywheel.setVelocity(conveyer, () -> 6), new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
 				intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none());
 	}
 
@@ -57,7 +60,7 @@ public class IntakeCommands {
 	 */
 	public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
 		return Commands.parallel(new PositionJointPositionCommand(rotationMotor, INTAKE_POSITIONS.DEPLOY),
-				new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE),
+				new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.STOP),
 				intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none());
 	}
 
@@ -65,13 +68,16 @@ public class IntakeCommands {
 	 * Spins the wheels to intake, and moves the rotation motor repeatedly up and
 	 * down for feeding stuck balls to the shooter.
 	 */
-	public static Command agitateIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
+	public static Command agitateIntake(PositionJoint rotationMotor, Flywheel rollerMotor, Flywheel conveyor) {
 		return Commands.parallel(new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.EJECT), Commands.sequence(
 				// TODO: need to fix depending if positions are positive or negative
 				PositionJoint.setPosition(rotationMotor, INTAKE_POSITIONS.SAFE),
-				Commands.waitUntil(() -> rotationMotor.getPosition() > INTAKE_POSITIONS.SAFE.get()),
+				// Commands.waitUntil(() -> rotationMotor.getPosition() >
+				// INTAKE_POSITIONS.SAFE.get()),
 				PositionJoint.setPosition(rotationMotor, INTAKE_POSITIONS.DEPLOY),
-				Commands.waitUntil(() -> rotationMotor.getPosition() > INTAKE_POSITIONS.DEPLOY.get())).repeatedly());
+				Flywheel.setVelocity(conveyor, INTAKE_VELO.CONVEYORAGG)));
+		// Commands.waitUntil(() -> rotationMotor.getPosition() >
+		// INTAKE_POSITIONS.DEPLOY.get())).repeatedly());
 	}
 
 	public static Command feedIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
@@ -84,5 +90,9 @@ public class IntakeCommands {
 								PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOWVELO)),
 						Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_VOLTS.STOP),
 								PositionJoint.setVelocity(rotationMotor, INTAKE_VELO.STOP)));
+	}
+
+	public static Command spinIntake(Flywheel rollerMotor) {
+		return new FlywheelVoltageCommand(rollerMotor, ROLLER_VOLTS.INTAKE);
 	}
 }

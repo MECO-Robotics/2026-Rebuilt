@@ -3,53 +3,48 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5437831125827817,
-        "y": 7.418129139072847
+        "x": 3.5460416666666665,
+        "y": 0.6186333333333334
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.543783112582781,
-        "y": 7.418129139072847
+        "x": 2.729741666666667,
+        "y": 0.7924749999999992
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.498576158940397,
-        "y": 6.859114238410595
+        "x": 1.9512333333333332,
+        "y": 1.1855083333333334
       },
       "prevControl": {
-        "x": 6.4364513364947795,
-        "y": 7.550252888118078
+        "x": 2.669275,
+        "y": 1.1855083333333334
       },
       "nextControl": {
-        "x": 6.5566556291390725,
-        "y": 6.212980132450331
+        "x": 1.3457169512033564,
+        "y": 1.1855083333333334
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 6.498576158940397,
-        "y": 4.811812913907284
+        "x": 0.39421666666666666,
+        "y": 0.6186333333333334
       },
       "prevControl": {
-        "x": 6.534875827814569,
-        "y": 5.6902649006622505
+        "x": 1.2256333333333334,
+        "y": 0.8453833333333329
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Test 1 auto"
+      "linkedName": "Depot 1 end"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.6101694915254189,
-      "rotationDegrees": 0.0
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -63,10 +58,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -88.53119928561419
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Test",
+  "folder": "Depot",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 0.0
