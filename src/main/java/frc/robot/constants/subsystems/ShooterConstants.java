@@ -1,5 +1,6 @@
 package frc.robot.constants.subsystems;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularVelocityUnit;
@@ -50,7 +51,7 @@ public final class ShooterConstants {
 	public static final UnitInterpolatingMap<DistanceUnit, AngularVelocityUnit> shooterVelocityMap = new UnitInterpolatingMap<>(
 			Units.Meters, Units.RevolutionsPerSecond);
 
-		/** Conveyor roller preset voltages. */
+	/** Conveyor roller preset voltages. */
 	public final class CONVEYOR_PRESET {
 		public static final LoggedTunableNumber FEED = new LoggedTunableNumber("Presets/Conveyor/IntakeVolts", -10);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Conveyor/StopVolts", 0);
@@ -61,11 +62,13 @@ public final class ShooterConstants {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/Hood/StowPos", 0);
 		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Hood/FenderPos", 0.001);
 		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Hood/FerryPos", 0.049);
+		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Hood/Trench", 0);
 	}
 
 	/** Indexer roller preset voltages. */
 	public final class INDEXER_PRESET {
-		public static final LoggedTunableNumber FEED_BOTTOM = new LoggedTunableNumber("Presets/Indexer/BottomVolts", -7);
+		public static final LoggedTunableNumber FEED_BOTTOM = new LoggedTunableNumber("Presets/Indexer/BottomVolts",
+				-7);
 		public static final LoggedTunableNumber FEED_TOP = new LoggedTunableNumber("Presets/Indexer/TopVolts", 7);
 		public static final LoggedTunableNumber IDLE_BOTTOM = new LoggedTunableNumber("Presets/Indexer/IdleVolts", 0);
 		public static final LoggedTunableNumber IDLE_TOP = new LoggedTunableNumber("Presets/Indexer/IdleVolts", 0);
@@ -78,6 +81,7 @@ public final class ShooterConstants {
 		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/FenderVeloc", 30);
 		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 35);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Shooter/IdleVeloc", 0);
+		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Shooter/Trench", 0);
 	}
 
 	static {

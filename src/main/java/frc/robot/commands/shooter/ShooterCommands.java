@@ -24,8 +24,7 @@ public class ShooterCommands {
 	 */
 	public static Command idleRollers(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller,
 			Flywheel conveyorRoller) {
-		return Commands.parallel(
-				Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.IDLE_BOTTOM),
+		return Commands.parallel(Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.IDLE_BOTTOM),
 				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.IDLE_BOTTOM),
 				Flywheel.setVoltage(conveyorRoller, CONVEYOR_PRESET.IDLE));
 	}
@@ -33,8 +32,7 @@ public class ShooterCommands {
 	/** Puts both indexers feeding towards the shooter */
 	public static Command feedRollers(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller,
 			Flywheel conveyorRoller) {
-		return Commands.parallel(
-				Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.FEED_BOTTOM),
+		return Commands.parallel(Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.FEED_BOTTOM),
 				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.FEED_TOP),
 				Flywheel.setVoltage(conveyorRoller, CONVEYOR_PRESET.FEED));
 		// launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() :
@@ -44,20 +42,22 @@ public class ShooterCommands {
 	/* PRESETS */
 
 	public static Command shooterIdle(Flywheel shooterRoller, PositionJoint hood) {
-		return Commands.deadline(
-				PositionJoint.setPosition(hood, HOOD_PRESET.STOW),
+		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.STOW),
 				Flywheel.setVoltage(shooterRoller, SHOOTER_PRESET.IDLE));
 	}
 
 	public static Command hubPreset(Flywheel shooterRoller, PositionJoint hood) {
-		return Commands.deadline(
-				PositionJoint.setPosition(hood, HOOD_PRESET.HUB),
-				Flywheel.setVoltage(shooterRoller, SHOOTER_PRESET.HUB));
-	}	
+		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.HUB),
+				Flywheel.setVelocity(shooterRoller, SHOOTER_PRESET.HUB));
+	}
 
 	public static Command ferryPreset(Flywheel shooter, PositionJoint hood) {
-		return Commands.deadline(
-				PositionJoint.setPosition(hood, HOOD_PRESET.FERRY),
+		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.FERRY),
 				Flywheel.setVelocity(shooter, SHOOTER_PRESET.FERRY));
+	}
+
+	public static Command trenchPreset(Flywheel shooter, PositionJoint hood) {
+		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.TRENCH),
+				Flywheel.setVelocity(shooter, SHOOTER_PRESET.TRENCH));
 	}
 }
