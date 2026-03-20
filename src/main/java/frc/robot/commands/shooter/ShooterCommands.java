@@ -1,7 +1,9 @@
 package frc.robot.commands.shooter;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.commands.flywheel.FlywheelVelocityCommand;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.commands.position_joint.PositionJointPositionCommand;
 // import frc.robot.simulation.LaunchedFuelSim;
@@ -28,6 +30,8 @@ public class ShooterCommands {
 	/** Intake rotation preset positions. */
 	public static final class HOOD_POSITIONS {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("IntakePosition/Stow", 0);
+		public static final LoggedTunableNumber FENDERHOOD = new LoggedTunableNumber("Fender", 0.001);
+		public static final LoggedTunableNumber FERRYHOOD = new LoggedTunableNumber("Ferry", 0.049);
 	}
 
 	/** Indexer roller preset voltages. */
@@ -37,6 +41,8 @@ public class ShooterCommands {
 		public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("IndexerVolts/Slow", -4);
 		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("IndexerVolts/Eject", 12);
 		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("IndexerVolts/Stop", 0);
+		public static final LoggedTunableNumber FERREYVELOC = new LoggedTunableNumber("Ferry Velocity", 35);
+
 	}
 
 	/**
@@ -47,6 +53,7 @@ public class ShooterCommands {
 		public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("ShooterVolts/Slow", -1.5);
 		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("ShooterVolts/Eject", 12);
 		public static final LoggedTunableNumber STOP = new LoggedTunableNumber("ShooterVolts/Stop", 0);
+		public static final LoggedTunableNumber FENDERFLYWHEEL = new LoggedTunableNumber("Fender Hood", 30);
 	}
 
 	/**
@@ -74,5 +81,15 @@ public class ShooterCommands {
 
 		return Commands.parallel(new FlywheelVoltageCommand(shooterRoller, SHOOTER_VOLTS.STOP),
 				new PositionJointPositionCommand(hood, HOOD_POSITIONS.STOW));
+	}
+
+	public static Command fender(Flywheel shooterRoller, PositionJoint hood) {
+		return Commands.parallel(new PositionJointPositionCommand(hood, HOOD_POSITIONS.FENDERHOOD),
+				new FlywheelVelocityCommand(shooterRoller, SHOOTER_VOLTS.FENDERFLYWHEEL));
+	}
+
+	public static Command off(Flywheel shooterRoller, PositionJoint hood) {
+		return Commands.parallel(new PositionJointPositionCommand(hood, HOOD_POSITIONS.STOW),
+				new FlywheelVelocityCommand(shooterRoller, SHOOTER_VOLTS.STOP));
 	}
 }

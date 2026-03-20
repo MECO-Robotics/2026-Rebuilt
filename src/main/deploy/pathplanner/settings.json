@@ -6,12 +6,13 @@
     "Left 1678",
     "Left Double",
     "Left Rush",
-    "Test",
+    "New Folder",
     "Right 1678",
-    "Right Human"
+    "Right Human",
+    "Depot"
   ],
   "autoFolders": [
-    "New Folder"
+    "Old Autos"
   ],
   "defaultMaxVel": 4.0,
   "defaultMaxAccel": 2.0,

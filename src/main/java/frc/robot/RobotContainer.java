@@ -20,12 +20,14 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.flywheel.FlywheelSysIdCommands;
+import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.commands.position_joint.PositionJointSysIdCommands;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.drive.TunerConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
+import frc.robot.constants.types.FlywheelConstants;
 import frc.robot.constants.vision.VisionConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
@@ -47,12 +49,12 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
 	private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
 																						// speed
-	private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second
+	private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second
 																						// max angular velocity
 
 	// Subsystems
 	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.1)
+	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.2)
 			.withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
 			.withDriveRequestType(DriveRequestType.OpenLoopVoltage); // Use open-loop control for drive motors
 
@@ -63,11 +65,12 @@ public class RobotContainer {
 	private final Flywheel intakeRoller;
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
-	private final Vision vision;
+	// private final Vision vision;
 	// private final RobotSimulation simulation;
 
 	// Controller
 	private final CommandXboxController controller = new CommandXboxController(0);
+	private final CommandXboxController coPilot = new CommandXboxController(1);
 
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
@@ -81,7 +84,7 @@ public class RobotContainer {
 				ShooterConstants.INDEXER_ROLLER_GAINS);
 
 		bottomIndexer = new Flywheel(
-				FlywheelIO.fromSparkMax("BottomIndexer", ShooterConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
+				FlywheelIO.fromTalonFX("BottomIndexer", ShooterConstants.BOTTOM_INDEXER_ROLLER_CONFIG),
 				ShooterConstants.INDEXER_ROLLER_GAINS);
 
 		conveyor = new Flywheel(FlywheelIO.fromSparkMax("Conveyor", ShooterConstants.CONVEYOR_CONFIG),
@@ -99,8 +102,10 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		vision = new Vision(drivetrain::addVisionMeasurement, VisionIO.questNavWithPhoton(VisionConstants.arducamName,
-				VisionConstants.robotToQuest, robotToArducam, () -> drivetrain.getState().Pose));
+		// vision = new Vision(drivetrain::addVisionMeasurement,
+		// VisionIO.questNavWithPhoton(VisionConstants.arducamName,
+		// VisionConstants.robotToQuest, robotToArducam, () ->
+		// drivetrain.getState().Pose));
 		// simulation = RobotSimulation.create(drive, intakeRack, hood,
 		// shooterFlywheel);
 		// simulation.bindCommandHooks();
@@ -145,11 +150,12 @@ public class RobotContainer {
 		// () -> Rotation2d.kZero));
 
 		// Auto-aim to hub when Y button is held
-		controller.y()
-				.whileTrue(DriveCommands
-						.joystickAimToHub(drivetrain, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
-								MaxSpeed)
-						.alongWith(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)))
+		controller.y().whileTrue(
+				// DriveCommands
+				// .joystickAimToHub(drivetrain, () -> -controller.getLeftY(), () ->
+				// -controller.getLeftX(),
+				// MaxSpeed)
+				(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)))
 				.whileFalse(Flywheel.setVoltage(shooterFlywheel, () -> 0)
 						.alongWith(PositionJoint.setPosition(hood, () -> 0)));
 		// .whileFalse(ShooterCommands.stopShooting(shooterFlywheel, hood));
@@ -164,6 +170,28 @@ public class RobotContainer {
 		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
 				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+
+		coPilot.y().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+		coPilot.a().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+
+		coPilot.b()
+				.whileTrue(Flywheel.setVelocity(shooterFlywheel, () -> 30)
+						.alongWith(PositionJoint.setPosition(hood, () -> 0.001)))
+				.whileFalse(Flywheel.setVelocity(shooterFlywheel, () -> 0)
+						.alongWith(PositionJoint.setPosition(hood, () -> 0)));
+
+		controller.x()
+				.whileTrue(Flywheel.setVelocity(shooterFlywheel, () -> 35)
+						.alongWith(PositionJoint.setPosition(hood, () -> 0.049)))
+				.whileFalse(Flywheel.setVelocity(shooterFlywheel, () -> 0)
+						.alongWith(PositionJoint.setPosition(hood, () -> 0)));
+
+		coPilot.x().whileTrue(ShooterCommands.fender(bottomIndexer, hood))
+				.whileFalse(ShooterCommands.off(bottomIndexer, hood));
+
+		controller.povRight().whileTrue(IntakeCommands.agitateIntake(hood, bottomIndexer, conveyor));
+
 		// controller.povRight().whileTrue(IntakeCommands.feedIntake(intakeRack,
 		// intakeRoller));
 	}
@@ -199,9 +227,11 @@ public class RobotContainer {
 	public void configureAuto() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
-		NamedCommands.registerCommand("AgitateIntake", IntakeCommands.agitateIntake(intakeRack, intakeRoller));
+		NamedCommands.registerCommand("AgitateIntake",
+				IntakeCommands.agitateIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
 		// NamedCommands.registerCommand("Flywheel",
 		// ShooterCalculator.calculateAndShoot(drive, hood, shooterFlywheel));
 
