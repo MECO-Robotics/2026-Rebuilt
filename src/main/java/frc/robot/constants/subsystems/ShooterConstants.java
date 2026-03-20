@@ -50,7 +50,7 @@ public final class ShooterConstants {
 	public static final UnitInterpolatingMap<DistanceUnit, AngularVelocityUnit> shooterVelocityMap = new UnitInterpolatingMap<>(
 			Units.Meters, Units.RevolutionsPerSecond);
 
-		/** Conveyor roller preset voltages. */
+	/** Conveyor roller preset voltages. */
 	public final class CONVEYOR_PRESET {
 		public static final LoggedTunableNumber FEED = new LoggedTunableNumber("Presets/Conveyor/IntakeVolts", -10);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Conveyor/StopVolts", 0);
@@ -65,7 +65,8 @@ public final class ShooterConstants {
 
 	/** Indexer roller preset voltages. */
 	public final class INDEXER_PRESET {
-		public static final LoggedTunableNumber FEED_BOTTOM = new LoggedTunableNumber("Presets/Indexer/BottomVolts", -7);
+		public static final LoggedTunableNumber FEED_BOTTOM = new LoggedTunableNumber("Presets/Indexer/BottomVolts",
+				-7);
 		public static final LoggedTunableNumber FEED_TOP = new LoggedTunableNumber("Presets/Indexer/TopVolts", 7);
 		public static final LoggedTunableNumber IDLE_BOTTOM = new LoggedTunableNumber("Presets/Indexer/IdleVolts", 0);
 		public static final LoggedTunableNumber IDLE_TOP = new LoggedTunableNumber("Presets/Indexer/IdleVolts", 0);

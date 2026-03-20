@@ -101,7 +101,6 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-
 		configureAuto();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -133,19 +132,21 @@ public class RobotContainer {
 				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 
 		// Run intake
-		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller)).whileFalse(IntakeCommands.idleIntake(intakeRoller));
+		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
+				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
 
 		// Deploy and stow intake
 		controller.povUp().or(coPilot.povUp()).whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
 
-		controller.povDown().or(coPilot.povDown()).whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
+		controller.povDown().or(coPilot.povDown())
+				.whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 
 		// Shooter presets
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(bottomIndexer, hood));
 
 		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(bottomIndexer, hood));
 
-		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));	
+		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));
 	}
 
 	public void updateDashboardOutputs() {
@@ -178,7 +179,7 @@ public class RobotContainer {
 
 	public void configureAuto() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
@@ -194,7 +195,7 @@ public class RobotContainer {
 	public Command getAutonomousCommand() {
 		// Command sysIdCommand = sysIdChooser.get();
 		// if (sysIdCommand != null) {
-		// 	return sysIdCommand; 
+		// return sysIdCommand;
 		// }
 		Command autoCommand = autoChooser.get();
 		return autoCommand != null ? autoCommand : Commands.none();
