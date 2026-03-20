@@ -1,5 +1,6 @@
 package frc.robot.constants.subsystems;
 
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.AngleUnit;
 import edu.wpi.first.units.AngularVelocityUnit;
@@ -61,6 +62,7 @@ public final class ShooterConstants {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/Hood/StowPos", 0);
 		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Hood/FenderPos", 0.001);
 		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Hood/FerryPos", 0.049);
+		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Hood/Trench", 0);
 	}
 
 	/** Indexer roller preset voltages. */
@@ -79,6 +81,7 @@ public final class ShooterConstants {
 		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/FenderVeloc", 30);
 		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 35);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Shooter/IdleVeloc", 0);
+		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Shooter/Trench", 0);
 	}
 
 	static {

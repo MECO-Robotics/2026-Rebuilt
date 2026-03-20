@@ -48,11 +48,16 @@ public class ShooterCommands {
 
 	public static Command hubPreset(Flywheel shooterRoller, PositionJoint hood) {
 		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.HUB),
-				Flywheel.setVoltage(shooterRoller, SHOOTER_PRESET.HUB));
+				Flywheel.setVelocity(shooterRoller, SHOOTER_PRESET.HUB));
 	}
 
 	public static Command ferryPreset(Flywheel shooter, PositionJoint hood) {
 		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.FERRY),
 				Flywheel.setVelocity(shooter, SHOOTER_PRESET.FERRY));
+	}
+
+	public static Command trenchPreset(Flywheel shooter, PositionJoint hood) {
+		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.TRENCH),
+				Flywheel.setVelocity(shooter, SHOOTER_PRESET.TRENCH));
 	}
 }

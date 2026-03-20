@@ -2,7 +2,6 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.constants.subsystems.IntakeConstants.RACK_PRESETS;
 import frc.robot.constants.subsystems.IntakeConstants.ROLLER_PRESETS;
 import frc.robot.simulation.IntakeSim;

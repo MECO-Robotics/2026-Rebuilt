@@ -119,10 +119,10 @@ public class RobotContainer {
 		// Default command, normal field-relative drive
 		drivetrain.setDefaultCommand(
 				// Drivetrain will execute this command periodically
-				drivetrain.applyRequest(() -> drive.withVelocityX(-controller.getLeftY() * MaxSpeed) // Drive forward
-																										// with negative
-																										// Y (forward)
-						.withVelocityY(-controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+				drivetrain.applyRequest(() -> drive.withVelocityX(controller.getLeftY() * MaxSpeed) // Drive forward
+																									// with negative
+																									// Y (forward)
+						.withVelocityY(controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
 						.withRotationalRate(controller.getRightX() * MaxAngularRate) // Drive counterclockwise with
 																						// negative X (left)
 				));
@@ -142,11 +142,11 @@ public class RobotContainer {
 				.whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 
 		// Shooter presets
-		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(bottomIndexer, hood));
+		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(bottomIndexer, hood));
+		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));
+		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(bottomIndexer, hood));	
 	}
 
 	public void updateDashboardOutputs() {
