@@ -21,19 +21,19 @@ public class IntakeCommands {
 	}
 
 	/**
-	 * Stows the intake by intaking and running conveyer until the intake is above the safe position, then stopping the rollers
+	 * Stows the intake by intaking and running conveyer until the intake is below the safe position, then stopping the rollers
 	 */
-	public static Command stowIntake(PositionJoint rackMotor, Flywheel rollerMotor, Flywheel conveyer) {
+	public static Command stowIntake(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
 		return Commands.sequence(
 					Commands.deadline(
-						Commands.waitUntil(() -> rackMotor.getPosition() < RACK_PRESETS.SAFE.get())),
-						PositionJoint.setPosition(rackMotor, RACK_PRESETS.STOW),
+						Commands.waitUntil(() -> rack.getPosition() < RACK_PRESETS.SAFE.get())),
+						PositionJoint.setPosition(rack, RACK_PRESETS.STOW),
 						Flywheel.setVoltage(conveyer, ROLLER_PRESETS.INTAKE), 
-						Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE),
+						Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE),
 						intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none(),
 					Commands.parallel(
 						Flywheel.setVoltage(conveyer, ROLLER_PRESETS.IDLE),
-						Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE)));
+						Flywheel.setVoltage(roller, ROLLER_PRESETS.IDLE)));
 	}
 
 	/**
@@ -41,7 +41,8 @@ public class IntakeCommands {
 	 * setting the roller motor to intake speed.
 	 */
 	public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
-		return Commands.parallel(new PositionJointPositionCommand(rotationMotor, RACK_PRESETS.DEPLOY),
+		return Commands.parallel(
+				PositionJoint.setPosition(rotationMotor, RACK_PRESETS.DEPLOY),
 				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE),
 				intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none());
 	}
