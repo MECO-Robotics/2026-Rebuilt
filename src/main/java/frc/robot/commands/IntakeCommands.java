@@ -23,8 +23,18 @@ public class IntakeCommands {
 	 * Stows the intake by intaking and running conveyer until the intake is below
 	 * the safe position, then stopping the rollers
 	 */
+	public static Command stowIntakeVelocity(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
+		return Commands.parallel(PositionJoint.setVelocity(rack, () -> -0.39),
+				Flywheel.setVoltage(conveyer, () -> -ROLLER_PRESETS.INTAKE.getAsDouble()),
+				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE));
+	}
+
+	/**
+	 * Stows the intake by intaking and running conveyer until the intake is below
+	 * the safe position, then stopping the rollers
+	 */
 	public static Command stowIntake(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
-		return Commands.parallel(PositionJoint.setVelocity(rack, RACK_PRESETS.STOW),
+		return Commands.parallel(PositionJoint.setPosition(rack, RACK_PRESETS.SAFE),
 				Flywheel.setVoltage(conveyer, () -> -ROLLER_PRESETS.INTAKE.getAsDouble()),
 				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE));
 	}
@@ -33,11 +43,18 @@ public class IntakeCommands {
 	 * Deploys the intake by moving the rotation motor to the down position and
 	 * setting the roller motor to intake speed.
 	 */
+	public static Command deployIntakeVelocity(PositionJoint rotationMotor, Flywheel rollerMotor) {
+		return Commands.parallel(PositionJoint.setVelocity(rotationMotor, () -> 0.39),
+				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE));
+	}
+
+	/**
+	 * Deploys the intake by moving the rotation motor to the down position and
+	 * setting the roller motor to intake speed.
+	 */
 	public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
-		return Commands
-				.parallel(PositionJoint.setVelocity(rotationMotor, RACK_PRESETS.DEPLOY).withTimeout(1),
-						Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE))
-				.andThen(PositionJoint.setVelocity(rotationMotor, () -> 0.0).withTimeout(0.0));
+		return Commands.parallel(PositionJoint.setPosition(rotationMotor, RACK_PRESETS.DEPLOY),
+				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE));
 	}
 
 	public static Command spinIntake(Flywheel rollerMotor) {

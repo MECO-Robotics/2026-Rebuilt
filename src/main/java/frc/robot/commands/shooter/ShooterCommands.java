@@ -29,12 +29,24 @@ public class ShooterCommands {
 				Flywheel.setVoltage(conveyorRoller, CONVEYOR_PRESET.IDLE));
 	}
 
+	public static Command idleRollers(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller) {
+		return Commands.parallel(Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.IDLE_BOTTOM),
+				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.IDLE_BOTTOM));
+	}
+
 	/** Puts both indexers feeding towards the shooter */
 	public static Command feedRollers(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller,
 			Flywheel conveyorRoller) {
 		return Commands.parallel(Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.FEED_BOTTOM),
 				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.FEED_TOP),
 				Flywheel.setVoltage(conveyorRoller, CONVEYOR_PRESET.FEED));
+		// launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() :
+		// Commands.none());
+	}
+
+	public static Command agitateIntake(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller) {
+		return Commands.parallel(Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.FEED_BOTTOM),
+				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.FEED_TOP));
 		// launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() :
 		// Commands.none());
 	}

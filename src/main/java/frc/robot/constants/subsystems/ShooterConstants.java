@@ -31,7 +31,7 @@ public final class ShooterConstants {
 
 	public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{34, 35},
 			new boolean[]{false, true}, 22.0 / 14, 0.006421, 40, "MECO CANIvore");
-	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.4, 0.0, 0.01, 0.33, 0.19, 0.15, 100,
+	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.7, 0.0, 0.01, 0.33, 0.19, 0.15, 100,
 			0.5);
 
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(20, 0.0, 0.0, 0.5, 0.1, 0.0, 0.0, 4.0,
@@ -53,7 +53,7 @@ public final class ShooterConstants {
 
 	/** Conveyor roller preset voltages. */
 	public final class CONVEYOR_PRESET {
-		public static final LoggedTunableNumber FEED = new LoggedTunableNumber("Presets/Conveyor/IntakeVolts", -10);
+		public static final LoggedTunableNumber FEED = new LoggedTunableNumber("Presets/Conveyor/IntakeVolts", -11);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Conveyor/StopVolts", 0);
 	}
 
@@ -68,8 +68,8 @@ public final class ShooterConstants {
 	/** Indexer roller preset voltages. */
 	public final class INDEXER_PRESET {
 		public static final LoggedTunableNumber FEED_BOTTOM = new LoggedTunableNumber("Presets/Indexer/BottomVolts",
-				-7);
-		public static final LoggedTunableNumber FEED_TOP = new LoggedTunableNumber("Presets/Indexer/TopVolts", 7);
+				-10);
+		public static final LoggedTunableNumber FEED_TOP = new LoggedTunableNumber("Presets/Indexer/TopVolts", 10);
 		public static final LoggedTunableNumber IDLE_BOTTOM = new LoggedTunableNumber("Presets/Indexer/IdleVolts", 0);
 		public static final LoggedTunableNumber IDLE_TOP = new LoggedTunableNumber("Presets/Indexer/IdleVolts", 0);
 	}
