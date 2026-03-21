@@ -173,11 +173,6 @@ public class RobotContainer {
 
 		SmartDashboard.putString("Shifts/Match Time Color", shiftInfo.matchTimeColor());
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
-
-		// Controller disconnected alerts
-		// primaryDisconnected.set(!DriverStation.isJoystickConnected(primary.getHID().getPort()));
-		// secondaryDisconnected.set(!DriverStation.isJoystickConnected(secondary.getHID().getPort()));
-		// overrideDisconnected.set(!overrides.isConnected());
 	}
 
 	public void configureAuto() {
@@ -186,7 +181,9 @@ public class RobotContainer {
 						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
 				.alongWith(
 						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
+
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
+		
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
