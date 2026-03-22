@@ -96,6 +96,8 @@ public class RobotContainer {
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		configureAuto();
 
+		SmartDashboard.putBoolean("Flywheel Spinning?", false);
+
 		// Configure the button bindings
 		configureButtonBindings();
 	}
@@ -143,11 +145,14 @@ public class RobotContainer {
 				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
 
 		// Shooter presets
-		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
+		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood)
+				.alongWith(Commands.run(() -> SmartDashboard.putBoolean("Flywheel Spinning?", false))));
 
 		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
 		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+
+		controller.a().or(coPilot.a()).whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
 
 		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
 	}
@@ -178,15 +183,16 @@ public class RobotContainer {
 	public void configureAuto() {
 		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
 				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
-						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor))
+						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
 				.alongWith(
 						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
 
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
-		
+
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
-		NamedCommands.registerCommand("FeedRollers", ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor));
+		NamedCommands.registerCommand("FeedRollers",
+				ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly());
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));

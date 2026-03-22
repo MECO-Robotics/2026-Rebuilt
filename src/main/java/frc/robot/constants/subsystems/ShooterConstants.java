@@ -31,7 +31,7 @@ public final class ShooterConstants {
 
 	public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{34, 35},
 			new boolean[]{false, true}, 22.0 / 14, 0.006421, 40, "MECO CANIvore");
-	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.7, 0.0, 0.01, 0.33, 0.19, 0.15, 100,
+	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.8, 0.0, 0.01, 0.33, 0.19, 0.15, 100,
 			0.5);
 
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(20, 0.0, 0.0, 0.5, 0.1, 0.0, 0.0, 4.0,
@@ -60,9 +60,9 @@ public final class ShooterConstants {
 	/** Intake rotation preset positions. */
 	public static final class HOOD_PRESET {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/Hood/StowPos", 0);
-		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Hood/FenderPos", 0.001);
+		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Hood/HubPos", 0.001);
 		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Hood/FerryPos", 0.049);
-		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Hood/Trench", 0);
+		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Hood/TrenchPos", 0.049);
 	}
 
 	/** Indexer roller preset voltages. */
@@ -78,10 +78,10 @@ public final class ShooterConstants {
 	 * Shooter roller preset voltages. (NOTE: MAINLY FOR TESTING/SHUTTLE (maybe))
 	 */
 	public final class SHOOTER_PRESET {
-		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/FenderVeloc", 30);
-		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 35);
+		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/HubVeloc", 29);
+		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 45);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Shooter/IdleVeloc", 0);
-		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Shooter/Trench", 0);
+		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Shooter/Trench", 38);
 	}
 
 	static {
