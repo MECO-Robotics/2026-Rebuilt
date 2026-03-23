@@ -45,6 +45,8 @@ public class Telemetry {
 	/* Robot swerve drive state */
 	private final NetworkTable driveStateTable = inst.getTable("DriveState");
 	private final StructPublisher<Pose2d> drivePose = driveStateTable.getStructTopic("Pose", Pose2d.struct).publish();
+	private final StructPublisher<Pose2d> drivePhysicsPose = driveStateTable
+			.getStructTopic("PhysicsPose", Pose2d.struct).publish();
 	private final StructPublisher<ChassisSpeeds> driveSpeeds = driveStateTable
 			.getStructTopic("Speeds", ChassisSpeeds.struct).publish();
 	private final StructPublisher<ChassisSpeeds> driveAutoCommandedSpeeds = driveStateTable
@@ -62,6 +64,7 @@ public class Telemetry {
 	/* Robot pose for field positioning */
 	private final NetworkTable table = inst.getTable("Pose");
 	private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
+	private final DoubleArrayPublisher physicsFieldPub = table.getDoubleArrayTopic("robotPoseActual").publish();
 	private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
 
 	/* Mechanisms to represent the swerve module states */
@@ -85,14 +88,16 @@ public class Telemetry {
 					.append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),};
 
 	private final double[] m_poseArray = new double[3];
+	private final double[] m_physicsPoseArray = new double[3];
 
 	/**
 	 * Accept the swerve drive state and telemeterize it to SmartDashboard and
 	 * SignalLogger.
 	 */
-	public void telemeterize(SwerveDriveState state) {
+	public void telemeterize(SwerveDriveState state, Pose2d physicsPose) {
 		/* Telemeterize the swerve drive state */
 		drivePose.set(state.Pose);
+		drivePhysicsPose.set(physicsPose);
 		driveSpeeds.set(state.Speeds);
 		driveModuleStates.set(state.ModuleStates);
 		driveModuleTargets.set(state.ModuleTargets);
@@ -102,6 +107,7 @@ public class Telemetry {
 
 		/* Also write to log file */
 		SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, state.Pose);
+		SignalLogger.writeStruct("DriveState/PhysicsPose", Pose2d.struct, physicsPose);
 		SignalLogger.writeStruct("DriveState/Speeds", ChassisSpeeds.struct, state.Speeds);
 		SignalLogger.writeStructArray("DriveState/ModuleStates", SwerveModuleState.struct, state.ModuleStates);
 		SignalLogger.writeStructArray("DriveState/ModuleTargets", SwerveModuleState.struct, state.ModuleTargets);
@@ -115,6 +121,10 @@ public class Telemetry {
 		m_poseArray[1] = state.Pose.getY();
 		m_poseArray[2] = state.Pose.getRotation().getDegrees();
 		fieldPub.set(m_poseArray);
+		m_physicsPoseArray[0] = physicsPose.getX();
+		m_physicsPoseArray[1] = physicsPose.getY();
+		m_physicsPoseArray[2] = physicsPose.getRotation().getDegrees();
+		physicsFieldPub.set(m_physicsPoseArray);
 
 		/* Telemeterize each module state to a Mechanism2d */
 		for (int i = 0; i < 4; ++i) {

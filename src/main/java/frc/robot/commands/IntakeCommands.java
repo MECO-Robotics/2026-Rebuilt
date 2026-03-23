@@ -58,15 +58,18 @@ public class IntakeCommands {
 	}
 
 	public static Command spinIntake(Flywheel rollerMotor) {
-		return Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE);
+		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE),
+				intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none());
 	}
 
 	public static Command idleIntake(Flywheel rollerMotor) {
-		return Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE);
+		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE),
+				intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none());
 	}
 
 	public static Command idle(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
 		return Commands.parallel(PositionJoint.setVelocity(rack, () -> 0), Flywheel.setVoltage(conveyer, () -> 0),
-				Flywheel.setVoltage(roller, () -> 0));
+				Flywheel.setVoltage(roller, () -> 0),
+				intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none());
 	}
 }
