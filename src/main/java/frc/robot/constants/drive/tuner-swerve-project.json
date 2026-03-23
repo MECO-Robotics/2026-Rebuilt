@@ -211,7 +211,7 @@
     "IsValidGyroCANbus": true,
     "VerticalTrackSizeInches": 21.0,
     "HorizontalTrackSizeInches": 21.0,
-    "WheelRadiusInches": 4.25,
+    "WheelRadiusInches": 2.125,
     "IsLeftSideInverted": true,
     "IsRightSideInverted": false,
     "SwerveModuleType": 11,
