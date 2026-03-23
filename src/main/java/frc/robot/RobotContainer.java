@@ -21,7 +21,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.shooter.ShooterCommands;
-import frc.robot.constants.drive.TunerConstants;
+import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -40,15 +40,11 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-	private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
-																						// speed
-	private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second
-	// Origionally 1.5
-
 	// Subsystems
-	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.05)
-			.withRotationalDeadband(MaxAngularRate * 0.05) // Add a 5% deadband
+	public final CommandSwerveDrivetrain drivetrain = DrivetrainConstants.createDrivetrain();
+	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+			.withDeadband(DrivetrainConstants.MAX_SPEED * 0.05)
+			.withRotationalDeadband(DrivetrainConstants.MAX_ANGULAR_RATE * 0.05) // Add a 5% deadband
 			.withDriveRequestType(DriveRequestType.Velocity); // Use closed-loop control for drive motors
 
 	private final Flywheel shooterFlywheel;
@@ -115,12 +111,17 @@ public class RobotContainer {
 		// Default command, normal field-relative drive
 		drivetrain.setDefaultCommand(
 				// Drivetrain will execute this command periodically
-				drivetrain.applyRequest(() -> drive.withVelocityX(controller.getLeftY() * MaxSpeed) // Drive forward
-																									// with negative
-																									// Y (forward)
-						.withVelocityY(controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-						.withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive counterclockwise with
-																						// negative X (left)
+				drivetrain.applyRequest(() -> drive.withVelocityX(controller.getLeftY() * DrivetrainConstants.MAX_SPEED) // Drive
+																															// forward
+						// with negative
+						// Y (forward)
+						.withVelocityY(controller.getLeftX() * DrivetrainConstants.MAX_SPEED) // Drive left with
+																								// negative X (left)
+						.withRotationalRate(-controller.getRightX() * DrivetrainConstants.MAX_ANGULAR_RATE) // Drive
+																											// counterclockwise
+																											// with
+																											// negative
+																											// X (left)
 				));
 
 		intakeRack.setDefaultCommand(PositionJoint.setVelocity(intakeRack, () -> 0.0));
@@ -199,7 +200,8 @@ public class RobotContainer {
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
-		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
+		NamedCommands.registerCommand("AutoAim",
+				DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED).withTimeout(2));
 	}
 
 	/**
