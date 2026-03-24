@@ -34,8 +34,8 @@ public final class IntakeConstants {
 	// PositionJointGains(0, 0.0, 0.0, 0, 0.0, 0.0, 0.0,
 	// 10.0, 10.0, 0.0, 0.21, 0.01, 0.0);
 
-	public static final PositionJointGains INTAKE_RACK_GAINS = new PositionJointGains(2616.7, 0.0, 1.25, 0.0, 0.03, 34.37, 0.02,
-			13.0, 3.5, 0, 0.35, 0.02, 0.0);
+	public static final PositionJointGains INTAKE_RACK_GAINS = new PositionJointGains(2616.7, 0.0, 1.25, 0.0, 0.03,
+			34.37, 0.02, 13.0, 3.5, 0, 0.35, 0.02, 0.0);
 	public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG = new PositionJointHardwareConfig(new int[]{21},
 			new boolean[]{false}, INTAKE_RACK_GEAR_RATIO, INTAKE_RACK_INPUT_SHAFT_MOI_KG_METERS_SQUARED, 40,
 			EncoderType.INTERNAL, 0, MechanismType.LINEAR, INTAKE_RACK_DRUM_RADIUS_METERS, Rotation2d.fromRotations(0),
