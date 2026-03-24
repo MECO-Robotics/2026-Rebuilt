@@ -6,17 +6,17 @@ import frc.robot.constants.subsystems.ShooterConstants.CONVEYOR_PRESET;
 import frc.robot.constants.subsystems.ShooterConstants.HOOD_PRESET;
 import frc.robot.constants.subsystems.ShooterConstants.INDEXER_PRESET;
 import frc.robot.constants.subsystems.ShooterConstants.SHOOTER_PRESET;
-// import frc.robot.simulation.LaunchedFuelSim;
+import frc.robot.simulation.LaunchedFuelSim;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
 
 /** Factory methods for coordinated shooter/indexer/conveyor command groups. */
 public class ShooterCommands {
-	// private static LaunchedFuelSim launchedFuelSimulation;
+	private static LaunchedFuelSim launchedFuelSimulation;
 
-	// public static void setLaunchedFuelSimulation(LaunchedFuelSim sim) {
-	// launchedFuelSimulation = sim;
-	// }
+	public static void setLaunchedFuelSimulation(LaunchedFuelSim sim) {
+		launchedFuelSimulation = sim;
+	}
 
 	/**
 	 * Puts the Shooter and bottom indexers in a slow idle speed, and stopping the
@@ -39,16 +39,14 @@ public class ShooterCommands {
 			Flywheel conveyorRoller) {
 		return Commands.parallel(Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.FEED_BOTTOM),
 				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.FEED_TOP),
-				Flywheel.setVoltage(conveyorRoller, CONVEYOR_PRESET.FEED));
-		// launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() :
-		// Commands.none());
+				Flywheel.setVoltage(conveyorRoller, CONVEYOR_PRESET.FEED),
+				launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() : Commands.none());
 	}
 
 	public static Command agitateIntake(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller) {
 		return Commands.parallel(Flywheel.setVoltage(bottomIntakingRoller, INDEXER_PRESET.FEED_BOTTOM),
-				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.FEED_TOP));
-		// launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() :
-		// Commands.none());
+				Flywheel.setVoltage(topIntakingRoller, INDEXER_PRESET.FEED_TOP),
+				launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() : Commands.none());
 	}
 
 	/* PRESETS */

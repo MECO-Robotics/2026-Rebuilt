@@ -22,8 +22,10 @@ import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.drive.DrivetrainConstants;
+import frc.robot.constants.Constants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
+import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
@@ -54,7 +56,7 @@ public class RobotContainer {
 	private final Flywheel intakeRoller;
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
-	// private final RobotSimulation simulation;
+	private final RobotSimulation simulation;
 
 	// Controller
 	private final CommandXboxController controller = new CommandXboxController(0);
@@ -90,6 +92,8 @@ public class RobotContainer {
 				IntakeConstants.INTAKE_RACK_GAINS);
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
+		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
+		simulation.bindCommandHooks();
 
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
@@ -220,18 +224,24 @@ public class RobotContainer {
 
 	/** Logs robot and component transforms for the custom Robot_Remy asset. */
 	public void updateVisualization() {
-		// simulation.visualizationPeriodic();
+		if (Constants.currentMode != Constants.Mode.REAL) {
+			simulation.visualizationPeriodic();
+		}
 	}
 
 	/** Runs simulation-specific autonomous setup if simulation is active. */
 	public void simulationAutonomousInit(Command autonomousCommand) {
-		// simulation.autonomousInit(autonomousCommand);
+		if (Constants.currentMode != Constants.Mode.REAL) {
+			simulation.autonomousInit(autonomousCommand);
+		}
 	}
 
 	/**
 	 * Runs simulation periodic updates and telemetry if simulation is active.
 	 */
 	public void simulationPeriodic() {
-		// simulation.simulationPeriodic();
+		if (Constants.currentMode != Constants.Mode.REAL) {
+			simulation.simulationPeriodic();
+		}
 	}
 }

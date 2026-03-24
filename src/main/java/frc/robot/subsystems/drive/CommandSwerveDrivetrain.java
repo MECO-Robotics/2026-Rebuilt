@@ -7,6 +7,10 @@ import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.sim.CANcoderSimState;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.Pigeon2SimState;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -21,15 +25,23 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.drive.DrivetrainConstants.TunerSwerveDrivetrain;
+import org.ironmaple.simulation.SimulatedArena;
+import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
+import org.ironmaple.simulation.drivesims.COTS;
+import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
+import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
+import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
+import org.ironmaple.simulation.motorsims.SimulatedMotorController;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -39,9 +51,13 @@ import frc.robot.constants.drive.DrivetrainConstants.TunerSwerveDrivetrain;
  * https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-	private static final double kSimLoopPeriod = 0.004; // 4 ms
-	private Notifier m_simNotifier = null;
-	private double m_lastSimTime;
+	private static final double kRobotMassKg = 52.0;
+	private static final double kBumperLengthMeters = 0.76;
+	private static final double kBumperWidthMeters = 0.76;
+	private static final double kWheelCoefficientOfFriction = COTS.WHEELS.DEFAULT_NEOPRENE_TREAD.cof;
+	private static final double kFieldLengthMeters = 16.540988;
+	private static final double kFieldWidthMeters = 8.052;
+	private static final double kDefaultSpawnYMeters = 0.9;
 
 	/* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
 	private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -60,6 +76,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
 
 	private final Telemetry telemetry = new Telemetry(DrivetrainConstants.kSpeedAt12Volts.in(MetersPerSecond));
+	private final SwerveModuleConstants<?, ?, ?>[] m_moduleConstants;
+	private final SwerveDriveSimulation m_mapleDriveSimulation;
+	private final SimulatedMotorController.GenericMotorController[] m_mapleDriveControllers;
+	private final SimulatedMotorController.GenericMotorController[] m_mapleSteerControllers;
 
 	/*
 	 * SysId routine for characterizing translation. This is used to find PID gains
@@ -124,9 +144,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	public CommandSwerveDrivetrain(SwerveDrivetrainConstants drivetrainConstants,
 			SwerveModuleConstants<?, ?, ?>... modules) {
 		super(drivetrainConstants, modules);
-		if (Utils.isSimulation()) {
-			startSimThread();
-		}
+		m_moduleConstants = modules.clone();
+		m_mapleDriveSimulation = createMapleDriveSimulation();
+		m_mapleDriveControllers = createMapleDriveControllers(m_mapleDriveSimulation);
+		m_mapleSteerControllers = createMapleSteerControllers(m_mapleDriveSimulation);
+		seedDefaultSimulationPose();
 		configureAutoBuilder();
 	}
 
@@ -148,9 +170,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	public CommandSwerveDrivetrain(SwerveDrivetrainConstants drivetrainConstants, double odometryUpdateFrequency,
 			SwerveModuleConstants<?, ?, ?>... modules) {
 		super(drivetrainConstants, odometryUpdateFrequency, modules);
-		if (Utils.isSimulation()) {
-			startSimThread();
-		}
+		m_moduleConstants = modules.clone();
+		m_mapleDriveSimulation = createMapleDriveSimulation();
+		m_mapleDriveControllers = createMapleDriveControllers(m_mapleDriveSimulation);
+		m_mapleSteerControllers = createMapleSteerControllers(m_mapleDriveSimulation);
+		seedDefaultSimulationPose();
 		configureAutoBuilder();
 	}
 
@@ -180,9 +204,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			SwerveModuleConstants<?, ?, ?>... modules) {
 		super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation,
 				modules);
-		if (Utils.isSimulation()) {
-			startSimThread();
-		}
+		m_moduleConstants = modules.clone();
+		m_mapleDriveSimulation = createMapleDriveSimulation();
+		m_mapleDriveControllers = createMapleDriveControllers(m_mapleDriveSimulation);
+		m_mapleSteerControllers = createMapleSteerControllers(m_mapleDriveSimulation);
+		seedDefaultSimulationPose();
 		configureAutoBuilder();
 	}
 
@@ -255,6 +281,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	@Override
 	public void periodic() {
+		if (m_mapleDriveSimulation != null) {
+			applyPhoenixOutputsToMaple();
+			SimulatedArena.getInstance().simulationPeriodic();
+		}
+
 		/*
 		 * Periodically try to apply the operator perspective. If we haven't applied the
 		 * operator perspective before, then we should apply it regardless of DS state.
@@ -271,23 +302,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 				m_hasAppliedOperatorPerspective = true;
 			});
 		}
-		telemetry.telemeterize(getState());
+		telemetry.telemeterize(getState(), getPhysicsPose());
 
 	}
 
-	private void startSimThread() {
-		m_lastSimTime = Utils.getCurrentTimeSeconds();
+	public AbstractDriveTrainSimulation getSimulation() {
+		return m_mapleDriveSimulation;
+	}
 
-		/* Run simulation at a faster rate so PID gains behave more reasonably */
-		m_simNotifier = new Notifier(() -> {
-			final double currentTime = Utils.getCurrentTimeSeconds();
-			double deltaTime = currentTime - m_lastSimTime;
-			m_lastSimTime = currentTime;
+	public Pose2d getPhysicsPose() {
+		return m_mapleDriveSimulation != null ? m_mapleDriveSimulation.getSimulatedDriveTrainPose() : getState().Pose;
+	}
 
-			/* use the measured time delta, get battery voltage from WPILib */
-			updateSimState(deltaTime, RobotController.getBatteryVoltage());
-		});
-		m_simNotifier.startPeriodic(kSimLoopPeriod);
+	public ChassisSpeeds getPhysicsSpeeds() {
+		return m_mapleDriveSimulation != null
+				? m_mapleDriveSimulation.getDriveTrainSimulatedChassisSpeedsRobotRelative()
+				: getState().Speeds;
 	}
 
 	/**
@@ -338,5 +368,182 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	@Override
 	public Optional<Pose2d> samplePoseAt(double timestampSeconds) {
 		return super.samplePoseAt(Utils.fpgaToCurrentTime(timestampSeconds));
+	}
+
+	@Override
+	public void resetPose(Pose2d pose) {
+		super.resetPose(pose);
+		if (m_mapleDriveSimulation != null) {
+			m_mapleDriveSimulation.setSimulationWorldPose(pose);
+		}
+	}
+
+	@Override
+	public void resetTranslation(edu.wpi.first.math.geometry.Translation2d translation) {
+		super.resetTranslation(translation);
+		if (m_mapleDriveSimulation != null) {
+			Pose2d currentPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
+			m_mapleDriveSimulation.setSimulationWorldPose(new Pose2d(translation, currentPose.getRotation()));
+		}
+	}
+
+	@Override
+	public void resetRotation(Rotation2d rotation) {
+		super.resetRotation(rotation);
+		if (m_mapleDriveSimulation != null) {
+			Pose2d currentPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
+			m_mapleDriveSimulation.setSimulationWorldPose(new Pose2d(currentPose.getTranslation(), rotation));
+		}
+	}
+
+	private SwerveDriveSimulation createMapleDriveSimulation() {
+		if (!Utils.isSimulation()) {
+			return null;
+		}
+
+		DriveTrainSimulationConfig config = new DriveTrainSimulationConfig(Kilograms.of(kRobotMassKg),
+				Meters.of(kBumperLengthMeters), Meters.of(kBumperWidthMeters), Meters.of(trackLengthMeters()),
+				Meters.of(trackWidthMeters()), COTS.ofPigeon2(), createSwerveModuleSimulationFactory());
+		SwerveDriveSimulation simulation = new SwerveDriveSimulation(config, getState().Pose);
+		SimulatedArena.getInstance().addDriveTrainSimulation(simulation);
+		SimulatedArena.getInstance().addCustomSimulation(subTickNum -> updatePhoenixSimSignals());
+		configurePhoenixSimDevices();
+		return simulation;
+	}
+
+	private void seedDefaultSimulationPose() {
+		if (m_mapleDriveSimulation != null) {
+			resetPose(getDefaultSimulationPose());
+		}
+	}
+
+	private Pose2d getDefaultSimulationPose() {
+		// Exact field center intersects the center fuel stack in Rebuilt, which causes
+		// immediate collision jitter at sim startup.
+		return new Pose2d(kFieldLengthMeters / 2.0, kDefaultSpawnYMeters, Rotation2d.kZero);
+	}
+
+	private SwerveModuleSimulationConfig createSwerveModuleSimulationFactory() {
+		SwerveModuleConstants<?, ?, ?> module = m_moduleConstants[0];
+		DCMotor driveMotorModel = DCMotor.getKrakenX60Foc(1);
+		double calibratedWheelRadiusMeters = DrivetrainConstants.kSpeedAt12Volts.in(MetersPerSecond)
+				/ (driveMotorModel.freeSpeedRadPerSec / module.DriveMotorGearRatio);
+		return new SwerveModuleSimulationConfig(driveMotorModel, DCMotor.getKrakenX60Foc(1), module.DriveMotorGearRatio,
+				module.SteerMotorGearRatio, Volts.of(module.DriveFrictionVoltage),
+				Volts.of(module.SteerFrictionVoltage), Meters.of(calibratedWheelRadiusMeters),
+				KilogramSquareMeters.of(module.SteerInertia), kWheelCoefficientOfFriction);
+	}
+
+	private SimulatedMotorController.GenericMotorController[] createMapleDriveControllers(
+			SwerveDriveSimulation simulation) {
+		if (simulation == null) {
+			return null;
+		}
+
+		SwerveModuleSimulation[] mapleModules = simulation.getModules();
+		SimulatedMotorController.GenericMotorController[] controllers = new SimulatedMotorController.GenericMotorController[mapleModules.length];
+		for (int i = 0; i < mapleModules.length; i++) {
+			controllers[i] = mapleModules[i].useGenericMotorControllerForDrive();
+		}
+		return controllers;
+	}
+
+	private SimulatedMotorController.GenericMotorController[] createMapleSteerControllers(
+			SwerveDriveSimulation simulation) {
+		if (simulation == null) {
+			return null;
+		}
+
+		SwerveModuleSimulation[] mapleModules = simulation.getModules();
+		SimulatedMotorController.GenericMotorController[] controllers = new SimulatedMotorController.GenericMotorController[mapleModules.length];
+		for (int i = 0; i < mapleModules.length; i++) {
+			controllers[i] = mapleModules[i].useGenericControllerForSteer();
+		}
+		return controllers;
+	}
+
+	private void configurePhoenixSimDevices() {
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			SwerveModuleConstants<?, ?, ?> module = m_moduleConstants[i];
+			TalonFXSimState driveSimState = getModule(i).getDriveMotor().getSimState();
+			TalonFXSimState steerSimState = getModule(i).getSteerMotor().getSimState();
+			CANcoderSimState encoderSimState = getModule(i).getEncoder().getSimState();
+
+			driveSimState.Orientation = module.DriveMotorInverted
+					? ChassisReference.Clockwise_Positive
+					: ChassisReference.CounterClockwise_Positive;
+			steerSimState.Orientation = module.SteerMotorInverted
+					? ChassisReference.Clockwise_Positive
+					: ChassisReference.CounterClockwise_Positive;
+			encoderSimState.Orientation = module.EncoderInverted
+					? ChassisReference.Clockwise_Positive
+					: ChassisReference.CounterClockwise_Positive;
+			encoderSimState.SensorOffset = module.EncoderOffset;
+		}
+	}
+
+	private void applyPhoenixOutputsToMaple() {
+		double supplyVoltage = RobotController.getBatteryVoltage();
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			TalonFXSimState driveSimState = getModule(i).getDriveMotor().getSimState();
+			TalonFXSimState steerSimState = getModule(i).getSteerMotor().getSimState();
+			CANcoderSimState encoderSimState = getModule(i).getEncoder().getSimState();
+
+			driveSimState.setSupplyVoltage(supplyVoltage);
+			steerSimState.setSupplyVoltage(supplyVoltage);
+			encoderSimState.setSupplyVoltage(supplyVoltage);
+
+			m_mapleDriveControllers[i].requestVoltage(Volts.of(driveSimState.getMotorVoltage()));
+			m_mapleSteerControllers[i].requestVoltage(Volts.of(steerSimState.getMotorVoltage()));
+		}
+
+		getPigeon2().getSimState().setSupplyVoltage(supplyVoltage);
+	}
+
+	private void updatePhoenixSimSignals() {
+		SwerveModuleSimulation[] mapleModules = m_mapleDriveSimulation.getModules();
+		for (int i = 0; i < mapleModules.length; i++) {
+			SwerveModuleSimulation mapleModule = mapleModules[i];
+			TalonFXSimState driveSimState = getModule(i).getDriveMotor().getSimState();
+			TalonFXSimState steerSimState = getModule(i).getSteerMotor().getSimState();
+			CANcoderSimState encoderSimState = getModule(i).getEncoder().getSimState();
+
+			driveSimState.setRawRotorPosition(mapleModule.getDriveEncoderUnGearedPosition());
+			driveSimState.setRotorVelocity(mapleModule.getDriveEncoderUnGearedSpeed());
+			steerSimState.setRawRotorPosition(
+					mapleModule.getSteerAbsoluteAngle().times(mapleModule.config.STEER_GEAR_RATIO));
+			steerSimState.setRotorVelocity(
+					mapleModule.getSteerAbsoluteEncoderSpeed().times(mapleModule.config.STEER_GEAR_RATIO));
+			encoderSimState.setRawPosition(mapleModule.getSteerAbsoluteAngle());
+			encoderSimState.setVelocity(mapleModule.getSteerAbsoluteEncoderSpeed());
+		}
+
+		Pigeon2SimState pigeonSimState = getPigeon2().getSimState();
+		Pose2d simulatedPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
+		ChassisSpeeds simulatedSpeeds = m_mapleDriveSimulation.getDriveTrainSimulatedChassisSpeedsRobotRelative();
+		pigeonSimState.setRawYaw(simulatedPose.getRotation().getMeasure());
+		pigeonSimState.setAngularVelocityZ(RadiansPerSecond.of(simulatedSpeeds.omegaRadiansPerSecond));
+
+		applyPhoenixOutputsToMaple();
+	}
+
+	private double trackLengthMeters() {
+		double minX = Double.POSITIVE_INFINITY;
+		double maxX = Double.NEGATIVE_INFINITY;
+		for (var moduleLocation : getModuleLocations()) {
+			minX = Math.min(minX, moduleLocation.getX());
+			maxX = Math.max(maxX, moduleLocation.getX());
+		}
+		return maxX - minX;
+	}
+
+	private double trackWidthMeters() {
+		double minY = Double.POSITIVE_INFINITY;
+		double maxY = Double.NEGATIVE_INFINITY;
+		for (var moduleLocation : getModuleLocations()) {
+			minY = Math.min(minY, moduleLocation.getY());
+			maxY = Math.max(maxY, moduleLocation.getY());
+		}
+		return maxY - minY;
 	}
 }
