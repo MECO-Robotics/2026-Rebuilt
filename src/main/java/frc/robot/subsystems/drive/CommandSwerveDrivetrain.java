@@ -521,7 +521,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		Pigeon2SimState pigeonSimState = getPigeon2().getSimState();
 		Pose2d simulatedPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
 		ChassisSpeeds simulatedSpeeds = m_mapleDriveSimulation.getDriveTrainSimulatedChassisSpeedsRobotRelative();
-		pigeonSimState.setRawYaw(simulatedPose.getRotation().getMeasure());
+		pigeonSimState.setRawYaw(simulatedPose.getRotation().getDegrees());
+		pigeonSimState.setPitch(0.0);
+		pigeonSimState.setRoll(0.0);
 		pigeonSimState.setAngularVelocityZ(RadiansPerSecond.of(simulatedSpeeds.omegaRadiansPerSecond));
 
 		applyPhoenixOutputsToMaple();
