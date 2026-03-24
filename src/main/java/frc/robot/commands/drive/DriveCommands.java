@@ -1,21 +1,20 @@
 package frc.robot.commands.drive;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.constants.FieldConstants.Hub;
+import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
 /** Factory methods for drivetrain teleop and characterization commands. */
@@ -25,10 +24,6 @@ public class DriveCommands {
 	private static final LoggedTunableNumber ANGLE_KD = new LoggedTunableNumber("DriveCommands/Angle_KD", 0.0);
 	private static final LoggedTunableNumber ANGLE_MAX_VELOCITY = new LoggedTunableNumber(
 			"DriveCommands/Angle_Max_Velocity", 25.0);
-	private static final LoggedTunableNumber ANGLE_MAX_ACCELERATION = new LoggedTunableNumber(
-			"DriveCommands/Angle_Max_Acceleration", 20.0);
-
-	private final static SwerveRequest.ApplyRobotSpeeds applyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 	// private static final LoggedTunableNumber FF_START_DELAY = new
 	// LoggedTunableNumber("DriveCommands/FF_Start_Delay",
 	// 2.0); // Secs
@@ -143,44 +138,27 @@ public class DriveCommands {
 	public static Command joystickDriveAtAngle(CommandSwerveDrivetrain drivetrain, DoubleSupplier xSupplier,
 			DoubleSupplier ySupplier, Supplier<Rotation2d> rotationSupplier, double maxSpeed) {
 
-		// Create PID controller
-		ProfiledPIDController angleController = new ProfiledPIDController(ANGLE_KP.get(), 0.0, ANGLE_KD.get(),
-				new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY.get(), ANGLE_MAX_ACCELERATION.get()));
-		angleController.enableContinuousInput(-Math.PI, Math.PI);
+		SwerveRequest.FieldCentricFacingAngle driveAtAngleRequest = new SwerveRequest.FieldCentricFacingAngle()
+				.withDeadband(maxSpeed * DEADBAND.get())
+				.withRotationalDeadband(DrivetrainConstants.MAX_ANGULAR_RATE * DEADBAND.get())
+				.withDriveRequestType(DriveRequestType.Velocity);
+		driveAtAngleRequest.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
 
 		// Construct command
 		return Commands.run(() -> {
-			angleController.setPID(ANGLE_KP.get(), 0, ANGLE_KD.get());
-			angleController.setConstraints(
-					new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY.get(), ANGLE_MAX_ACCELERATION.get()));
+			driveAtAngleRequest.HeadingController.setPID(ANGLE_KP.get(), 0.0, ANGLE_KD.get());
 			// Get linear velocity
 			Translation2d linearVelocity = getLinearVelocityFromJoysticks(xSupplier.getAsDouble(),
 					ySupplier.getAsDouble());
 
-			var state = drivetrain.getState();
-
-			// Calculate angular speed
-			double omega = angleController.calculate(state.Pose.getRotation().getRadians(),
-					rotationSupplier.get().getRadians());
-
-			// Convert to field relative speeds & send command
-			ChassisSpeeds speeds = new ChassisSpeeds(linearVelocity.getX() * maxSpeed, linearVelocity.getY() * maxSpeed,
-					omega);
-			speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, state.Pose.getRotation());
-
-			drivetrain.setControl(applyRobotSpeeds.withSpeeds(ChassisSpeeds.discretize(speeds, 0.020)
-			// .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-			// .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())
-			));
-
-			// isFlipped ? drive.getRotation().plus(new Rotation2d(Math.PI)) :
-			// drive.getRotation());
-			// drive.runVelocity(speeds);
+			drivetrain.applyRequest(() -> driveAtAngleRequest.withVelocityX(linearVelocity.getX() * maxSpeed)
+					.withVelocityY(linearVelocity.getY() * maxSpeed).withTargetDirection(rotationSupplier.get())
+					.withMaxAbsRotationalRate(ANGLE_MAX_VELOCITY.get()));
 
 		}, drivetrain)
 
 				// Reset PID controller when command starts
-				.beforeStarting(() -> angleController.reset(drivetrain.getState().Pose.getRotation().getRadians()));
+				.beforeStarting(() -> driveAtAngleRequest.HeadingController.reset());
 
 	}
 
