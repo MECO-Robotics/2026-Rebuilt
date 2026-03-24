@@ -44,6 +44,10 @@ public class FlywheelIOSim implements FlywheelIO {
 	 *            hardware constants used to shape the simulation model
 	 */
 	public FlywheelIOSim(String name, FlywheelHardwareConfig config) {
+		this(name, config, DCMotor.getKrakenX60Foc(config.canIds().length));
+	}
+
+	public FlywheelIOSim(String name, FlywheelHardwareConfig config, DCMotor simMotorModel) {
 		this.name = name;
 
 		this.config = config;
@@ -58,7 +62,7 @@ public class FlywheelIOSim implements FlywheelIO {
 
 		motorVoltages = new double[numMotors];
 		motorCurrents = new double[numMotors];
-		gearBox = DCMotor.getKrakenX60Foc(config.canIds().length);
+		gearBox = simMotorModel;
 
 		sim = new DCMotorSim(LinearSystemId.createDCMotorSystem(gearBox, config.momentOfInertiaKgMetersSquared(),
 				config.gearRatio()), gearBox);

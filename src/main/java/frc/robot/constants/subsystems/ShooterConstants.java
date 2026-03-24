@@ -8,7 +8,7 @@ import edu.wpi.first.units.Units;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.constants.types.PositionJointConstants.EncoderType;
-import frc.robot.constants.types.PositionJointConstants.GravityType;
+import frc.robot.constants.types.PositionJointConstants.MechanismType;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.UnitInterpolatingMap;
@@ -36,7 +36,7 @@ public final class ShooterConstants {
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(20, 0.0, 0.0, 0.5, 0.1, 0.0, 0.0, 4.0,
 			8.0, 0.0, 0.049, 0.05, 0.0);
 	public static final PositionJointHardwareConfig HOOD_CONFIG = new PositionJointHardwareConfig(new int[]{33},
-			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, GravityType.COSINE, EncoderType.INTERNAL, 0,
+			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, EncoderType.INTERNAL, 0, MechanismType.ROTATIONAL, 0.0,
 			Rotation2d.fromRotations(0), "");
 
 	// Regression constants for hood and shooter velocity. These are used to

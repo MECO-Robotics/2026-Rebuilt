@@ -7,23 +7,32 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import frc.robot.constants.types.PositionJointConstants.GravityType;
+import frc.robot.constants.types.PositionJointConstants.MechanismType;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.feedforwards.PositionJointFeedforward;
+import frc.robot.util.feedforwards.TunableArmFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 
 /** Physics-simulation implementation of {@link PositionJointIO}. */
 public class PositionJointIOSim implements PositionJointIO {
+	private static final double DEFAULT_LINEAR_MIN_POSITION_METERS = -1.0;
+	private static final double DEFAULT_LINEAR_MAX_POSITION_METERS = 1.0;
+
 	private final String name;
 
 	private final PositionJointHardwareConfig config;
 
 	private final DCMotor gearBox;
 
-	private final DCMotorSim sim;
+	private final DCMotorSim rotationalSim;
+	private final ElevatorSim linearSim;
 
 	private final PIDController controller;
 	private final PositionJointFeedforward feedforward;
+	private final double feedforwardPositionAddition;
 
 	private final boolean[] motorsConnected;
 
@@ -48,6 +57,10 @@ public class PositionJointIOSim implements PositionJointIO {
 	 *            hardware constants used to shape the simulation model
 	 */
 	public PositionJointIOSim(String name, PositionJointHardwareConfig config) {
+		this(name, config, DCMotor.getKrakenX60Foc(config.canIds().length));
+	}
+
+	public PositionJointIOSim(String name, PositionJointHardwareConfig config, DCMotor simMotorModel) {
 		this.name = name;
 
 		this.config = config;
@@ -62,38 +75,71 @@ public class PositionJointIOSim implements PositionJointIO {
 		motorVoltages = new double[numMotors];
 		motorCurrents = new double[numMotors];
 
-		gearBox = DCMotor.getKrakenX60Foc(config.canIds().length);
+		gearBox = simMotorModel;
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			double drumRadiusMeters = config.outputRadiusMeters();
+			if (drumRadiusMeters <= 0.0) {
+				throw new IllegalArgumentException("Linear mechanism requires a positive output radius");
+			}
 
-		sim = new DCMotorSim(LinearSystemId.createDCMotorSystem(gearBox, config.momentOfInertiaKgMetersSquared(),
-				config.gearRatio()), gearBox);
+			double motorRotationsPerMeter = config.gearRatio();
+			double motorRadiansPerMeter = motorRotationsPerMeter * 2.0 * Math.PI;
+			double carriageMassKg = config.momentOfInertiaKgMetersSquared() * motorRadiansPerMeter
+					* motorRadiansPerMeter;
+
+			rotationalSim = null;
+			linearSim = new ElevatorSim(gearBox, motorRotationsPerMeter * 2.0 * Math.PI * drumRadiusMeters,
+					carriageMassKg, drumRadiusMeters, DEFAULT_LINEAR_MIN_POSITION_METERS,
+					DEFAULT_LINEAR_MAX_POSITION_METERS, config.gravityType() == GravityType.CONSTANT, 0.0);
+		} else {
+			double outputSideMoiKgMetersSquared = config.momentOfInertiaKgMetersSquared() * config.gearRatio()
+					* config.gearRatio();
+
+			rotationalSim = new DCMotorSim(
+					LinearSystemId.createDCMotorSystem(gearBox, outputSideMoiKgMetersSquared, config.gearRatio()),
+					gearBox);
+			linearSim = null;
+		}
 
 		controller = new PIDController(0, 0, 0);
-		feedforward = new TunableElevatorFeedforward(0.0, 0.0, 0.0, 0.0);
+		if (config.gravityType() == GravityType.CONSTANT) {
+			feedforward = new TunableElevatorFeedforward(0.0, 0.0, 0.0, 0.0);
+			feedforwardPositionAddition = 0.0;
+		} else {
+			feedforward = new TunableArmFeedforward(0.0, 0.0, 0.0, 0.0);
+			feedforwardPositionAddition = config.gravityType() == GravityType.SINE ? -Math.PI / 2.0 : 0.0;
+		}
 	}
 
 	@Override
 	public void updateInputs(PositionJointIOInputs inputs) {
+		double mechanismPosition = getMechanismPosition();
+		double mechanismVelocity = getMechanismVelocity();
+		double ffPosition = mechanismPosition + feedforwardPositionAddition;
 		inputVoltage = closedLoop
-				? controller.calculate(sim.getAngularPosition().in(Rotations), positionSetpoint)
-						+ feedforward.calculate(sim.getAngularPositionRotations(),
-								sim.getAngularVelocity().in(RotationsPerSecond), velocitySetpoint, 0.02)
+				? controller.calculate(mechanismPosition, positionSetpoint)
+						+ feedforward.calculate(ffPosition, mechanismVelocity, velocitySetpoint, 0.02)
 				: voltageSetpoint;
-		sim.setInputVoltage(inputVoltage);
-		sim.update(0.02);
+		setSimulationInputVoltage(inputVoltage);
+		updateSimulation();
 
-		inputs.outputPosition = sim.getAngularPosition().in(Rotations);
+		mechanismPosition = getMechanismPosition();
+		mechanismVelocity = getMechanismVelocity();
+
+		inputs.outputPosition = mechanismPosition;
 		inputs.desiredPosition = positionSetpoint;
-		inputs.velocity = sim.getAngularVelocity().in(RotationsPerSecond);
+		inputs.velocity = mechanismVelocity;
 		inputs.desiredVelocity = velocitySetpoint;
+		inputs.rotorPosition = mechanismPosition * config.gearRatio();
 
 		for (int i = 0; i < config.canIds().length; i++) {
 			motorsConnected[i] = true;
 
-			motorPositions[i] = sim.getAngularPosition().in(Rotations);
-			motorVelocities[i] = sim.getAngularVelocity().in(RotationsPerSecond);
+			motorPositions[i] = inputs.rotorPosition;
+			motorVelocities[i] = mechanismVelocity * config.gearRatio();
 
-			motorVoltages[i] = sim.getInputVoltage();
-			motorCurrents[i] = sim.getCurrentDrawAmps();
+			motorVoltages[i] = inputVoltage;
+			motorCurrents[i] = getSimulationCurrentDrawAmps();
 		}
 
 		inputs.motorsConnected = motorsConnected;
@@ -131,5 +177,42 @@ public class PositionJointIOSim implements PositionJointIO {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	private double getMechanismPosition() {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			return linearSim.getPositionMeters();
+		}
+		return rotationalSim.getAngularPosition().in(Rotations);
+	}
+
+	private double getMechanismVelocity() {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			return linearSim.getVelocityMetersPerSecond();
+		}
+		return rotationalSim.getAngularVelocity().in(RotationsPerSecond);
+	}
+
+	private void setSimulationInputVoltage(double voltage) {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			linearSim.setInputVoltage(voltage);
+			return;
+		}
+		rotationalSim.setInputVoltage(voltage);
+	}
+
+	private void updateSimulation() {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			linearSim.update(0.02);
+			return;
+		}
+		rotationalSim.update(0.02);
+	}
+
+	private double getSimulationCurrentDrawAmps() {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			return linearSim.getCurrentDrawAmps();
+		}
+		return rotationalSim.getCurrentDrawAmps();
 	}
 }
