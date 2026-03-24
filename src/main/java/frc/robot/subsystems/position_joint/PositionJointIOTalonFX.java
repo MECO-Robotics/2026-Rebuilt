@@ -290,9 +290,9 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 	@Override
 	public void setGains(PositionJointGains gains) {
 		GravityTypeValue gravity;
-		if (hardwareConfig.gravity() == GravityType.CONSTANT) {
+		if (hardwareConfig.gravityType() == GravityType.CONSTANT) {
 			gravity = GravityTypeValue.Elevator_Static;
-		} else if (hardwareConfig.gravity() == GravityType.COSINE) {
+		} else if (hardwareConfig.gravityType() == GravityType.COSINE) {
 			gravity = GravityTypeValue.Arm_Cosine;
 		} else {
 			throw new IllegalArgumentException("SINE gravity is not supported for TalonFX");

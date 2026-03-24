@@ -175,12 +175,12 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 					name + " Follower Motor " + i + " Disconnected! CAN ID: " + config.canIds()[i], AlertType.kError);
 		}
 
-		if (config.gravity() == GravityType.CONSTANT) {
+		if (config.gravityType() == GravityType.CONSTANT) {
 			feedforward = new TunableElevatorFeedforward();
 			feedforward_position_addition = 0.0;
 		} else {
 			feedforward = new TunableArmFeedforward();
-			if (config.gravity() == GravityType.SINE) {
+			if (config.gravityType() == GravityType.SINE) {
 				feedforward_position_addition = -Math.PI / 2;
 			} else {
 				feedforward_position_addition = 0.0;

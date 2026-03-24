@@ -44,10 +44,10 @@ public class IntakeSim {
 	}
 
 	public Command startIntake() {
-		return Commands.run(() -> setRunning(true));
+		return Commands.runOnce(() -> setRunning(true));
 	}
 
 	public Command stopIntake() {
-		return Commands.run(() -> setRunning(false));
+		return Commands.runOnce(() -> setRunning(false));
 	}
 }

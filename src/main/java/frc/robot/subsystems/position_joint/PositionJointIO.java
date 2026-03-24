@@ -1,5 +1,6 @@
 package frc.robot.subsystems.position_joint;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.constants.Constants;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
@@ -85,10 +86,10 @@ public interface PositionJointIO {
 	 * sim, and replay IO during log replay.
 	 */
 	public static PositionJointIO fromMode(String name, PositionJointHardwareConfig config,
-			Supplier<PositionJointIO> subsystemSupplier) {
+			Supplier<PositionJointIO> subsystemSupplier, DCMotor simMotorModel) {
 		return switch (Constants.currentMode) {
 			case REAL -> subsystemSupplier.get();
-			case SIM -> new PositionJointIOSim(name, config);
+			case SIM -> new PositionJointIOSim(name, config, simMotorModel);
 			default -> replayFactory(name).get();
 		};
 	}
@@ -97,14 +98,16 @@ public interface PositionJointIO {
 	 * Creates mode-appropriate position-joint IO using SparkMax for real hardware.
 	 */
 	public static PositionJointIO fromSparkMax(String name, PositionJointHardwareConfig config) {
-		return fromMode(name, config, () -> new PositionJointIOSparkMax(name, config));
+		return fromMode(name, config, () -> new PositionJointIOSparkMax(name, config),
+				DCMotor.getNEO(config.canIds().length));
 	}
 
 	/**
 	 * Creates mode-appropriate position-joint IO using TalonFX for real hardware.
 	 */
 	public static PositionJointIO fromTalonFX(String name, PositionJointHardwareConfig config) {
-		return fromMode(name, config, () -> new PositionJointIOTalonFX(name, config));
+		return fromMode(name, config, () -> new PositionJointIOTalonFX(name, config),
+				DCMotor.getKrakenX60Foc(config.canIds().length));
 	}
 
 	/** Returns a unique telemetry/logging name for this joint. */

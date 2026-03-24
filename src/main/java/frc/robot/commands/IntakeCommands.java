@@ -19,6 +19,14 @@ public class IntakeCommands {
 		intakeSimulation = sim;
 	}
 
+	private static Command activateIntakeSimulation() {
+		return intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none();
+	}
+
+	private static Command deactivateIntakeSimulation() {
+		return intakeSimulation != null ? intakeSimulation.stopIntake() : Commands.none();
+	}
+
 	/**
 	 * Stows the intake by intaking and running conveyer until the intake is below
 	 * the safe position, then stopping the rollers
@@ -26,7 +34,7 @@ public class IntakeCommands {
 	public static Command stowIntakeVelocity(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
 		return Commands.parallel(PositionJoint.setVelocity(rack, () -> -0.39),
 				Flywheel.setVoltage(conveyer, () -> -ROLLER_PRESETS.INTAKE.getAsDouble()),
-				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE));
+				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE), deactivateIntakeSimulation());
 	}
 
 	/**
@@ -36,7 +44,7 @@ public class IntakeCommands {
 	public static Command stowIntake(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
 		return Commands.parallel(PositionJoint.setPosition(rack, RACK_PRESETS.SAFE),
 				Flywheel.setVoltage(conveyer, () -> -ROLLER_PRESETS.INTAKE.getAsDouble()),
-				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE));
+				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE), deactivateIntakeSimulation());
 	}
 
 	/**
@@ -45,7 +53,7 @@ public class IntakeCommands {
 	 */
 	public static Command deployIntakeVelocity(PositionJoint rotationMotor, Flywheel rollerMotor) {
 		return Commands.parallel(PositionJoint.setVelocity(rotationMotor, () -> 0.39),
-				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE));
+				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE), activateIntakeSimulation());
 	}
 
 	/**
@@ -54,19 +62,19 @@ public class IntakeCommands {
 	 */
 	public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
 		return Commands.parallel(PositionJoint.setPosition(rotationMotor, RACK_PRESETS.DEPLOY),
-				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE));
+				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE), activateIntakeSimulation());
 	}
 
 	public static Command spinIntake(Flywheel rollerMotor) {
-		return Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE);
+		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE), activateIntakeSimulation());
 	}
 
 	public static Command idleIntake(Flywheel rollerMotor) {
-		return Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE);
+		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE), deactivateIntakeSimulation());
 	}
 
 	public static Command idle(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
 		return Commands.parallel(PositionJoint.setVelocity(rack, () -> 0), Flywheel.setVoltage(conveyer, () -> 0),
-				Flywheel.setVoltage(roller, () -> 0));
+				Flywheel.setVoltage(roller, () -> 0), deactivateIntakeSimulation());
 	}
 }
