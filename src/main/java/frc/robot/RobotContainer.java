@@ -99,6 +99,7 @@ public class RobotContainer {
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
 
+		registerNamedCommands();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		configureAuto();
@@ -187,15 +188,7 @@ public class RobotContainer {
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
 	}
 
-	public void configureAuto() {
-		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
-				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
-						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
-				.alongWith(
-						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
-
-		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
-
+	private void registerNamedCommands() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers",
@@ -204,6 +197,16 @@ public class RobotContainer {
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
+	}
+
+	public void configureAuto() {
+		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
+				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
+						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
+				.alongWith(
+						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
+
+		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
 	}
 
 	/**

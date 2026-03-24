@@ -107,7 +107,7 @@ public interface RobotSimulation {
 		public void autonomousInit(Command autonomousCommand) {
 			SimulatedArena.getInstance().resetFieldForAuto();
 			launchedFuelSim.resetSuccessfulScoreCount();
-			resetAutonomousPose(autonomousCommand);
+			resetMapleAutonomousPose(autonomousCommand);
 		}
 
 		@Override
@@ -129,7 +129,7 @@ public interface RobotSimulation {
 			Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
 		}
 
-		private void resetAutonomousPose(Command autonomousCommand) {
+		private void resetMapleAutonomousPose(Command autonomousCommand) {
 			if (!(autonomousCommand instanceof PathPlannerAuto pathPlannerAuto)) {
 				return;
 			}
@@ -139,11 +139,10 @@ public interface RobotSimulation {
 				return;
 			}
 
-			Pose2d allianceAdjustedPose = Constants.isAllianceRed()
+			Pose2d allianceAdjustedPose = drive.shouldFlipAutoPath()
 					? FlippingUtil.flipFieldPose(startingPose)
 					: startingPose;
-			drive.getSimulation().setSimulationWorldPose(allianceAdjustedPose);
-			drive.resetPose(allianceAdjustedPose);
+			drive.resetSimulationPoseOnly(allianceAdjustedPose);
 		}
 
 		private Pose3d[] concat(Pose3d[] first, Pose3d[] second) {

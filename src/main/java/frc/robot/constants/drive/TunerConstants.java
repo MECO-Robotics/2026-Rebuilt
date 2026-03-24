@@ -89,6 +89,14 @@ public class TunerConstants {
 	private static final int kPigeonId = 13;
 
 	// These are only used for simulation
+	public static final double kSimRobotMassKg = 52.0;
+	public static final double kSimBumperLengthMeters = 0.76;
+	public static final double kSimBumperWidthMeters = 0.76;
+	public static final double kSimWheelCoefficientOfFriction = 2.9;
+	public static final double kSimFieldLengthMeters = 16.540988;
+	public static final double kSimFieldWidthMeters = 8.052;
+	public static final double kSimDefaultSpawnYMeters = 0.9;
+	public static final double kSimResetSettleSeconds = 0.02;
 	private static final MomentOfInertia kSteerInertia = KilogramSquareMeters.of(0.01);
 	private static final MomentOfInertia kDriveInertia = KilogramSquareMeters.of(0.01);
 	// Simulated voltage necessary to overcome friction
