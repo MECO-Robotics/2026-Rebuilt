@@ -111,6 +111,7 @@ public class RobotContainer {
 		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,
 				this::followChoreoSample, true, drivetrain);
 
+		registerNamedCommands();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		configureAuto();
@@ -204,16 +205,7 @@ public class RobotContainer {
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
 	}
 
-	public void configureAuto() {
-		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
-				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
-						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
-				.alongWith(
-						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
-
-		autoChooser.addOption("Choreo LeftBlueBump + Shoot", createLeftBlueBumpShootAuto());
-		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
-
+	private void registerNamedCommands() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers",
@@ -258,6 +250,17 @@ public class RobotContainer {
 		drivetrain.setControl(choreoDrive.withSpeeds(ChassisSpeeds.discretize(
 				choreoController.calculateRobotRelativeSpeeds(drivetrain.getState().Pose, targetState),
 				AUTO_LOOP_PERIOD_SECONDS)));
+	}
+
+	public void configureAuto() {
+		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
+				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
+						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
+				.alongWith(
+						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
+
+		autoChooser.addOption("Choreo LeftBlueBump + Shoot", createLeftBlueBumpShootAuto());
+		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
 	}
 
 	/**

@@ -23,12 +23,14 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -51,20 +53,13 @@ import org.ironmaple.simulation.motorsims.SimulatedMotorController;
  * https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-	private static final double kRobotMassKg = 52.0;
-	private static final double kBumperLengthMeters = 0.76;
-	private static final double kBumperWidthMeters = 0.76;
-	private static final double kWheelCoefficientOfFriction = COTS.WHEELS.DEFAULT_NEOPRENE_TREAD.cof;
-	private static final double kFieldLengthMeters = 16.540988;
-	private static final double kFieldWidthMeters = 8.052;
-	private static final double kDefaultSpawnYMeters = 0.9;
-
 	/* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
 	private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
 	/* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
 	private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
 	/* Keep track if we've ever applied the operator perspective before or not */
 	private boolean m_hasAppliedOperatorPerspective = false;
+	private boolean m_shouldFlipAutoPath = false;
 
 	/** Swerve request to apply during robot-centric path following */
 	private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
@@ -80,6 +75,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private final SwerveDriveSimulation m_mapleDriveSimulation;
 	private final SimulatedMotorController.GenericMotorController[] m_mapleDriveControllers;
 	private final SimulatedMotorController.GenericMotorController[] m_mapleSteerControllers;
+	private final SwerveDriveOdometry m_wheelOdometry;
 
 	/*
 	 * SysId routine for characterizing translation. This is used to find PID gains
@@ -145,6 +141,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			SwerveModuleConstants<?, ?, ?>... modules) {
 		super(drivetrainConstants, modules);
 		m_moduleConstants = modules.clone();
+		m_wheelOdometry = new SwerveDriveOdometry(getKinematics(), getState().RawHeading, getState().ModulePositions,
+				getState().Pose);
 		m_mapleDriveSimulation = createMapleDriveSimulation();
 		m_mapleDriveControllers = createMapleDriveControllers(m_mapleDriveSimulation);
 		m_mapleSteerControllers = createMapleSteerControllers(m_mapleDriveSimulation);
@@ -171,6 +169,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			SwerveModuleConstants<?, ?, ?>... modules) {
 		super(drivetrainConstants, odometryUpdateFrequency, modules);
 		m_moduleConstants = modules.clone();
+		m_wheelOdometry = new SwerveDriveOdometry(getKinematics(), getState().RawHeading, getState().ModulePositions,
+				getState().Pose);
 		m_mapleDriveSimulation = createMapleDriveSimulation();
 		m_mapleDriveControllers = createMapleDriveControllers(m_mapleDriveSimulation);
 		m_mapleSteerControllers = createMapleSteerControllers(m_mapleDriveSimulation);
@@ -205,6 +205,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		super(drivetrainConstants, odometryUpdateFrequency, odometryStandardDeviation, visionStandardDeviation,
 				modules);
 		m_moduleConstants = modules.clone();
+		m_wheelOdometry = new SwerveDriveOdometry(getKinematics(), getState().RawHeading, getState().ModulePositions,
+				getState().Pose);
 		m_mapleDriveSimulation = createMapleDriveSimulation();
 		m_mapleDriveControllers = createMapleDriveControllers(m_mapleDriveSimulation);
 		m_mapleSteerControllers = createMapleSteerControllers(m_mapleDriveSimulation);
@@ -215,7 +217,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private void configureAutoBuilder() {
 		try {
 			var config = RobotConfig.fromGUISettings();
-			AutoBuilder.configure(() -> getState().Pose, // Supplier of current robot pose
+			AutoBuilder.configure(() -> Utils.isSimulation() ? getWheelOdometryPose() : getState().Pose, // Supplier of
+																											// current
+																											// robot
+																											// pose
 					this::resetPose, // Consumer for seeding pose against auto
 					() -> getState().Speeds, // Supplier of current robot speeds
 					// Consumer of ChassisSpeeds and feedforwards to drive the robot
@@ -230,8 +235,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 					config,
 					// Assume the path needs to be flipped for Red vs Blue, this is normally the
 					// case
-					() -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red, this // Subsystem for
-																									// requirements
+					() -> m_shouldFlipAutoPath, this // Subsystem for requirements
 			);
 		} catch (Exception ex) {
 			DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder",
@@ -282,9 +286,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	@Override
 	public void periodic() {
 		if (m_mapleDriveSimulation != null) {
+			syncPhoenixSimStateFromMaple();
 			applyPhoenixOutputsToMaple();
 			SimulatedArena.getInstance().simulationPeriodic();
+			syncPhoenixSimStateFromMaple();
 		}
+
+		var state = getState();
+		m_wheelOdometry.update(getOdometryHeading(state), state.ModulePositions);
 
 		/*
 		 * Periodically try to apply the operator perspective. If we haven't applied the
@@ -296,13 +305,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		 */
 		if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
 			DriverStation.getAlliance().ifPresent(allianceColor -> {
+				m_shouldFlipAutoPath = allianceColor == Alliance.Red;
 				setOperatorPerspectiveForward(allianceColor == Alliance.Red
 						? kRedAlliancePerspectiveRotation
 						: kBlueAlliancePerspectiveRotation);
 				m_hasAppliedOperatorPerspective = true;
 			});
 		}
-		telemetry.telemeterize(getState(), getPhysicsPose());
+		telemetry.telemeterize(state, getPhysicsPose(), getWheelOdometryPose());
 
 	}
 
@@ -318,6 +328,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		return m_mapleDriveSimulation != null
 				? m_mapleDriveSimulation.getDriveTrainSimulatedChassisSpeedsRobotRelative()
 				: getState().Speeds;
+	}
+
+	public Pose2d getWheelOdometryPose() {
+		return m_wheelOdometry.getPoseMeters();
+	}
+
+	public boolean shouldFlipAutoPath() {
+		return m_shouldFlipAutoPath;
+	}
+
+	public void resetSimulationPoseOnly(Pose2d pose) {
+		if (m_mapleDriveSimulation == null) {
+			return;
+		}
+
+		teleportMapleSimulation(pose);
+		syncPhoenixSimStateFromMaple();
+		m_wheelOdometry.resetPosition(getOdometryHeading(getState()), getState().ModulePositions, pose);
 	}
 
 	/**
@@ -372,28 +400,48 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	@Override
 	public void resetPose(Pose2d pose) {
-		super.resetPose(pose);
-		if (m_mapleDriveSimulation != null) {
-			m_mapleDriveSimulation.setSimulationWorldPose(pose);
+		if (m_mapleDriveSimulation == null) {
+			super.resetPose(pose);
+			return;
 		}
+
+		teleportMapleSimulation(pose);
+		syncPhoenixSimStateFromMaple();
+		super.resetPose(pose);
+		m_wheelOdometry.resetPosition(getOdometryHeading(getState()), getState().ModulePositions, pose);
+		syncPhoenixSimStateFromMaple();
 	}
 
 	@Override
 	public void resetTranslation(edu.wpi.first.math.geometry.Translation2d translation) {
-		super.resetTranslation(translation);
-		if (m_mapleDriveSimulation != null) {
-			Pose2d currentPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
-			m_mapleDriveSimulation.setSimulationWorldPose(new Pose2d(translation, currentPose.getRotation()));
+		if (m_mapleDriveSimulation == null) {
+			super.resetTranslation(translation);
+			return;
 		}
+
+		Pose2d currentPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
+		teleportMapleSimulation(new Pose2d(translation, currentPose.getRotation()));
+		syncPhoenixSimStateFromMaple();
+		super.resetTranslation(translation);
+		m_wheelOdometry.resetPosition(getOdometryHeading(getState()), getState().ModulePositions,
+				new Pose2d(translation, getWheelOdometryPose().getRotation()));
+		syncPhoenixSimStateFromMaple();
 	}
 
 	@Override
 	public void resetRotation(Rotation2d rotation) {
-		super.resetRotation(rotation);
-		if (m_mapleDriveSimulation != null) {
-			Pose2d currentPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
-			m_mapleDriveSimulation.setSimulationWorldPose(new Pose2d(currentPose.getTranslation(), rotation));
+		if (m_mapleDriveSimulation == null) {
+			super.resetRotation(rotation);
+			return;
 		}
+
+		Pose2d currentPose = m_mapleDriveSimulation.getSimulatedDriveTrainPose();
+		teleportMapleSimulation(new Pose2d(currentPose.getTranslation(), rotation));
+		syncPhoenixSimStateFromMaple();
+		super.resetRotation(rotation);
+		m_wheelOdometry.resetPosition(getOdometryHeading(getState()), getState().ModulePositions,
+				new Pose2d(getWheelOdometryPose().getTranslation(), rotation));
+		syncPhoenixSimStateFromMaple();
 	}
 
 	private SwerveDriveSimulation createMapleDriveSimulation() {
@@ -401,9 +449,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			return null;
 		}
 
-		DriveTrainSimulationConfig config = new DriveTrainSimulationConfig(Kilograms.of(kRobotMassKg),
-				Meters.of(kBumperLengthMeters), Meters.of(kBumperWidthMeters), Meters.of(trackLengthMeters()),
-				Meters.of(trackWidthMeters()), COTS.ofPigeon2(), createSwerveModuleSimulationFactory());
+		DriveTrainSimulationConfig config = new DriveTrainSimulationConfig(Kilograms.of(TunerConstants.kSimRobotMassKg),
+				Meters.of(TunerConstants.kSimBumperLengthMeters), Meters.of(TunerConstants.kSimBumperWidthMeters),
+				Meters.of(trackLengthMeters()), Meters.of(trackWidthMeters()), COTS.ofPigeon2(),
+				createSwerveModuleSimulationFactory());
 		SwerveDriveSimulation simulation = new SwerveDriveSimulation(config, getState().Pose);
 		SimulatedArena.getInstance().addDriveTrainSimulation(simulation);
 		SimulatedArena.getInstance().addCustomSimulation(subTickNum -> updatePhoenixSimSignals());
@@ -417,10 +466,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		}
 	}
 
+	private void teleportMapleSimulation(Pose2d pose) {
+		m_mapleDriveSimulation.setSimulationWorldPose(pose);
+		m_mapleDriveSimulation.setRobotSpeeds(new ChassisSpeeds());
+		m_mapleDriveSimulation.getGyroSimulation().setRotation(pose.getRotation());
+		Timer.delay(TunerConstants.kSimResetSettleSeconds);
+	}
+
 	private Pose2d getDefaultSimulationPose() {
 		// Exact field center intersects the center fuel stack in Rebuilt, which causes
 		// immediate collision jitter at sim startup.
-		return new Pose2d(kFieldLengthMeters / 2.0, kDefaultSpawnYMeters, Rotation2d.kZero);
+		return new Pose2d(TunerConstants.kSimFieldLengthMeters / 2.0, TunerConstants.kSimDefaultSpawnYMeters,
+				Rotation2d.kZero);
 	}
 
 	private SwerveModuleSimulationConfig createSwerveModuleSimulationFactory() {
@@ -431,7 +488,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		return new SwerveModuleSimulationConfig(driveMotorModel, DCMotor.getKrakenX60Foc(1), module.DriveMotorGearRatio,
 				module.SteerMotorGearRatio, Volts.of(module.DriveFrictionVoltage),
 				Volts.of(module.SteerFrictionVoltage), Meters.of(calibratedWheelRadiusMeters),
-				KilogramSquareMeters.of(module.SteerInertia), kWheelCoefficientOfFriction);
+				KilogramSquareMeters.of(module.SteerInertia), TunerConstants.kSimWheelCoefficientOfFriction);
 	}
 
 	private SimulatedMotorController.GenericMotorController[] createMapleDriveControllers(
@@ -480,6 +537,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 					: ChassisReference.CounterClockwise_Positive;
 			encoderSimState.SensorOffset = module.EncoderOffset;
 		}
+		syncPhoenixSimStateFromMaple();
 	}
 
 	private void applyPhoenixOutputsToMaple() {
@@ -501,6 +559,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	}
 
 	private void updatePhoenixSimSignals() {
+		syncPhoenixSimStateFromMaple();
+		applyPhoenixOutputsToMaple();
+	}
+
+	private void syncPhoenixSimStateFromMaple() {
+		if (m_mapleDriveSimulation == null) {
+			return;
+		}
+
 		SwerveModuleSimulation[] mapleModules = m_mapleDriveSimulation.getModules();
 		for (int i = 0; i < mapleModules.length; i++) {
 			SwerveModuleSimulation mapleModule = mapleModules[i];
@@ -525,8 +592,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		pigeonSimState.setPitch(0.0);
 		pigeonSimState.setRoll(0.0);
 		pigeonSimState.setAngularVelocityZ(RadiansPerSecond.of(simulatedSpeeds.omegaRadiansPerSecond));
+	}
 
-		applyPhoenixOutputsToMaple();
+	private Rotation2d getOdometryHeading(SwerveDriveState state) {
+		if (m_mapleDriveSimulation == null) {
+			return state.RawHeading;
+		}
+
+		return Rotation2d.fromDegrees(getPigeon2().getYaw().refresh().getValueAsDouble());
 	}
 
 	private double trackLengthMeters() {
