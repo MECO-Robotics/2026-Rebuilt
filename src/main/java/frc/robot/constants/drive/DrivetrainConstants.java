@@ -55,9 +55,9 @@ public final class DrivetrainConstants {
 	public static final CANBus CAN_BUS = new CANBus("MECO CANIvore", "./logs/example.hoot");
 	public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.5);
 
-	public static final double kSimRobotMassKg = 52.0;
-	public static final double kSimBumperLengthMeters = 0.76;
-	public static final double kSimBumperWidthMeters = 0.76;
+	public static final double kSimRobotMassKg = 53.0;
+	public static final double kSimBumperLengthMeters = 0.8509;
+	public static final double kSimBumperWidthMeters = 0.8509;
 	public static final double kSimWheelCoefficientOfFriction = 2.9;
 	public static final double kSimFieldLengthMeters = 16.540988;
 	public static final double kSimFieldWidthMeters = 8.052;

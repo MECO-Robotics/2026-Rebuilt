@@ -473,8 +473,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private Pose2d getDefaultSimulationPose() {
 		// Exact field center intersects the center fuel stack in Rebuilt, which causes
 		// immediate collision jitter at sim startup.
-		return new Pose2d(DrivetrainConstants.kSimFieldLengthMeters / 2.0, DrivetrainConstants.kSimDefaultSpawnYMeters,
-				Rotation2d.kZero);
+		return new Pose2d(DrivetrainConstants.kSimFieldLengthMeters / 2.0,
+				DrivetrainConstants.kSimFieldWidthMeters / 2.0, Rotation2d.kZero);
 	}
 
 	private SwerveModuleSimulationConfig createSwerveModuleSimulationFactory() {
