@@ -449,11 +449,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			return null;
 		}
 
-		DriveTrainSimulationConfig config = new DriveTrainSimulationConfig(Kilograms.of(TunerConstants.kSimRobotMassKg),
-				Meters.of(TunerConstants.kSimBumperLengthMeters), Meters.of(TunerConstants.kSimBumperWidthMeters),
-				Meters.of(trackLengthMeters()), Meters.of(trackWidthMeters()), COTS.ofPigeon2(),
-				createSwerveModuleSimulationFactory());
-		SwerveDriveSimulation simulation = new SwerveDriveSimulation(config, getState().Pose);
+		SwerveDriveSimulation simulation = new SwerveDriveSimulation(DrivetrainConstants.SIMULATION_CONFIG,
+				getState().Pose);
 		SimulatedArena.getInstance().addDriveTrainSimulation(simulation);
 		SimulatedArena.getInstance().addCustomSimulation(subTickNum -> updatePhoenixSimSignals());
 		configurePhoenixSimDevices();
@@ -470,13 +467,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		m_mapleDriveSimulation.setSimulationWorldPose(pose);
 		m_mapleDriveSimulation.setRobotSpeeds(new ChassisSpeeds());
 		m_mapleDriveSimulation.getGyroSimulation().setRotation(pose.getRotation());
-		Timer.delay(TunerConstants.kSimResetSettleSeconds);
+		Timer.delay(DrivetrainConstants.kSimResetSettleSeconds);
 	}
 
 	private Pose2d getDefaultSimulationPose() {
 		// Exact field center intersects the center fuel stack in Rebuilt, which causes
 		// immediate collision jitter at sim startup.
-		return new Pose2d(TunerConstants.kSimFieldLengthMeters / 2.0, TunerConstants.kSimDefaultSpawnYMeters,
+		return new Pose2d(DrivetrainConstants.kSimFieldLengthMeters / 2.0, DrivetrainConstants.kSimDefaultSpawnYMeters,
 				Rotation2d.kZero);
 	}
 
@@ -488,7 +485,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		return new SwerveModuleSimulationConfig(driveMotorModel, DCMotor.getKrakenX60Foc(1), module.DriveMotorGearRatio,
 				module.SteerMotorGearRatio, Volts.of(module.DriveFrictionVoltage),
 				Volts.of(module.SteerFrictionVoltage), Meters.of(calibratedWheelRadiusMeters),
-				KilogramSquareMeters.of(module.SteerInertia), TunerConstants.kSimWheelCoefficientOfFriction);
+				KilogramSquareMeters.of(module.SteerInertia), DrivetrainConstants.kSimWheelCoefficientOfFriction);
 	}
 
 	private SimulatedMotorController.GenericMotorController[] createMapleDriveControllers(
