@@ -46,8 +46,6 @@ public class Telemetry {
 	/* Robot swerve drive state */
 	private final NetworkTable driveStateTable = inst.getTable("DriveState");
 	private final StructPublisher<Pose2d> drivePose = driveStateTable.getStructTopic("Pose", Pose2d.struct).publish();
-	private final StructPublisher<Pose2d> driveCtrePose = driveStateTable.getStructTopic("CtrePose", Pose2d.struct)
-			.publish();
 	private final StructPublisher<Pose2d> drivePhysicsPose = driveStateTable
 			.getStructTopic("PhysicsPose", Pose2d.struct).publish();
 	private final StructPublisher<ChassisSpeeds> driveSpeeds = driveStateTable
@@ -97,10 +95,9 @@ public class Telemetry {
 	 * Accept the swerve drive state and telemeterize it to SmartDashboard and
 	 * SignalLogger.
 	 */
-	public void telemeterize(SwerveDriveState state, Pose2d physicsPose, Pose2d wheelOdometryPose) {
+	public void telemeterize(SwerveDriveState state, Pose2d physicsPose) {
 		/* Telemeterize the swerve drive state */
-		drivePose.set(wheelOdometryPose);
-		driveCtrePose.set(state.Pose);
+		drivePose.set(state.Pose);
 		drivePhysicsPose.set(physicsPose);
 		driveSpeeds.set(state.Speeds);
 		driveModuleStates.set(state.ModuleStates);
@@ -110,18 +107,12 @@ public class Telemetry {
 		driveOdometryFrequency.set(1.0 / state.OdometryPeriod);
 
 		/* Also write to log file */
-		SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, wheelOdometryPose);
-		SignalLogger.writeStruct("DriveState/CtrePose", Pose2d.struct, state.Pose);
+		SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, state.Pose);
 		SignalLogger.writeStruct("DriveState/PhysicsPose", Pose2d.struct, physicsPose);
-		Transform2d ctrePoseError = physicsPose.minus(state.Pose);
-		Transform2d wheelOdometryError = physicsPose.minus(wheelOdometryPose);
-		SignalLogger.writeDouble("DriveState/CtrePoseErrorX", ctrePoseError.getX(), "meters");
-		SignalLogger.writeDouble("DriveState/CtrePoseErrorY", ctrePoseError.getY(), "meters");
-		SignalLogger.writeDouble("DriveState/CtrePoseErrorTheta", ctrePoseError.getRotation().getDegrees(), "degrees");
-		SignalLogger.writeDouble("DriveState/WheelOdometryErrorX", wheelOdometryError.getX(), "meters");
-		SignalLogger.writeDouble("DriveState/WheelOdometryErrorY", wheelOdometryError.getY(), "meters");
-		SignalLogger.writeDouble("DriveState/WheelOdometryErrorTheta", wheelOdometryError.getRotation().getDegrees(),
-				"degrees");
+		Transform2d poseError = physicsPose.minus(state.Pose);
+		SignalLogger.writeDouble("DriveState/PoseErrorX", poseError.getX(), "meters");
+		SignalLogger.writeDouble("DriveState/PoseErrorY", poseError.getY(), "meters");
+		SignalLogger.writeDouble("DriveState/PoseErrorTheta", poseError.getRotation().getDegrees(), "degrees");
 		SignalLogger.writeStruct("DriveState/Speeds", ChassisSpeeds.struct, state.Speeds);
 		SignalLogger.writeStructArray("DriveState/ModuleStates", SwerveModuleState.struct, state.ModuleStates);
 		SignalLogger.writeStructArray("DriveState/ModuleTargets", SwerveModuleState.struct, state.ModuleTargets);
@@ -131,9 +122,9 @@ public class Telemetry {
 		/* Telemeterize the pose to a Field2d */
 		fieldTypePub.set("Field2d");
 
-		m_poseArray[0] = wheelOdometryPose.getX();
-		m_poseArray[1] = wheelOdometryPose.getY();
-		m_poseArray[2] = wheelOdometryPose.getRotation().getDegrees();
+		m_poseArray[0] = state.Pose.getX();
+		m_poseArray[1] = state.Pose.getY();
+		m_poseArray[2] = state.Pose.getRotation().getDegrees();
 		fieldPub.set(m_poseArray);
 		m_physicsPoseArray[0] = physicsPose.getX();
 		m_physicsPoseArray[1] = physicsPose.getY();

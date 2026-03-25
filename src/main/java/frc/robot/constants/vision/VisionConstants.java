@@ -19,6 +19,7 @@ public class VisionConstants {
 	public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
 
 	// Camera names, must match names configured on coprocessor
+	public static String limelightName = "limelight";
 	public static String questName = "QuestNav";
 	public static String arducamName = "arducam";
 
@@ -27,6 +28,8 @@ public class VisionConstants {
 	public static Transform3d robotToQuest = new Transform3d(Units.inchesToMeters(-(27.0 / 2.0)),
 			Units.inchesToMeters(0), Units.inchesToMeters(8.5),
 			new Rotation3d(Units.degreesToRadians(180), 0.0, Units.degreesToRadians(180)));
+	public static Transform3d robotToLimelight = new Transform3d(Units.inchesToMeters(10.5), Units.inchesToMeters(0),
+			Units.inchesToMeters(22.0), new Rotation3d(0.0, Units.degreesToRadians(-20.0), 0.0));
 	public static Transform3d robotToArducam = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(-10),
 			Units.inchesToMeters(22), new Rotation3d(0.0, Units.degreesToRadians(-20), 0.0));
 
