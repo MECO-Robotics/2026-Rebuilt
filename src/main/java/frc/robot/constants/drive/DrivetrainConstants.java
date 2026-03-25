@@ -50,7 +50,7 @@ import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 public final class DrivetrainConstants {
 	public static final double MAX_SPEED = 5.5;
-	public static final double MAX_ANGULAR_RATE = 1.5;
+	public static final double MAX_ANGULAR_RATE = 5;
 
 	public static final CANBus CAN_BUS = new CANBus("MECO CANIvore", "./logs/example.hoot");
 	public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.5);
@@ -97,7 +97,7 @@ public final class DrivetrainConstants {
 	private static final Voltage DRIVE_FRICTION_VOLTAGE = Volts.of(0.2);
 
 	private static final ModuleSpec FRONT_LEFT_SPEC = new ModuleSpec(1, 2, 9, Rotations.of(0.3076171875), Inches.of(11),
-			Inches.of(101), INVERT_LEFT_SIDE, true, false);
+			Inches.of(11), INVERT_LEFT_SIDE, true, false);
 	private static final ModuleSpec FRONT_RIGHT_SPEC = new ModuleSpec(3, 8, 10, Rotations.of(0.304931640625),
 			Inches.of(11), Inches.of(-11), INVERT_RIGHT_SIDE, true, false);
 	private static final ModuleSpec BACK_LEFT_SPEC = new ModuleSpec(5, 6, 11, Rotations.of(-0.083740234375),
