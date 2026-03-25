@@ -132,18 +132,22 @@ public class RobotContainer {
 		// Default command, normal field-relative drive
 		drivetrain.setDefaultCommand(
 				// Drivetrain will execute this command periodically
-				drivetrain.applyRequest(() -> drive.withVelocityX(controller.getLeftY() * DrivetrainConstants.MAX_SPEED) // Drive
-																															// forward
-						// with negative
-						// Y (forward)
-						.withVelocityY(controller.getLeftX() * DrivetrainConstants.MAX_SPEED) // Drive left with
-																								// negative X (left)
-						.withRotationalRate(-controller.getRightX() * DrivetrainConstants.MAX_ANGULAR_RATE) // Drive
-																											// counterclockwise
-																											// with
-																											// negative
-																											// X (left)
-				));
+				drivetrain
+						.applyRequest(() -> drive.withVelocityX(-controller.getLeftY() * DrivetrainConstants.MAX_SPEED) // Drive
+																														// forward
+								// with negative
+								// Y (forward)
+								.withVelocityY(-controller.getLeftX() * DrivetrainConstants.MAX_SPEED) // Drive left
+																										// with
+																										// negative X
+																										// (left)
+								.withRotationalRate(-controller.getRightX() * DrivetrainConstants.MAX_ANGULAR_RATE) // Drive
+																													// counterclockwise
+																													// with
+																													// negative
+																													// X
+																													// (left)
+						));
 
 		intakeRack.setDefaultCommand(PositionJoint.setVelocity(intakeRack, () -> 0.0));
 		intakeRoller.setDefaultCommand(Flywheel.setVelocity(intakeRoller, () -> 0.0));

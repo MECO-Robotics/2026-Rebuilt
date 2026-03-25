@@ -182,6 +182,6 @@ public class DriveCommands {
 	// // public static Command azimuthTuning()
 
 	public static Command resetHeading(CommandSwerveDrivetrain drive) {
-		return Commands.runOnce(() -> drive.seedFieldCentric(Rotation2d.fromDegrees(180)));
+		return Commands.runOnce(() -> drive.seedFieldCentric(Rotation2d.fromDegrees(0)));
 	}
 }
