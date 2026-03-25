@@ -134,11 +134,10 @@ public class LaunchedFuelSim {
 	private void launchSingleFuel(int burstIndex, double projectileSpeedMps) {
 		double randomizedAngleRadians = getRandomizedLaunchAngleRadians();
 		double randomizedSpeedMps = getRandomizedProjectileSpeedMps(projectileSpeedMps);
-		Pose3d[] emptyTrajectory = new Pose3d[0];
 
 		SimulatedArena.getInstance()
 				.addGamePieceProjectile(new RebuiltFuelOnFly(drive.getPhysicsPose().getTranslation(),
-						getShooterTranslationForBurstIndex(burstIndex), drive.getPhysicsSpeeds(),
+						getShooterTranslationForBurstIndex(burstIndex), getLaunchChassisSpeedsFieldRelative(),
 						drive.getPhysicsPose().getRotation().plus(MapleSimConstants.SHOOTER_YAW_OFFSET),
 						Meters.of(MapleSimConstants.SHOOTER_HEIGHT_METERS), MetersPerSecond.of(randomizedSpeedMps),
 						Radians.of(Math.PI / 2.0 - randomizedAngleRadians))
@@ -150,20 +149,11 @@ public class LaunchedFuelSim {
 									successfulScoreCount++;
 									Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
 									SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel());
-								})
-								.withProjectileTrajectoryDisplayCallBack(
-										pose3ds -> Logger.recordOutput("Flywheel/FuelProjectileSuccessfulShot",
-												pose3ds.toArray(Pose3d[]::new)),
-										pose3ds -> Logger.recordOutput("Flywheel/FuelProjectileUnsuccessfulShot",
-												pose3ds.toArray(Pose3d[]::new)))
-								.withProjectileTrajectoryDisplayCallBack(
+								}).withProjectileTrajectoryDisplayCallBack(
 										pose3ds -> Logger.recordOutput("Flywheel/FuelProjectileSuccessfulShot",
 												pose3ds.toArray(Pose3d[]::new)),
 										pose3ds -> Logger.recordOutput("Flywheel/FuelProjectileUnsuccessfulShot",
 												pose3ds.toArray(Pose3d[]::new))));
-
-		Logger.recordOutput("Flywheel/FuelProjectileSuccessfulShot", emptyTrajectory);
-		Logger.recordOutput("Flywheel/FuelProjectileUnsuccessfulShot", emptyTrajectory);
 	}
 
 	private double getRandomizedLaunchAngleRadians() {
@@ -187,6 +177,10 @@ public class LaunchedFuelSim {
 
 	private double getProjectileSpeedMps() {
 		return Math.abs(shooterFlywheel.getVelocity()) * MapleSimConstants.MPS_PER_FLYWHEEL_RPS;
+	}
+
+	private ChassisSpeeds getLaunchChassisSpeedsFieldRelative() {
+		return ChassisSpeeds.fromRobotRelativeSpeeds(drive.getPhysicsSpeeds(), drive.getPhysicsPose().getRotation());
 	}
 
 	private Translation2d getShooterTranslationForBurstIndex(int burstIndex) {
