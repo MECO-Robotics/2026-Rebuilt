@@ -76,4 +76,17 @@ public interface VisionIO {
 				() -> new VisionIOQuestNavSim(simPoseSupplier,
 						new VisionIOPhotonVisionSim(photonCameraName, robotToPhotonCamera, simPoseSupplier)));
 	}
+
+	/**
+	 * Creates mode-appropriate Limelight vision IO.
+	 *
+	 * <p>
+	 * Real mode uses Limelight NetworkTables data. Sim mode uses PhotonVision's
+	 * simulator with Limelight-style observations.
+	 */
+	public static VisionIO limelightWithSim(String limelightName, Supplier<Rotation2d> rotationSupplier,
+			Transform3d robotToLimelight, Supplier<Pose2d> simPoseSupplier) {
+		return fromMode(() -> new VisionIOLimelight(limelightName, rotationSupplier),
+				() -> new VisionIOLimelightSim(limelightName, robotToLimelight, simPoseSupplier));
+	}
 }
