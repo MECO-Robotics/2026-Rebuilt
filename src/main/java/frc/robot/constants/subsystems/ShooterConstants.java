@@ -89,12 +89,12 @@ public final class ShooterConstants {
 	static {
 		hoodMap.put(Units.Inches.of(58.0), Units.Rotations.of(HOOD_PRESET.HUB.get()));
 		hoodMap.put(Units.Inches.of(114.25), Units.Rotations.of(0.025));
-		hoodMap.put(Units.Inches.of(163), Units.Rotations.of(HOOD_PRESET.TRENCH.get()));
-		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(HOOD_PRESET.FERRY.get()));
+		hoodMap.put(Units.Inches.of(163), Units.Rotations.of(0.049));
+		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
-		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(SHOOTER_PRESET.HUB.get()));
+		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(29));
 		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(36));
-		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(SHOOTER_PRESET.TRENCH.get()));
-		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(SHOOTER_PRESET.FERRY.get()));
+		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(40));
+		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(50));
 	}
 }

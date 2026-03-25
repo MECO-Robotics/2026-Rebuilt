@@ -111,7 +111,7 @@ public final class MapleSimConstants {
 	 * Offset applied to hood angle (radians) to align mechanism zero with shot
 	 * pitch.
 	 */
-	public static final double HOOD_ANGLE_OFFSET_RADIANS = Math.toRadians(21.0);
+	public static final double HOOD_ANGLE_OFFSET_RADIANS = Math.toRadians(21.0 - 5.0); // 5 deg for backspin
 
 	/** Physical clamp range for launched pitch angle. */
 	public static final double MIN_LAUNCH_ANGLE_RADIANS = HOOD_ANGLE_OFFSET_RADIANS - Math.toRadians(1.0);

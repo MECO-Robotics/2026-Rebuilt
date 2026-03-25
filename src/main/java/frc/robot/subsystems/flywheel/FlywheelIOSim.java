@@ -7,10 +7,13 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
+import org.littletonrobotics.junction.Logger;
 
 /** Physics-simulation implementation of {@link FlywheelIO}. */
 public class FlywheelIOSim implements FlywheelIO {
@@ -33,6 +36,7 @@ public class FlywheelIOSim implements FlywheelIO {
 	private final double[] motorCurrents;
 
 	private double velocitySetpoint = 0;
+	private double previousVelocitySetpoint = 0;
 	private double voltageSetpoint = 0;
 	private boolean closedLoop = true;
 
@@ -75,13 +79,25 @@ public class FlywheelIOSim implements FlywheelIO {
 	@Override
 	public void updateInputs(FlywheelIOInputs inputs) {
 		double measuredVelocityRps = sim.getAngularVelocity().in(RotationsPerSecond);
+		double availableVoltage = BatterySim.calculateDefaultBatteryLoadedVoltage(sim.getCurrentDrawAmps());
 		double requestedVoltage = closedLoop
 				? controller.calculate(measuredVelocityRps, velocitySetpoint)
-						+ feedforward.calculateWithVelocities(measuredVelocityRps, velocitySetpoint)
+						+ feedforward.calculateWithVelocities(previousVelocitySetpoint, velocitySetpoint)
 				: voltageSetpoint;
-		double inputVoltage = MathUtil.clamp(requestedVoltage, -12.0, 12.0);
+		double inputVoltage = MathUtil.clamp(requestedVoltage, -availableVoltage, availableVoltage);
 		sim.setInputVoltage(inputVoltage);
 		sim.update(0.02);
+		double loadedBatteryVoltage = BatterySim.calculateDefaultBatteryLoadedVoltage(sim.getCurrentDrawAmps());
+		RoboRioSim.setVInVoltage(loadedBatteryVoltage);
+		previousVelocitySetpoint = velocitySetpoint;
+
+		Logger.recordOutput(name + "/Sim/RequestedVoltage", requestedVoltage);
+		Logger.recordOutput(name + "/Sim/AvailableVoltage", availableVoltage);
+		Logger.recordOutput(name + "/Sim/AppliedVoltage", inputVoltage);
+		Logger.recordOutput(name + "/Sim/CurrentDrawAmps", sim.getCurrentDrawAmps());
+		Logger.recordOutput(name + "/Sim/LoadedBatteryVoltage", loadedBatteryVoltage);
+		Logger.recordOutput(name + "/Sim/VelocitySetpoint", velocitySetpoint);
+		Logger.recordOutput(name + "/Sim/MeasuredVelocity", measuredVelocityRps);
 
 		inputs.velocity = sim.getAngularVelocity().in(RotationsPerSecond);
 		inputs.position = sim.getAngularPositionRotations();
