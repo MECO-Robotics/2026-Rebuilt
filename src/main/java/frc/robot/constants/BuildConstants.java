@@ -10,6 +10,7 @@ public final class BuildConstants {
 	public static final int GIT_REVISION = 337;
 	public static final String GIT_SHA = "9c17a4ef4860a6ad46eb229e51d9b9a002493b76";
 	public static final String GIT_DATE = "2026-03-24 21:29:24 EDT";
+<<<<<<< HEAD
 	public static final String GIT_BRANCH = "dev";
 	public static final String BUILD_DATE = "2026-03-25 01:21:06 EDT";
 	public static final long BUILD_UNIX_TIME = 1774416066264L;
