@@ -3,6 +3,7 @@ package frc.robot.subsystems.flywheel;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
@@ -74,10 +75,11 @@ public class FlywheelIOSim implements FlywheelIO {
 	@Override
 	public void updateInputs(FlywheelIOInputs inputs) {
 		double measuredVelocityRps = sim.getAngularVelocity().in(RotationsPerSecond);
-		double inputVoltage = closedLoop
+		double requestedVoltage = closedLoop
 				? controller.calculate(measuredVelocityRps, velocitySetpoint)
 						+ feedforward.calculateWithVelocities(measuredVelocityRps, velocitySetpoint)
 				: voltageSetpoint;
+		double inputVoltage = MathUtil.clamp(requestedVoltage, -12.0, 12.0);
 		sim.setInputVoltage(inputVoltage);
 		sim.update(0.02);
 

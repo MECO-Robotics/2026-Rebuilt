@@ -178,11 +178,22 @@ public class LaunchedFuelSim {
 	private double getProjectileSpeedMps() {
 		double mainWheelLinearSpeedMps = Math.abs(shooterFlywheel.getVelocity())
 				* MapleSimConstants.MPS_PER_FLYWHEEL_RPS;
-		return mainWheelLinearSpeedMps * getBackspinEnergyTransferScale();
+		return mainWheelLinearSpeedMps * getBackspinEnergyTransferScale() * getFlywheelSlowdownScale();
 	}
 
 	private double getBackspinEnergyTransferScale() {
 		return (1.0 + MapleSimConstants.COUNTER_TO_MAIN_SHOOTER_WHEEL_SPEED_RATIO) / 2.0;
+	}
+
+	private double getFlywheelSlowdownScale() {
+		if (!MapleSimConstants.ENABLE_FLYWHEEL_MOI_SIMULATION) {
+			return 1.0;
+		}
+
+		double ballReflectedInertia = MapleSimConstants.FUEL_MASS_KG
+				* Math.pow(MapleSimConstants.SHOOTER_WHEEL_RADIUS_METERS, 2);
+		return MapleSimConstants.SHOOTER_SYSTEM_MOI_KG_METERS_SQUARED
+				/ (MapleSimConstants.SHOOTER_SYSTEM_MOI_KG_METERS_SQUARED + ballReflectedInertia);
 	}
 
 	private ChassisSpeeds getLaunchChassisSpeedsFieldRelative() {
