@@ -21,6 +21,14 @@ public final class MapleSimConstants {
 	/** Conversion from flywheel RPS to projectile speed in m/s. */
 	public static final double MPS_PER_FLYWHEEL_RPS = 4.0 * Math.PI * 0.0254; // 4" diameter wheel
 
+	/**
+	 * Counter-wheel linear speed divided by main shooter-wheel linear speed.
+	 * <p>
+	 * A value below 1.0 models backspin by reducing net energy transfer to the
+	 * ball.
+	 */
+	public static final double COUNTER_TO_MAIN_SHOOTER_WHEEL_SPEED_RATIO = 1.0 * (48 / 52) / 4;
+
 	/** Minimum flywheel speed before a shot can launch in simulation. */
 	public static final double MIN_FLYWHEEL_RPS_FOR_SHOT = 5.0;
 
