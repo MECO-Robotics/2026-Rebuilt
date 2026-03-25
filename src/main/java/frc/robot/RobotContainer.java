@@ -223,6 +223,7 @@ public class RobotContainer {
 				ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly());
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
+		NamedCommands.registerCommand("AutoSpinUp", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("AutoAim",
 				DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED).withTimeout(2));
