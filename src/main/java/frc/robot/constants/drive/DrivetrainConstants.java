@@ -64,7 +64,7 @@ public final class DrivetrainConstants {
 	public static final double kSimDefaultSpawnYMeters = 0.9;
 	public static final double kSimResetSettleSeconds = 0.02;
 
-	private static final Slot0Configs STEER_GAINS = new Slot0Configs().withKP(200).withKI(0).withKD(1).withKS(0.1)
+	private static final Slot0Configs STEER_GAINS = new Slot0Configs().withKP(100).withKI(0).withKD(1).withKS(0.1)
 			.withKV(2.0).withKA(0.01).withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
 	private static final Slot0Configs DRIVE_GAINS = new Slot0Configs().withKP(2.84).withKI(0).withKD(0).withKS(0.25)
 			.withKV(2.16).withKA(0.02);
