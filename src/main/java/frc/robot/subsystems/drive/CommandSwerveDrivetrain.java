@@ -224,7 +224,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 					config,
 					// Assume the path needs to be flipped for Red vs Blue, this is normally the
 					// case
-					() -> m_shouldFlipAutoPath, this // Subsystem for requirements
+					this::shouldFlipAutoPath, this // Subsystem for requirements
 			);
 		} catch (Exception ex) {
 			DriverStation.reportError("Failed to load PathPlanner config and configure AutoBuilder",
@@ -292,13 +292,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		 * disable event occurs during testing.
 		 */
 		if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
-			DriverStation.getAlliance().ifPresent(allianceColor -> {
-				m_shouldFlipAutoPath = allianceColor == Alliance.Red;
-				setOperatorPerspectiveForward(allianceColor == Alliance.Red
-						? kRedAlliancePerspectiveRotation
-						: kBlueAlliancePerspectiveRotation);
-				m_hasAppliedOperatorPerspective = true;
-			});
+			updateAllianceState();
 		}
 		telemetry.telemeterize(state, getPhysicsPose());
 
@@ -319,7 +313,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	}
 
 	public boolean shouldFlipAutoPath() {
+		updateAllianceState();
 		return m_shouldFlipAutoPath;
+	}
+
+	private void updateAllianceState() {
+		DriverStation.getAlliance().ifPresent(allianceColor -> {
+			m_shouldFlipAutoPath = allianceColor == Alliance.Red;
+			setOperatorPerspectiveForward(
+					allianceColor == Alliance.Red ? kRedAlliancePerspectiveRotation : kBlueAlliancePerspectiveRotation);
+			m_hasAppliedOperatorPerspective = true;
+		});
 	}
 
 	public void resetSimulationPoseOnly(Pose2d pose) {
