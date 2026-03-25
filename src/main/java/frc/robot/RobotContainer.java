@@ -28,6 +28,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.choreo.ChoreoTraj;
+import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.Constants;
 import frc.robot.constants.drive.DrivetrainConstants;
@@ -136,6 +137,7 @@ public class RobotContainer {
 	 * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
 	 */
 	private void configureButtonBindings() {
+		// ************************** DRIVETRAIN KEYBINDS **************************
 		// Default command, normal field-relative drive
 		drivetrain.setDefaultCommand(
 				// Drivetrain will execute this command periodically
@@ -155,9 +157,29 @@ public class RobotContainer {
 																													// X
 																													// (left)
 						));
+		// Reset heading
+		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
 
+		// ************************** INTAKE KEYBINDS **************************
 		intakeRack.setDefaultCommand(PositionJoint.setVelocity(intakeRack, () -> 0.0));
 		intakeRoller.setDefaultCommand(Flywheel.setVelocity(intakeRoller, () -> 0.0));
+		// Run intake
+		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
+				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
+
+		// Deploy intake setpoint
+		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+		// Stow intake setpoint
+		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+
+		// Deploy intake backup for intake skipping
+		coPilot.povUp().whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
+		// Stow intake backup for intake skipping
+		coPilot.povDown().whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor))
+				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+
+		// ************************** SHOOTER KEYBINDS **************************
 		// Feed shooter
 		controller.rightBumper()
 				.whileTrue(ShooterCommands.agitateIntake(bottomIndexer, topIndexer)
@@ -165,32 +187,20 @@ public class RobotContainer {
 				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor)
 						.alongWith(IntakeCommands.deployIntake(intakeRack, intakeRoller)));
 
-		// Run intake
-		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
-				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
-
-		// Deploy and stow intake
-		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
-
-		coPilot.povUp().whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
-
-		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
-				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
-
-		coPilot.povDown().whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor))
-				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+		controller.a()
+				.whileTrue(Commands.parallel(
+						DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftY(),
+								() -> -controller.getLeftX(), DrivetrainConstants.MAX_SPEED),
+						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
 
 		// Shooter presets
-		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood)
-				.alongWith(Commands.run(() -> SmartDashboard.putBoolean("Flywheel Spinning?", false))));
+		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
+		coPilot.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
 
-		controller.a().or(coPilot.a()).whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
-
-		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
+		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
 	}
 
 	public void updateDashboardOutputs() {
