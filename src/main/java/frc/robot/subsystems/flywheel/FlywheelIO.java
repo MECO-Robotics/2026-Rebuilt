@@ -73,21 +73,27 @@ public interface FlywheelIO {
 			Supplier<FlywheelIO> subsystemSupplier, DCMotor simMotorModel) {
 		return switch (Constants.currentMode) {
 			case REAL -> subsystemSupplier.get();
-			case SIM -> new FlywheelIOSim(name, config, simMotorModel);
+			case SIM -> replayFactory(name).get();
 			default -> replayFactory(name).get();
 		};
 	}
 
 	/** Creates mode-appropriate flywheel IO using SparkMax for real hardware. */
 	public static FlywheelIO fromSparkMax(String name, FlywheelHardwareConfig config) {
-		return fromMode(name, config, () -> new FlywheelIOSparkMax(name, config),
-				DCMotor.getNEO(config.canIds().length));
+		return switch (Constants.currentMode) {
+			case REAL -> new FlywheelIOSparkMax(name, config);
+			case SIM -> new FlywheelIOSimSparkMax(name, config, DCMotor.getNEO(config.canIds().length));
+			default -> replayFactory(name).get();
+		};
 	}
 
 	/** Creates mode-appropriate flywheel IO using TalonFX for real hardware. */
 	public static FlywheelIO fromTalonFX(String name, FlywheelHardwareConfig config) {
-		return fromMode(name, config, () -> new FlywheelIOTalonFX(name, config),
-				DCMotor.getKrakenX60Foc(config.canIds().length));
+		return switch (Constants.currentMode) {
+			case REAL -> new FlywheelIOTalonFX(name, config);
+			case SIM -> new FlywheelIOSimTalonFX(name, config, DCMotor.getKrakenX60Foc(config.canIds().length));
+			default -> replayFactory(name).get();
+		};
 	}
 
 	/** Returns a unique telemetry/logging name for this flywheel. */

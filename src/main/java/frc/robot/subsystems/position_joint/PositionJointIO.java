@@ -99,7 +99,7 @@ public interface PositionJointIO {
 			Supplier<PositionJointIO> subsystemSupplier, DCMotor simMotorModel) {
 		return switch (Constants.currentMode) {
 			case REAL -> subsystemSupplier.get();
-			case SIM -> new PositionJointIOSim(name, config, simMotorModel);
+			case SIM -> replayFactory(name).get();
 			default -> replayFactory(name).get();
 		};
 	}
@@ -108,16 +108,22 @@ public interface PositionJointIO {
 	 * Creates mode-appropriate position-joint IO using SparkMax for real hardware.
 	 */
 	public static PositionJointIO fromSparkMax(String name, PositionJointHardwareConfig config) {
-		return fromMode(name, config, () -> new PositionJointIOSparkMax(name, config),
-				DCMotor.getNEO(config.canIds().length));
+		return switch (Constants.currentMode) {
+			case REAL -> new PositionJointIOSparkMax(name, config);
+			case SIM -> new PositionJointIOSimSparkMax(name, config, DCMotor.getNEO(config.canIds().length));
+			default -> replayFactory(name).get();
+		};
 	}
 
 	/**
 	 * Creates mode-appropriate position-joint IO using TalonFX for real hardware.
 	 */
 	public static PositionJointIO fromTalonFX(String name, PositionJointHardwareConfig config) {
-		return fromMode(name, config, () -> new PositionJointIOTalonFX(name, config),
-				DCMotor.getKrakenX60Foc(config.canIds().length));
+		return switch (Constants.currentMode) {
+			case REAL -> new PositionJointIOTalonFX(name, config);
+			case SIM -> new PositionJointIOSimTalonFX(name, config, DCMotor.getKrakenX60Foc(config.canIds().length));
+			default -> replayFactory(name).get();
+		};
 	}
 
 	/** Returns a unique telemetry/logging name for this joint. */
