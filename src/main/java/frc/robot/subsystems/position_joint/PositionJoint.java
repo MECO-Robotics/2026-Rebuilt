@@ -42,6 +42,7 @@ public class PositionJoint extends SubsystemBase {
 	private final LoggedTunableNumber kTolerance;
 
 	private final LoggedTunableNumber kSetpoint;
+	private Double profileMaxVelocityOverride = null;
 
 	private TrapezoidProfile.Constraints constraints;
 
@@ -96,6 +97,12 @@ public class PositionJoint extends SubsystemBase {
 		SmartDashboard.putData(name, this);
 	}
 
+	private void updateProfileConstraints() {
+		double maxVelocity = profileMaxVelocityOverride != null ? profileMaxVelocityOverride : kMaxVelo.get();
+		constraints = new TrapezoidProfile.Constraints(maxVelocity, kMaxAccel.get());
+		profile = new TrapezoidProfile(constraints);
+	}
+
 	@Override
 	public void periodic() {
 		positionJoint.updateInputs(inputs);
@@ -111,8 +118,7 @@ public class PositionJoint extends SubsystemBase {
 
 			goal = new TrapezoidProfile.State(MathUtil.clamp(values[12], kMinPosition.get(), kMaxPosition.get()), 0);
 
-			constraints = new TrapezoidProfile.Constraints(values[7], values[8]);
-			profile = new TrapezoidProfile(constraints);
+			updateProfileConstraints();
 		}, kP, kI, kD, kS, kG, kV, kA, kMaxVelo, kMaxAccel, kMinPosition, kMaxPosition, kTolerance, kSetpoint);
 
 		Logger.recordOutput(name + "/isFinished", isFinished());
@@ -121,6 +127,26 @@ public class PositionJoint extends SubsystemBase {
 	/** Sets a new goal position, clamped to configured mechanism limits. */
 	public void setPosition(double position) {
 		goal = new TrapezoidProfile.State(MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get()), 0);
+	}
+
+	/** Sets a new goal position with a temporary max-velocity override. */
+	public void setPosition(double position, double maxVelocity) {
+		profileMaxVelocityOverride = Math.max(0.0, maxVelocity);
+		updateProfileConstraints();
+		setPosition(position);
+	}
+
+	/**
+	 * Clears any temporary profile constraint override and restores tunable
+	 * defaults.
+	 */
+	public void clearProfileConstraintsOverride() {
+		if (profileMaxVelocityOverride == null) {
+			return;
+		}
+
+		profileMaxVelocityOverride = null;
+		updateProfileConstraints();
 	}
 
 	/** Adds an offset to the current goal position. */
@@ -162,6 +188,12 @@ public class PositionJoint extends SubsystemBase {
 	/** Builds a command that continuously sets position from a supplier. */
 	public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier) {
 		return new PositionJointPositionCommand(positionJoint, positionSupplier);
+	}
+
+	/** Builds a command that sets position using a temporary max-velocity limit. */
+	public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier,
+			DoubleSupplier maxVelocitySupplier) {
+		return new PositionJointPositionCommand(positionJoint, positionSupplier, maxVelocitySupplier);
 	}
 
 	/** Builds a command that continuously sets velocity from a supplier. */
