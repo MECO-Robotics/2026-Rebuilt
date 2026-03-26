@@ -108,9 +108,14 @@ public class PositionJoint extends SubsystemBase {
 		positionJoint.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
 
-		setpoint = profile.calculate(0.02, setpoint, goal);
-
-		positionJoint.setPosition(setpoint.position, setpoint.velocity);
+		boolean usingDynamicOverride = profileMaxVelocityOverride != null
+				&& positionJoint.setPositionDynamic(goal.position, profileMaxVelocityOverride, kMaxAccel.get());
+		if (!usingDynamicOverride) {
+			setpoint = profile.calculate(0.02, setpoint, goal);
+			positionJoint.setPosition(setpoint.position, setpoint.velocity);
+		} else {
+			setpoint = new TrapezoidProfile.State(inputs.outputPosition, inputs.velocity);
+		}
 
 		LoggedTunableNumber.ifChanged(hashCode(), (values) -> {
 			positionJoint.setGains(new PositionJointGains(values[0], values[1], values[2], values[3], values[4],
@@ -146,6 +151,7 @@ public class PositionJoint extends SubsystemBase {
 		}
 
 		profileMaxVelocityOverride = null;
+		setpoint = new TrapezoidProfile.State(inputs.outputPosition, inputs.velocity);
 		updateProfileConstraints();
 	}
 

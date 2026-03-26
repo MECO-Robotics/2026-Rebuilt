@@ -9,11 +9,13 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -51,7 +53,8 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 	private final IAbsoluteEncoder externalEncoder;
 
 	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final PositionVoltage positionRequest = new PositionVoltage(0);
+	private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
+	private final DynamicMotionMagicVoltage dynamicPositionRequest = new DynamicMotionMagicVoltage(0, 0, 0);
 
 	private final StatusSignal<Angle> outputPosition;
 	private final StatusSignal<Angle> rotorPosition;
@@ -270,12 +273,25 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		positionSetpoint = position;
 		velocitySetpoint = velocity;
 
-		motors[0].setControl(positionRequest.withPosition(position).withVelocity(velocity)
-				.withFeedForward(externalFeedforward.getAsDouble()));
+		motors[0].setControl(positionRequest.withPosition(position).withFeedForward(externalFeedforward.getAsDouble()));
 		for (int i = 1; i < motors.length; i++) {
 			motorval = hardwareConfig.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
 			motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
 		}
+	}
+
+	@Override
+	public boolean setPositionDynamic(double position, double maxVelocity, double maxAcceleration) {
+		positionSetpoint = position;
+		velocitySetpoint = 0.0;
+
+		motors[0].setControl(dynamicPositionRequest.withPosition(position).withVelocity(Math.abs(maxVelocity))
+				.withAcceleration(Math.abs(maxAcceleration)).withFeedForward(externalFeedforward.getAsDouble()));
+		for (int i = 1; i < motors.length; i++) {
+			motorval = hardwareConfig.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
+			motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
+		}
+		return true;
 	}
 
 	@Override
@@ -300,6 +316,8 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 
 		motors[0].getConfigurator().apply(new Slot0Configs().withKP(gains.kP()).withKI(gains.kI()).withKD(gains.kD())
 				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()).withKG(gains.kG()).withGravityType(gravity));
+		motors[0].getConfigurator().apply(new MotionMagicConfigs().withMotionMagicCruiseVelocity(gains.kMaxVelo())
+				.withMotionMagicAcceleration(gains.kMaxAccel()));
 
 		System.out.println(name + " gains set to " + gains);
 	}

@@ -9,6 +9,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
+import com.revrobotics.spark.config.MAXMotionConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj.Alert;
@@ -138,7 +139,8 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 	public void setVelocity(double velocity) {
 		velocitySetpoint = velocity;
 
-		motors[0].getClosedLoopController().setSetpoint(velocitySetpoint, ControlType.kVelocity, ClosedLoopSlot.kSlot0,
+		motors[0].getClosedLoopController().setSetpoint(velocitySetpoint, ControlType.kMAXMotionVelocityControl,
+				ClosedLoopSlot.kSlot0,
 				feedforward.calculateWithVelocities(motors[0].getEncoder().getVelocity(), velocity));
 	}
 
@@ -149,7 +151,9 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 
 	@Override
 	public void setGains(FlywheelGains gains) {
-		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())),
+		motors[0].configure(
+				leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
+						.apply(new MAXMotionConfig().maxAcceleration(gains.kMaxAccel()))),
 				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
 		feedforward.setGains(gains.kS(), gains.kV(), gains.kA());

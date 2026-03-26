@@ -56,6 +56,16 @@ public interface PositionJointIO {
 	public default void setPosition(double position, double velocity) {
 	}
 
+	/**
+	 * Commands a dynamic closed-loop position request with runtime profile
+	 * constraints.
+	 *
+	 * @return true if the IO implementation handled the request directly
+	 */
+	public default boolean setPositionDynamic(double position, double maxVelocity, double maxAcceleration) {
+		return false;
+	}
+
 	/** Commands an open-loop voltage output. */
 	public default void setVoltage(double voltage) {
 	}
