@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.ChassisReference;
@@ -41,6 +40,7 @@ import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.ironmaple.simulation.drivesims.SwerveModuleSimulation;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.ironmaple.simulation.motorsims.SimulatedMotorController;
+import org.littletonrobotics.junction.Logger;
 
 /**
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
@@ -82,8 +82,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 																											// (1 V/s)
 			Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
 			null, // Use default timeout (10 s)
-			// Log state with SignalLogger class
-			state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+			state -> Logger.recordOutput("Drive/SysIdTranslationState", state.toString())),
 			new SysIdRoutine.Mechanism(output -> setControl(m_translationCharacterization.withVolts(output)), null,
 					this));
 
@@ -95,8 +94,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 																									// rate (1 V/s)
 			Volts.of(7), // Use dynamic voltage of 7 V
 			null, // Use default timeout (10 s)
-			// Log state with SignalLogger class
-			state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+			state -> Logger.recordOutput("Drive/SysIdSteerState", state.toString())),
 			new SysIdRoutine.Mechanism(volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
 
 	/*
@@ -109,13 +107,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			Volts.of(Math.PI / 6).per(Second),
 			/* This is in radians per second, but SysId only supports "volts" */
 			Volts.of(Math.PI), null, // Use default timeout (10 s)
-			// Log state with SignalLogger class
-			state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+			state -> Logger.recordOutput("Drive/SysIdRotationState", state.toString())),
 			new SysIdRoutine.Mechanism(output -> {
 				/* output is actually radians per second, but SysId only supports "volts" */
 				setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
 				/* also log the requested output for SysId */
-				SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+				Logger.recordOutput("Drive/SysIdRotationalRate", output.in(Volts));
 			}, null, this));
 
 	/* The SysId routine to test */
@@ -292,7 +289,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
 			updateAllianceState();
 		}
-		telemetry.telemeterize(state, getPhysicsPose());
+		telemetry.telemeterize(state, getPhysicsPose(), getPhysicsSpeeds(), getOdometryHeading(state));
 
 	}
 

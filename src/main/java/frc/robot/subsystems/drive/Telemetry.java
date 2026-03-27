@@ -1,9 +1,9 @@
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import org.littletonrobotics.junction.Logger;
 
 public class Telemetry {
 	private final double MaxSpeed;
@@ -32,7 +33,6 @@ public class Telemetry {
 	 */
 	public Telemetry(double maxSpeed) {
 		MaxSpeed = maxSpeed;
-		SignalLogger.start();
 
 		/* Set up the module state Mechanism2d telemetry */
 		for (int i = 0; i < 4; ++i) {
@@ -92,10 +92,11 @@ public class Telemetry {
 	private final double[] m_physicsPoseArray = new double[3];
 
 	/**
-	 * Accept the swerve drive state and telemeterize it to SmartDashboard and
-	 * SignalLogger.
+	 * Accept the swerve drive state and telemeterize it to dashboards and
+	 * AdvantageKit.
 	 */
-	public void telemeterize(SwerveDriveState state, Pose2d physicsPose) {
+	public void telemeterize(SwerveDriveState state, Pose2d physicsPose, ChassisSpeeds physicsSpeeds,
+			Rotation2d odometryHeading) {
 		/* Telemeterize the swerve drive state */
 		drivePose.set(state.Pose);
 		drivePhysicsPose.set(physicsPose);
@@ -106,18 +107,22 @@ public class Telemetry {
 		driveTimestamp.set(state.Timestamp);
 		driveOdometryFrequency.set(1.0 / state.OdometryPeriod);
 
-		/* Also write to log file */
-		SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, state.Pose);
-		SignalLogger.writeStruct("DriveState/PhysicsPose", Pose2d.struct, physicsPose);
+		/* Mirror drivetrain state into AdvantageKit for WPILOG capture/replay. */
+		Logger.recordOutput("DriveState/Pose", state.Pose);
+		Logger.recordOutput("DriveState/PhysicsPose", physicsPose);
 		Transform2d poseError = physicsPose.minus(state.Pose);
-		SignalLogger.writeDouble("DriveState/PoseErrorX", poseError.getX(), "meters");
-		SignalLogger.writeDouble("DriveState/PoseErrorY", poseError.getY(), "meters");
-		SignalLogger.writeDouble("DriveState/PoseErrorTheta", poseError.getRotation().getDegrees(), "degrees");
-		SignalLogger.writeStruct("DriveState/Speeds", ChassisSpeeds.struct, state.Speeds);
-		SignalLogger.writeStructArray("DriveState/ModuleStates", SwerveModuleState.struct, state.ModuleStates);
-		SignalLogger.writeStructArray("DriveState/ModuleTargets", SwerveModuleState.struct, state.ModuleTargets);
-		SignalLogger.writeStructArray("DriveState/ModulePositions", SwerveModulePosition.struct, state.ModulePositions);
-		SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
+		Logger.recordOutput("DriveState/PoseErrorX", poseError.getX());
+		Logger.recordOutput("DriveState/PoseErrorY", poseError.getY());
+		Logger.recordOutput("DriveState/PoseErrorThetaDeg", poseError.getRotation().getDegrees());
+		Logger.recordOutput("DriveState/Speeds", state.Speeds);
+		Logger.recordOutput("DriveState/PhysicsSpeeds", physicsSpeeds);
+		Logger.recordOutput("DriveState/ModuleStates", state.ModuleStates);
+		Logger.recordOutput("DriveState/ModuleTargets", state.ModuleTargets);
+		Logger.recordOutput("DriveState/ModulePositions", state.ModulePositions);
+		Logger.recordOutput("DriveState/Timestamp", state.Timestamp);
+		Logger.recordOutput("DriveState/OdometryPeriod", state.OdometryPeriod);
+		Logger.recordOutput("DriveState/OdometryFrequency", 1.0 / state.OdometryPeriod);
+		Logger.recordOutput("DriveState/OdometryHeading", odometryHeading);
 
 		/* Telemeterize the pose to a Field2d */
 		fieldTypePub.set("Field2d");
@@ -141,6 +146,6 @@ public class Telemetry {
 
 	public void logAutoCommandedSpeeds(ChassisSpeeds speeds) {
 		driveAutoCommandedSpeeds.set(speeds);
-		SignalLogger.writeStruct("DriveState/AutoCommandedSpeeds", ChassisSpeeds.struct, speeds);
+		Logger.recordOutput("DriveState/AutoCommandedSpeeds", speeds);
 	}
 }
