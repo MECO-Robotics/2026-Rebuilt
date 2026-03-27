@@ -4,8 +4,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.constants.Constants;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
-import frc.robot.subsystems.flywheel.sim.FlywheelIOSimSparkMax;
-import frc.robot.subsystems.flywheel.sim.FlywheelIOSimTalonFX;
+import frc.robot.sim.flywheel.FlywheelIOSimSparkMax;
+import frc.robot.sim.flywheel.FlywheelIOSimTalonFX;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 

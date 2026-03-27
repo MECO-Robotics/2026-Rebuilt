@@ -1,4 +1,4 @@
-package frc.robot.subsystems.piece_detection.sim;
+package frc.robot.sim.piece_detection;
 
 import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.subsystems.piece_detection.PieceDetectionIO;
