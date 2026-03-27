@@ -213,6 +213,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		this(name, config, () -> 0);
 	}
 
+	/** Refreshes Talon, follower, and encoder telemetry used by the subsystem layer. */
 	@Override
 	public void updateInputs(PositionJointIOInputs inputs) {
 		BaseStatusSignal.refreshAll(outputPosition, rotorPosition, velocity);
@@ -268,6 +269,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		inputs.encoderConnected = encoderConnected;
 	}
 
+	/** Commands Motion Magic position control with the configured feedforward term. */
 	@Override
 	public void setPosition(double position, double velocity) {
 		positionSetpoint = position;
@@ -280,6 +282,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		}
 	}
 
+	/** Commands Motion Magic with temporary cruise velocity and acceleration limits. */
 	@Override
 	public boolean setPositionDynamic(double position, double maxVelocity, double maxAcceleration) {
 		positionSetpoint = position;
@@ -294,6 +297,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		return true;
 	}
 
+	/** Applies open-loop voltage to the leader and reasserts follower mode. */
 	@Override
 	public void setVoltage(double voltage) {
 		motors[0].setControl(voltageRequest.withOutput(voltage));
@@ -303,6 +307,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		}
 	}
 
+	/** Applies slot gains and Motion Magic constraints to the leader TalonFX. */
 	@Override
 	public void setGains(PositionJointGains gains) {
 		GravityTypeValue gravity;
@@ -322,6 +327,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		System.out.println(name + " gains set to " + gains);
 	}
 
+	/** Zeros the TalonFX integrated position reference. */
 	@Override
 	public void resetPosition() {
 		motors[0].setPosition(0);

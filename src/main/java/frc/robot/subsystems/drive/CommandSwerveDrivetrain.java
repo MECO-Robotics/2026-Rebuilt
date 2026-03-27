@@ -239,6 +239,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		return run(() -> this.setControl(request.get()));
 	}
 
+	/** Stops the drivetrain by applying an idle swerve request. */
 	public void stop() {
 		setControl(m_idleRequest);
 	}
@@ -293,20 +294,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	}
 
+	/** Returns the MapleSim drivetrain instance when running in simulation. */
 	public AbstractDriveTrainSimulation getSimulation() {
 		return m_mapleDriveSimulation;
 	}
 
+	/** Returns the simulated pose when available, otherwise the estimated pose. */
 	public Pose2d getPhysicsPose() {
 		return m_mapleDriveSimulation != null ? m_mapleDriveSimulation.getSimulatedDriveTrainPose() : getState().Pose;
 	}
 
+	/** Returns the simulated chassis speeds when available, otherwise estimator speeds. */
 	public ChassisSpeeds getPhysicsSpeeds() {
 		return m_mapleDriveSimulation != null
 				? m_mapleDriveSimulation.getDriveTrainSimulatedChassisSpeedsRobotRelative()
 				: getState().Speeds;
 	}
 
+	/** Returns whether autonomous paths should be mirrored for the current alliance. */
 	public boolean shouldFlipAutoPath() {
 		updateAllianceState();
 		return m_shouldFlipAutoPath;
@@ -321,6 +326,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		});
 	}
 
+	/** Teleports only the simulation state without modifying estimator pose directly. */
 	public void resetSimulationPoseOnly(Pose2d pose) {
 		if (m_mapleDriveSimulation == null) {
 			return;
