@@ -1,4 +1,4 @@
-package frc.robot.subsystems.position_joint;
+package frc.robot.subsystems.position_joint.sim;
 
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -36,6 +36,7 @@ import frc.robot.constants.types.PositionJointConstants.GravityType;
 import frc.robot.constants.types.PositionJointConstants.MechanismType;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.util.feedforwards.PositionJointFeedforward;
 import frc.robot.util.feedforwards.TunableArmFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;

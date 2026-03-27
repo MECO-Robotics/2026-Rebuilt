@@ -1,4 +1,4 @@
-package frc.robot.subsystems.flywheel;
+package frc.robot.subsystems.flywheel.sim;
 
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
 /** SparkMax-backed simulation implementation of {@link FlywheelIO}. */
