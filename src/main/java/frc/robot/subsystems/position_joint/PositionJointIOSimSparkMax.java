@@ -58,6 +58,10 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 	private double maxMotionVelocity = Double.NaN;
 	private double maxMotionAcceleration = Double.NaN;
 
+	/**
+	 * Creates a Spark Max simulation-backed joint using either an arm or elevator
+	 * plant based on mechanism type.
+	 */
 	public PositionJointIOSimSparkMax(String name, PositionJointHardwareConfig config, DCMotor simMotorModel) {
 		this.name = name;
 		this.config = config;
@@ -107,6 +111,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		leaderSim = new SparkMaxSim(motors[0], simMotorModel);
 	}
 
+	/** Advances the REV simulation model and publishes synthetic mechanism telemetry. */
 	@Override
 	public void updateInputs(PositionJointIOInputs inputs) {
 		currentPosition = getMechanismPosition();
@@ -146,6 +151,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		inputs.motorCurrents = motorCurrents;
 	}
 
+	/** Commands the sim joint to a position using the configured MAXMotion profile. */
 	@Override
 	public void setPosition(double position, double velocity) {
 		positionSetpoint = position;
@@ -156,6 +162,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 				ClosedLoopSlot.kSlot0, feedforward.calculate(ffPosition, currentVelocity, velocity, 0.02));
 	}
 
+	/** Commands the sim joint with temporary MAXMotion cruise constraints. */
 	@Override
 	public boolean setPositionDynamic(double position, double maxVelocity, double maxAcceleration) {
 		positionSetpoint = position;
@@ -167,11 +174,13 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		return true;
 	}
 
+	/** Applies open-loop voltage directly to the simulated leader Spark Max. */
 	@Override
 	public void setVoltage(double voltage) {
 		motors[0].setVoltage(voltage);
 	}
 
+	/** Updates PID, feedforward, and MAXMotion limits on the simulated controller. */
 	@Override
 	public void setGains(PositionJointGains gains) {
 		feedforward.setGains(0.0, gains.kG(), gains.kV(), gains.kA());
@@ -184,11 +193,13 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		System.out.println(name + " gains set to " + gains);
 	}
 
+	/** Returns the logging name associated with this simulated joint. */
 	@Override
 	public String getName() {
 		return name;
 	}
 
+	/** Builds the shared base configuration for the leader Spark Max. */
 	private SparkMaxConfig createLeaderConfig(PositionJointHardwareConfig config) {
 		SparkMaxConfig leader = new SparkMaxConfig();
 		leader.apply(new EncoderConfig().positionConversionFactor(1.0 / config.gearRatio())
@@ -201,6 +212,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		return leader;
 	}
 
+	/** Reconfigures MAXMotion only when the requested limits actually change. */
 	private void ensureMaxMotionConfig(double velocity, double acceleration) {
 		if (Double.compare(maxMotionVelocity, velocity) == 0
 				&& Double.compare(maxMotionAcceleration, acceleration) == 0) {
@@ -215,6 +227,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 	}
 
+	/** Returns the simulated mechanism position in subsystem units. */
 	private double getMechanismPosition() {
 		if (config.mechanismType() == MechanismType.LINEAR) {
 			return linearSim.getPositionMeters();
@@ -222,6 +235,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		return rotationalSim.getAngularPosition().in(Rotations);
 	}
 
+	/** Returns the simulated mechanism velocity in subsystem units per second. */
 	private double getMechanismVelocity() {
 		if (config.mechanismType() == MechanismType.LINEAR) {
 			return linearSim.getVelocityMetersPerSecond();
@@ -229,6 +243,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		return rotationalSim.getAngularVelocity().in(RotationsPerSecond);
 	}
 
+	/** Routes the current applied voltage into the appropriate simulation model. */
 	private void setSimulationInputVoltage(double voltage) {
 		if (config.mechanismType() == MechanismType.LINEAR) {
 			linearSim.setInputVoltage(voltage);
@@ -237,6 +252,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		rotationalSim.setInputVoltage(voltage);
 	}
 
+	/** Advances the currently active arm/elevator simulation by one robot loop. */
 	private void updateSimulation() {
 		if (config.mechanismType() == MechanismType.LINEAR) {
 			linearSim.update(0.02);
@@ -245,6 +261,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		rotationalSim.update(0.02);
 	}
 
+	/** Returns the simulated current draw for battery loading calculations. */
 	private double getSimulationCurrentDrawAmps() {
 		if (config.mechanismType() == MechanismType.LINEAR) {
 			return linearSim.getCurrentDrawAmps();

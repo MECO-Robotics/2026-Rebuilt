@@ -6,9 +6,9 @@ import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
+/** Factory methods for climber rotation presets. */
 public class ClimberCommands {
 
-	/** Intake rotation preset positions. */
 	/** Climber rotation preset positions. */
 	public static final class ROTATION_POSITIONS {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("ClimberPosition/Stow", 0);
