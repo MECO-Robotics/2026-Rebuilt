@@ -14,8 +14,8 @@ public final class IntakeConstants {
 	private IntakeConstants() {
 	}
 
-	public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{22},
-			new boolean[]{false}, 1.5, 0.025, 40, "");
+	public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{22, 53},
+			new boolean[]{false, true}, 1.5, 0.025, 40, "");
 	// public static final FlywheelGains INTAKE_ROLLER_GAINS = new FlywheelGains(5,
 	// 0.0, 0.0, 0.25, 0.065, 0.0, 1, 0.1);
 	public static final FlywheelGains INTAKE_ROLLER_GAINS = new FlywheelGains(0, 0.0, 0.0, 0, 0, 0.0, 1, 0.1);
@@ -27,14 +27,14 @@ public final class IntakeConstants {
 	public static final PositionJointGains INTAKE_RACK_GAINS = new PositionJointGains(15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 			1.0, 5.0, -1, 1, 0.02, 0.0);
 	public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG = new PositionJointHardwareConfig(new int[]{21},
-			new boolean[]{false}, (5 * (48 / 16) * (22 / 12)) / (((Math.PI * 10) / 10) * 0.0254), 0.01, 40,
+			new boolean[]{false}, (5 * (48.0 / 16.0) * (24.0 / 16.0)) / (((Math.PI * 10.0) / 10.0) * 0.0254), 0.01, 40,
 			GravityType.COSINE, EncoderType.INTERNAL, 0, Rotation2d.fromRotations(0), "");
 
 	/** Intake rotation preset positions. */
 	public static final class RACK_PRESETS {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/IntakePosition/Stow", 0);
-		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("Presets/IntakePosition/Deploy", .42);
-		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("Presets/IntakePosition/Safe", 0.19);
+		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("Presets/IntakePosition/Deploy", .2);
+		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("Presets/IntakePosition/Safe", 0.1);
 	}
 
 	/** Intake roller preset voltages. */
