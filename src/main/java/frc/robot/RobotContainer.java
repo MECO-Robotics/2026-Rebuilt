@@ -95,9 +95,12 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 
-		// Keep PathPlanner's built-in chooser behavior (default option is "None").
+		registerNamedCommands();
+
+		// Build PathPlanner autos after named commands are registered so event markers
+		// can resolve.
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-		configureAuto();
+		configureAutoChooser();
 
 		SmartDashboard.putBoolean("Flywheel Spinning?", false);
 
@@ -115,10 +118,10 @@ public class RobotContainer {
 		// Default command, normal field-relative drive
 		drivetrain.setDefaultCommand(
 				// Drivetrain will execute this command periodically
-				drivetrain.applyRequest(() -> drive.withVelocityX(controller.getLeftY() * MaxSpeed) // Drive forward
-																									// with negative
-																									// Y (forward)
-						.withVelocityY(controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
+				drivetrain.applyRequest(() -> drive.withVelocityX(-controller.getLeftY() * MaxSpeed) // Drive forward
+																										// with negative
+																										// Y (forward)
+						.withVelocityY(-controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
 						.withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive counterclockwise with
 																						// negative X (left)
 				));
@@ -183,7 +186,7 @@ public class RobotContainer {
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
 	}
 
-	public void configureAuto() {
+	private void configureAutoChooser() {
 		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
 				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
 						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
@@ -191,7 +194,9 @@ public class RobotContainer {
 						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
 
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
+	}
 
+	private void registerNamedCommands() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers",
