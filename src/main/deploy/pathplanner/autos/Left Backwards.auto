@@ -9,9 +9,9 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Left Rush 1"
+                  "waitTime": 1.0
                 }
               },
               {
@@ -26,48 +26,42 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Rush 2"
+            "pathName": "Left Backwards 1"
           }
         },
         {
-          "type": "path",
-          "data": {
-            "pathName": "Left Rush 3"
-          }
-        },
-        {
-          "type": "deadline",
+          "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Left Rush 4"
+                  "pathName": "Left Backwards 2"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "AutoSpinUp"
+                  "name": "SpinIntake"
                 }
               }
             ]
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Left Backwards 3"
+          }
+        },
+        {
           "type": "deadline",
           "data": {
             "commands": [
               {
                 "type": "named",
                 "data": {
-                  "name": "AutoAim"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoSpinUp"
+                  "name": "Fender"
                 }
               },
               {
@@ -83,6 +77,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Old Autos",
+  "folder": null,
   "choreoAuto": false
 }
