@@ -1,11 +1,11 @@
 package frc.robot.subsystems.vision;
 
 import frc.robot.constants.Constants;
-import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for vision cameras and pose-estimation pipelines. */
@@ -59,6 +59,28 @@ public interface VisionIO {
 			case SIM -> simSupplier.get();
 			default -> replayFactory().get();
 		};
+	}
+
+	/**
+	 * Creates mode-appropriate Limelight IO using MegaTag 1.
+	 *
+	 * <p>
+	 * Real mode uses Limelight hardware. Sim and replay return inert/no-op vision
+	 * IO.
+	 */
+	public static VisionIO limelightMegatag1(String limelightName) {
+		return fromMode(() -> new VisionIOLimelight(limelightName), replayFactory());
+	}
+
+	/**
+	 * Creates mode-appropriate Limelight IO using MegaTag 2.
+	 *
+	 * <p>
+	 * Real mode uses Limelight hardware. Sim and replay return inert/no-op vision
+	 * IO.
+	 */
+	public static VisionIO limelightMegatag2(String limelightName, Supplier<Rotation2d> rotationSupplier) {
+		return fromMode(() -> new VisionIOLimelight(limelightName, rotationSupplier), replayFactory());
 	}
 
 	/**

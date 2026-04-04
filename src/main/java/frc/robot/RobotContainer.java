@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -29,6 +28,8 @@ import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -58,6 +59,7 @@ public class RobotContainer {
 	private final Flywheel intakeRoller;
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
+	private final Vision vision;
 	// private final RobotSimulation simulation;
 
 	// Controller
@@ -94,6 +96,8 @@ public class RobotContainer {
 				IntakeConstants.INTAKE_RACK_GAINS);
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
+		vision = new Vision(drivetrain::addVisionMeasurement,
+				VisionIO.limelightMegatag1("limelight"));
 
 		registerNamedCommands();
 
