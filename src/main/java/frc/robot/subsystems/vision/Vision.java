@@ -114,6 +114,8 @@ public class Vision extends SubsystemBase {
 				// Check whether to reject pose
 				boolean rejectPose = (!isQuestNav && observation.tagCount() < minTagCountForOdometry) // Must have
 																										// enough tags
+						|| (!isQuestNav && observation.tagCount() == 1 && observation.ambiguity() > maxAmbiguity)
+						// Single-tag solve must not be too ambiguous
 						|| (enforceWhitelistedTagMinimum && !hasEnoughWhitelistedTags) // Must include enough
 																						// currently-whitelisted tags
 						|| Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
