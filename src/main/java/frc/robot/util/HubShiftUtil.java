@@ -12,7 +12,7 @@ public class HubShiftUtil {
 			String matchTimeColor, String shiftTimeColor) {
 	}
 
-	private static final double PERIOD_LENGTH_SECS = 20.0;
+	private static final double PERIOD_LENGTH_SECS = 25.0;
 	private static final double TRANSITION_LENGTH_SECS = 10.0;
 	private static final double TELEOP_DURATION = 135.0;
 
