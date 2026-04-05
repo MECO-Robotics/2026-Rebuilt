@@ -4,6 +4,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.constants.Constants;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.sim.position_joint.PositionJointIOSimSparkMax;
+import frc.robot.sim.position_joint.PositionJointIOSimTalonFX;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 

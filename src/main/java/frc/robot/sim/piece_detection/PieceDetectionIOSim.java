@@ -1,6 +1,7 @@
-package frc.robot.subsystems.piece_detection;
+package frc.robot.sim.piece_detection;
 
 import edu.wpi.first.math.geometry.Pose3d;
+import frc.robot.subsystems.piece_detection.PieceDetectionIO;
 import java.util.function.Supplier;
 
 public class PieceDetectionIOSim implements PieceDetectionIO {
