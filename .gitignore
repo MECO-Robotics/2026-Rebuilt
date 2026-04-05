@@ -186,3 +186,7 @@ compile_commands.json
 # Version file
 .vscode/settings.json
 src/main/java/frc/robot/constants/BuildConstants.java
+
+# Sphinx docs build output
+docs/_build/
+docs/build/
