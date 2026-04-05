@@ -10,6 +10,8 @@ import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.MAXMotionConfig;
+import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
@@ -61,6 +63,8 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	private double currentPosition = 0.0;
 	private double positionSetpoint = 0.0;
 	private double velocitySetpoint = 0.0;
+	private double maxMotionVelocity = Double.NaN;
+	private double maxMotionAcceleration = Double.NaN;
 
 	/**
 	 * Creates a SparkMax position-joint IO implementation.
@@ -175,12 +179,12 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 					name + " Follower Motor " + i + " Disconnected! CAN ID: " + config.canIds()[i], AlertType.kError);
 		}
 
-		if (config.gravity() == GravityType.CONSTANT) {
+		if (config.gravityType() == GravityType.CONSTANT) {
 			feedforward = new TunableElevatorFeedforward();
 			feedforward_position_addition = 0.0;
 		} else {
 			feedforward = new TunableArmFeedforward();
-			if (config.gravity() == GravityType.SINE) {
+			if (config.gravityType() == GravityType.SINE) {
 				feedforward_position_addition = -Math.PI / 2;
 			} else {
 				feedforward_position_addition = 0.0;
@@ -248,14 +252,29 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	@Override
 	public void setPosition(double desiredPosition, double desiredVelocity) {
 		positionSetpoint = desiredPosition;
+		ensureMaxMotionConfig(maxMotionVelocity, maxMotionAcceleration);
 
 		double ffposition = currentPosition + feedforward_position_addition;
 
-		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kPosition, ClosedLoopSlot.kSlot0,
-				feedforward.calculate(ffposition, velocitySetpoint, desiredVelocity, 0.02)
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
+				ClosedLoopSlot.kSlot0, feedforward.calculate(ffposition, velocitySetpoint, desiredVelocity, 0.02)
 						+ externalFeedforward.getAsDouble());
 
 		velocitySetpoint = desiredVelocity;
+	}
+
+	@Override
+	public boolean setPositionDynamic(double position, double maxVelocity, double maxAcceleration) {
+		positionSetpoint = position;
+		velocitySetpoint = 0.0;
+		ensureMaxMotionConfig(Math.abs(maxVelocity), Math.abs(maxAcceleration));
+
+		double ffposition = currentPosition + feedforward_position_addition;
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
+				ClosedLoopSlot.kSlot0,
+				feedforward.calculate(ffposition, motors[0].getEncoder().getVelocity(), 0.0, 0.02)
+						+ externalFeedforward.getAsDouble());
+		return true;
 	}
 
 	@Override
@@ -266,8 +285,12 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	@Override
 	public void setGains(PositionJointGains gains) {
 		feedforward.setGains(gains.kS(), gains.kG(), gains.kV(), gains.kA());
+		maxMotionVelocity = gains.kMaxVelo();
+		maxMotionAcceleration = gains.kMaxAccel();
 
-		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())),
+		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
+				.apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity).maxAcceleration(maxMotionAcceleration)
+						.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal))),
 				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
 		System.out.println(name + " gains set to " + gains);
@@ -284,5 +307,20 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	private void ensureMaxMotionConfig(double velocity, double acceleration) {
+		if (Double.compare(maxMotionVelocity, velocity) == 0
+				&& Double.compare(maxMotionAcceleration, acceleration) == 0) {
+			return;
+		}
+
+		maxMotionVelocity = velocity;
+		maxMotionAcceleration = acceleration;
+		motors[0].configureAsync(
+				leaderConfig.apply(new ClosedLoopConfig().apply(
+						new MAXMotionConfig().cruiseVelocity(maxMotionVelocity).maxAcceleration(maxMotionAcceleration)
+								.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal))),
+				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 	}
 }

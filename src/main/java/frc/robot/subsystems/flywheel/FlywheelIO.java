@@ -1,5 +1,6 @@
 package frc.robot.subsystems.flywheel;
 
+import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.constants.Constants;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
@@ -69,22 +70,30 @@ public interface FlywheelIO {
 	 * sim, and replay IO during log replay.
 	 */
 	public static FlywheelIO fromMode(String name, FlywheelHardwareConfig config,
-			Supplier<FlywheelIO> subsystemSupplier) {
+			Supplier<FlywheelIO> subsystemSupplier, DCMotor simMotorModel) {
 		return switch (Constants.currentMode) {
 			case REAL -> subsystemSupplier.get();
-			case SIM -> new FlywheelIOSim(name, config);
+			case SIM -> replayFactory(name).get();
 			default -> replayFactory(name).get();
 		};
 	}
 
 	/** Creates mode-appropriate flywheel IO using SparkMax for real hardware. */
 	public static FlywheelIO fromSparkMax(String name, FlywheelHardwareConfig config) {
-		return fromMode(name, config, () -> new FlywheelIOSparkMax(name, config));
+		return switch (Constants.currentMode) {
+			case REAL -> new FlywheelIOSparkMax(name, config);
+			case SIM -> new FlywheelIOSimSparkMax(name, config, DCMotor.getNEO(config.canIds().length));
+			default -> replayFactory(name).get();
+		};
 	}
 
 	/** Creates mode-appropriate flywheel IO using TalonFX for real hardware. */
 	public static FlywheelIO fromTalonFX(String name, FlywheelHardwareConfig config) {
-		return fromMode(name, config, () -> new FlywheelIOTalonFX(name, config));
+		return switch (Constants.currentMode) {
+			case REAL -> new FlywheelIOTalonFX(name, config);
+			case SIM -> new FlywheelIOSimTalonFX(name, config, DCMotor.getKrakenX60Foc(config.canIds().length));
+			default -> replayFactory(name).get();
+		};
 	}
 
 	/** Returns a unique telemetry/logging name for this flywheel. */

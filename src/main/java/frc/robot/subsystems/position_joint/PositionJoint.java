@@ -1,7 +1,6 @@
 package frc.robot.subsystems.position_joint;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -42,14 +41,8 @@ public class PositionJoint extends SubsystemBase {
 	private final LoggedTunableNumber kTolerance;
 
 	private final LoggedTunableNumber kSetpoint;
-
-	private TrapezoidProfile.Constraints constraints;
-
-	private TrapezoidProfile profile;
-
-	private TrapezoidProfile.State goal = new TrapezoidProfile.State();
-
-	private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
+	private Double profileMaxVelocityOverride = null;
+	private double goalPosition;
 
 	/**
 	 * Creates a position-joint subsystem.
@@ -82,12 +75,7 @@ public class PositionJoint extends SubsystemBase {
 		kTolerance = new LoggedTunableNumber(name + "/Gains/kTolerance", gains.kTolerance());
 
 		kSetpoint = new LoggedTunableNumber(name + "/Gains/kSetpoint", gains.kDefaultSetpoint());
-
-		constraints = new TrapezoidProfile.Constraints(gains.kMaxVelo(), gains.kMaxAccel());
-		profile = new TrapezoidProfile(constraints);
-
-		goal = new TrapezoidProfile.State(gains.kDefaultSetpoint(), 0);
-		setpoint = goal;
+		goalPosition = gains.kDefaultSetpoint();
 
 		// Load the configured gains immediately so sim IO PID/FF are initialized at
 		// startup.
@@ -101,18 +89,17 @@ public class PositionJoint extends SubsystemBase {
 		positionJoint.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
 
-		setpoint = profile.calculate(0.02, setpoint, goal);
-
-		positionJoint.setPosition(setpoint.position, setpoint.velocity);
+		boolean usingDynamicOverride = profileMaxVelocityOverride != null
+				&& positionJoint.setPositionDynamic(goalPosition, profileMaxVelocityOverride, kMaxAccel.get());
+		if (!usingDynamicOverride) {
+			positionJoint.setPosition(goalPosition, 0.0);
+		}
 
 		LoggedTunableNumber.ifChanged(hashCode(), (values) -> {
 			positionJoint.setGains(new PositionJointGains(values[0], values[1], values[2], values[3], values[4],
 					values[5], values[6], values[7], values[8], values[9], values[10], values[11], values[12]));
 
-			goal = new TrapezoidProfile.State(MathUtil.clamp(values[12], kMinPosition.get(), kMaxPosition.get()), 0);
-
-			constraints = new TrapezoidProfile.Constraints(values[7], values[8]);
-			profile = new TrapezoidProfile(constraints);
+			goalPosition = MathUtil.clamp(values[12], kMinPosition.get(), kMaxPosition.get());
 		}, kP, kI, kD, kS, kG, kV, kA, kMaxVelo, kMaxAccel, kMinPosition, kMaxPosition, kTolerance, kSetpoint);
 
 		Logger.recordOutput(name + "/isFinished", isFinished());
@@ -120,12 +107,30 @@ public class PositionJoint extends SubsystemBase {
 
 	/** Sets a new goal position, clamped to configured mechanism limits. */
 	public void setPosition(double position) {
-		goal = new TrapezoidProfile.State(MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get()), 0);
+		goalPosition = MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get());
+	}
+
+	/** Sets a new goal position with a temporary max-velocity override. */
+	public void setPosition(double position, double maxVelocity) {
+		profileMaxVelocityOverride = Math.max(0.0, maxVelocity);
+		setPosition(position);
+	}
+
+	/**
+	 * Clears any temporary profile constraint override and restores tunable
+	 * defaults.
+	 */
+	public void clearProfileConstraintsOverride() {
+		if (profileMaxVelocityOverride == null) {
+			return;
+		}
+
+		profileMaxVelocityOverride = null;
 	}
 
 	/** Adds an offset to the current goal position. */
 	public void incrementPosition(double deltaPosition) {
-		goal.position += deltaPosition;
+		setPosition(goalPosition + deltaPosition);
 	}
 
 	/** Applies open-loop voltage to the joint leader motor. */
@@ -150,18 +155,24 @@ public class PositionJoint extends SubsystemBase {
 
 	/** Returns true when measured position is within tolerance of the goal. */
 	public boolean isFinished() {
-		return Math.abs(inputs.outputPosition - goal.position) < kTolerance.get();
+		return Math.abs(inputs.outputPosition - goalPosition) < kTolerance.get();
 	}
 
 	/** Resets sensor position and clears the active goal to zero. */
 	public void resetPosition() {
 		positionJoint.resetPosition();
-		goal.position = 0;
+		goalPosition = 0;
 	}
 
 	/** Builds a command that continuously sets position from a supplier. */
 	public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier) {
 		return new PositionJointPositionCommand(positionJoint, positionSupplier);
+	}
+
+	/** Builds a command that sets position using a temporary max-velocity limit. */
+	public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier,
+			DoubleSupplier maxVelocitySupplier) {
+		return new PositionJointPositionCommand(positionJoint, positionSupplier, maxVelocitySupplier);
 	}
 
 	/** Builds a command that continuously sets velocity from a supplier. */

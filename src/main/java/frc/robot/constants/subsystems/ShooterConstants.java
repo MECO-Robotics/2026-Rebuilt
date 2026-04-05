@@ -8,13 +8,16 @@ import edu.wpi.first.units.Units;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
 import frc.robot.constants.types.PositionJointConstants.EncoderType;
-import frc.robot.constants.types.PositionJointConstants.GravityType;
+import frc.robot.constants.types.PositionJointConstants.MechanismType;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.UnitInterpolatingMap;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 
 public final class ShooterConstants {
+	private static final double SHOOTER_SIM_MOI_KG_METERS_SQUARED = 24.0 * 0.45359237
+			* Math.pow(Units.Inches.of(1.0).in(Units.Meters), 2);
+
 	private ShooterConstants() {
 	}
 
@@ -29,14 +32,14 @@ public final class ShooterConstants {
 	public static final FlywheelGains CONVEYOR_GAINS = new FlywheelGains(0.0, 0.0, 0.0, 0.0, 0.065, 0.0, 0.0, 0.0);
 
 	public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{34, 35},
-			new boolean[]{false, true}, 22.0 / 14, 0.006421, 40, "MECO CANIvore");
+			new boolean[]{false, true}, 22.0 / 14, SHOOTER_SIM_MOI_KG_METERS_SQUARED, 40, "MECO CANIvore");
 	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.8, 0.0, 0.01, 0.33, 0.19, 0.15, 100,
 			0.5);
 
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(20, 0.0, 0.0, 0.5, 0.1, 0.0, 0.0, 4.0,
 			8.0, 0.0, 0.049, 0.05, 0.0);
 	public static final PositionJointHardwareConfig HOOD_CONFIG = new PositionJointHardwareConfig(new int[]{33},
-			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, GravityType.COSINE, EncoderType.INTERNAL, 0,
+			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, EncoderType.INTERNAL, 0, MechanismType.ROTATIONAL, 0.0,
 			Rotation2d.fromRotations(0), "");
 
 	// Regression constants for hood and shooter velocity. These are used to
@@ -84,14 +87,14 @@ public final class ShooterConstants {
 	}
 
 	static {
-		hoodMap.put(Units.Inches.of(58.0), Units.Rotations.of(0.005));
+		hoodMap.put(Units.Inches.of(58.0), Units.Rotations.of(HOOD_PRESET.HUB.get()));
 		hoodMap.put(Units.Inches.of(114.25), Units.Rotations.of(0.025));
-		hoodMap.put(Units.Inches.of(163), Units.Rotations.of(0.035));
+		hoodMap.put(Units.Inches.of(163), Units.Rotations.of(0.049));
 		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
-		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(30));
+		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(29));
 		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(36));
-		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(41.5));
-		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(47.5));
+		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(40));
+		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(50));
 	}
 }
