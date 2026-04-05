@@ -1,7 +1,7 @@
 Customizing
 ===========
 
-Adapt the base project to your team.
+Adapt this repository to your robot and workflow.
 
 
 Includes

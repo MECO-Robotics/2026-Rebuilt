@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-project = "2026 Base Bot"
+project = "2026 Rebuilt"
 author = "MECO Robotics"
 copyright = "2026, MECO Robotics"
 
@@ -20,7 +20,7 @@ templates_path = ["_templates"]
 exclude_patterns: list[str] = []
 
 html_theme = "furo"
-html_title = "MECO Robotics"
+html_title = "2026 Rebuilt Docs"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 

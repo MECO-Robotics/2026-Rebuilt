@@ -1,6 +1,6 @@
-# Ninjineers 2025 Base Robot Code
+# 2026-Rebuilt
 
-FRC Robot Code has gotten significantly more advanced in recent years with brushless motors, external CAN sensors, vision, and more complicated odometry. Ninjineers has realized that these advancements are not possible over the course of a single season so we created this base code to allow teams to focus on the emergent behavior of their robot instead of getting bogged down in the weeds of motor control. In developing this template we tried to create sensible defaults for TalonFX's and Spark Max's for motor control, and integrated Mechanical Advantage's Drivetrain and Vision projects (with modification to enable more modular configuration). These defaults work for us but you are free to create your own [IO layers](https://docs.advantagekit.org/data-flow/recording-inputs/io-interfaces) or bespoke Subsystems. We would love it if you create a pull request to share your code with other teams.
+MECO Robotics' rebuilt 2026 robot codebase. This repository includes the competition robot project, simulation support, and a Sphinx documentation site for setup, configuration, and troubleshooting.
 
 ## Getting Started
 
@@ -13,7 +13,7 @@ FRC Robot Code has gotten significantly more advanced in recent years with brush
 This repository now includes a Sphinx documentation site under `docs/` using the
 [Furo theme](https://github.com/pradyunsg/furo).
 
-Hosted docs: https://meco-robotics.github.io/2026_Base_Bot/
+Hosted docs: https://meco-robotics.github.io/2026-Rebuilt/
 
 Build it locally with:
 

@@ -1,9 +1,9 @@
-2026 Base Bot
-=============
+2026 Rebuilt
+============
 
-Official documentation for MECO Robotics **Base Project**.
+Official documentation for MECO Robotics **2026-Rebuilt** robot code.
 
-Included are both beginner-oriented guides as well as more in-depth documentation for maintenance and modification purposes.
+Included are both beginner-oriented guides and more in-depth documentation for maintaining and extending this repository.
 
 .. toctree::
    :maxdepth: 2

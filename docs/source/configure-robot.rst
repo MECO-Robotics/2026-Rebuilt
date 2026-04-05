@@ -1,7 +1,7 @@
 Configure Robot
 ===============
 
-The base project is intended to be reused across different robots, so it cannot know your exact wiring, motors, gear ratios, or mechanism limits ahead of time.
+This repository still needs robot-specific configuration before it is safe to run on hardware. It cannot know your exact wiring, motors, gear ratios, or mechanism limits ahead of time.
 
 Before you test on real hardware, update the robot configuration so the code matches the physical machine. If these values are wrong, the robot may fail to move, move in the wrong direction, or behave unsafely.
 
