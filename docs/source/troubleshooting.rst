@@ -31,11 +31,11 @@ Check Hardware Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Another common issue is incorrect hardware configuration. These mistakes are usually easy to fix, so check them before moving into deeper debugging. Check:
 
-- **CAN IDs match constants**:
+- **Hardware config matches constants**:
   Compare the configured CAN ID of every device against the constants used in code. A single mismatched ID can make a mechanism appear completely dead. See :doc:`configure/hardware-ids`.
 - **Motor type is correct in constants**:
   Confirm that each motor controller is configured for the actual motor attached to it. Using the wrong motor type will cause the controller to appear to be dead. For example, a controller configured for a NEO will not respond to commands if it is actually connected to a TalonFX.
-- **Mechanism constants are reasonable**:
+- **Mechanism gains and limits are reasonable**:
   Check inversion, gear ratio, unit conversions, and soft limits before tuning. Bad constants will often make a healthy mechanism look unstable or unresponsive. See :doc:`configure/mechanism-constants`.
 - **Motor controllers are flashed with correct firmware**:
   Update controllers to the expected firmware version and verify they were configured successfully. Old or mismatched firmware can lead to missing features or unexpected behavior.
@@ -78,11 +78,13 @@ If a mechanism moves but does not move well, poor controller tuning is the most 
   - **Maximum position**
     Incorrect soft limits can make a mechanism stop early or refuse to move in one direction.
 - **Encoder and sensor feedback**
+
   - **Inversions**
     Make sure sensor readings increase in the expected direction when the mechanism moves. If the feedback is inverted, the controller will try to correct in the wrong direction, causing instability or unresponsiveness.
   - **Gear Ratio**
     If the gear ratio is incorrect, the controller will be trying to move the mechanism much faster or slower than expected, which can cause poor performance even when tuning values are reasonable.
-
+  - **Finish Command Tolerance**
+    If the command is not exiting when expected, the problem could be a too small value for ``kTolerance``. This value controls when the command deschedules.
 Check Command Logic
 ~~~~~~~~~~~~~~~~~~~
 The other common cause is incorrect command logic. If the hardware is responsive and tuning looks reasonable, inspect the command flow. Check:
@@ -105,11 +107,10 @@ General Debugging Tips
 When a problem is not obvious, use a consistent process instead of changing several things at once.
 
 - Test one layer at a time
-  First verify communication, then hardware IDs and constants, then subsystem behavior, and only then command behavior.
+  First verify physical hardware, then hardware config and constants, then subsystem behavior, and only then command behavior.
 - Change one variable at a time
   If you adjust constants, wiring, and command code all at once, it becomes much harder to identify what fixed or caused the issue.
 - Use logs and dashboards
   Check whether the robot reports the expected state, setpoint, and sensor values before assuming a motor controller or command is broken.
 - Compare expected units to actual units
   Many mechanism issues come from mixing rotations, radians, meters, and degrees across constants, control logic, and dashboard displays.
-

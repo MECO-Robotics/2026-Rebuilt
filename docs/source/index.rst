@@ -3,7 +3,7 @@
 
 Official documentation for MECO Robotics **Base Project**.
 
-Included are beginner-oriented guides and more in-depth documentation for maintenance and modification purposes.
+Included are both beginner-oriented guides as well as more in-depth documentation for maintenance and modification purposes.
 
 .. toctree::
    :maxdepth: 2
@@ -11,12 +11,14 @@ Included are beginner-oriented guides and more in-depth documentation for mainte
    :caption: Start Here
    :includehidden:
 
-   setup-build
-   first-30-minutes
+   install-project
+   mechanism-types
    configure-robot
-   bringup-test
+   judging
+   command-compositions
    tune-iterate
-
+   troubleshooting
+   
 .. toctree::
    :maxdepth: 1
    :titlesonly:
@@ -30,10 +32,12 @@ Included are beginner-oriented guides and more in-depth documentation for mainte
 Quick start
 -----------
 
-- Installing project locally: :doc:`setup-build`
+- Installing project locally: :doc:`install-project`
+- Choosing the correct mechanism pattern: :doc:`mechanism-types`
 - Adapting robot to your hardware: :doc:`configure-robot`
-- Using the codebase: :doc:`first-30-minutes`
-- Robot not working: :doc:`bringup-test`
+- Basic information for judges: :doc:`judging`
+- Write commands to control the robot: :doc:`command-compositions`
+- Troubleshooting: :doc:`troubleshooting`
 - Ready to improve behavior: :doc:`tune-iterate`
 
 
