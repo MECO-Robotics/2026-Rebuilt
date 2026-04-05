@@ -3,11 +3,19 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
+import com.pathplanner.lib.util.DriveFeedforwards;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -19,12 +27,15 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.commands.drive.choreo.ChoreoTraj;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
-import frc.robot.constants.drive.TunerConstants;
+import frc.robot.constants.Constants;
+import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.constants.vision.VisionConstants;
+import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
@@ -43,16 +54,17 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-	private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top
-																						// speed
-	private double MaxAngularRate = RotationsPerSecond.of(1.5).in(RadiansPerSecond); // 3/4 of a rotation per second
-	// Origionally 1.5
+	private static final double AUTO_LOOP_PERIOD_SECONDS = 0.020;
 
 	// Subsystems
-	public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric().withDeadband(MaxSpeed * 0.05)
-			.withRotationalDeadband(MaxAngularRate * 0.05) // Add a 5% deadband
+	public final CommandSwerveDrivetrain drivetrain = DrivetrainConstants.createDrivetrain();
+	private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+			.withDeadband(DrivetrainConstants.MAX_SPEED * 0.05)
+			.withRotationalDeadband(DrivetrainConstants.MAX_ANGULAR_RATE * 0.05) // Add a 5% deadband
 			.withDriveRequestType(DriveRequestType.Velocity); // Use closed-loop control for drive motors
+	private final SwerveRequest.ApplyRobotSpeeds choreoDrive = new SwerveRequest.ApplyRobotSpeeds();
+	private final PPHolonomicDriveController choreoController = new PPHolonomicDriveController(
+			new PIDConstants(10, 0, 0), new PIDConstants(7, 0, 0), AUTO_LOOP_PERIOD_SECONDS);
 
 	private final Flywheel shooterFlywheel;
 	private final Flywheel topIndexer;
@@ -62,7 +74,7 @@ public class RobotContainer {
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
 	private final Vision vision;
-	// private final RobotSimulation simulation;
+	private final RobotSimulation simulation;
 
 	// Controller
 	private final CommandXboxController controller = new CommandXboxController(0);
@@ -70,6 +82,7 @@ public class RobotContainer {
 
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
+	private final AutoFactory choreoAutoFactory;
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -99,14 +112,17 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 		vision = new Vision(drivetrain::addVisionMeasurement,
-				VisionIO.limelightMegatag1(VisionConstants.limelightName, VisionConstants.robotToLimelight));
+				VisionIO.limelightWithSim(VisionConstants.limelightName, () -> drivetrain.getState().Pose.getRotation(),
+						VisionConstants.robotToLimelight, drivetrain::getPhysicsPose));
+		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
+		simulation.bindCommandHooks();
+		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,
+				this::followChoreoSample, true, drivetrain);
 
 		registerNamedCommands();
-
-		// Build PathPlanner autos after named commands are registered so event markers
-		// can resolve.
+		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-		configureAutoChooser();
+		configureAuto();
 
 		SmartDashboard.putBoolean("Flywheel Spinning?", false);
 
@@ -121,19 +137,49 @@ public class RobotContainer {
 	 * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
 	 */
 	private void configureButtonBindings() {
+		// ************************** DRIVETRAIN KEYBINDS **************************
 		// Default command, normal field-relative drive
 		drivetrain.setDefaultCommand(
 				// Drivetrain will execute this command periodically
-				drivetrain.applyRequest(() -> drive.withVelocityX(-controller.getLeftY() * MaxSpeed) // Drive forward
-																										// with negative
-																										// Y (forward)
-						.withVelocityY(-controller.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-						.withRotationalRate(-controller.getRightX() * MaxAngularRate) // Drive counterclockwise with
-																						// negative X (left)
-				));
+				drivetrain
+						.applyRequest(() -> drive.withVelocityX(-controller.getLeftY() * DrivetrainConstants.MAX_SPEED) // Drive
+																														// forward
+								// with negative
+								// Y (forward)
+								.withVelocityY(-controller.getLeftX() * DrivetrainConstants.MAX_SPEED) // Drive left
+																										// with
+																										// negative X
+																										// (left)
+								.withRotationalRate(-controller.getRightX() * DrivetrainConstants.MAX_ANGULAR_RATE) // Drive
+																													// counterclockwise
+																													// with
+																													// negative
+																													// X
+																													// (left)
+						));
+		// Reset heading
+		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
 
+		// ************************** INTAKE KEYBINDS **************************
 		intakeRack.setDefaultCommand(PositionJoint.setVelocity(intakeRack, () -> 0.0));
 		intakeRoller.setDefaultCommand(Flywheel.setVelocity(intakeRoller, () -> 0.0));
+		// Run intake
+		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
+				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
+
+		// Deploy intake setpoint
+		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+		// Stow intake setpoint
+		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+
+		// Deploy intake backup for intake skipping
+		coPilot.povUp().whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
+		// Stow intake backup for intake skipping
+		coPilot.povDown().whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor))
+				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+
+		// ************************** SHOOTER KEYBINDS **************************
 		// Feed shooter
 		controller.rightBumper()
 				.whileTrue(ShooterCommands.agitateIntake(bottomIndexer, topIndexer)
@@ -141,37 +187,20 @@ public class RobotContainer {
 				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor)
 						.alongWith(IntakeCommands.deployIntake(intakeRack, intakeRoller)));
 
-		// Run intake
-		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
-				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
-
-		// Deploy and stow intake
-		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
-
-		coPilot.povUp().whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
-
-		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
-				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
-
-		coPilot.povDown().whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor))
-				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+		controller.a()
+				.whileTrue(Commands.parallel(
+						DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftY(),
+								() -> -controller.getLeftX(), DrivetrainConstants.MAX_SPEED),
+						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
 
 		// Shooter presets
-		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood)
-				.alongWith(Commands.run(() -> SmartDashboard.putBoolean("Flywheel Spinning?", false))));
+		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		controller.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
+		coPilot.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		controller.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
 
-		controller.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
-
-		coPilot.x().whileTrue(DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftX(),
-				() -> -controller.getLeftY(), MaxAngularRate / 2));
-
-		coPilot.x().whileTrue(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel));
-
-		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
+		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
 	}
 
 	public void updateDashboardOutputs() {
@@ -197,26 +226,63 @@ public class RobotContainer {
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
 	}
 
-	private void configureAutoChooser() {
-		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
-				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
-						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
-				.alongWith(
-						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
-
-		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
-	}
-
 	private void registerNamedCommands() {
-		NamedCommands.registerCommand("IdleShooter", ShooterCommands.shooterIdle(shooterFlywheel, hood));
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers",
 				ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly());
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
+		NamedCommands.registerCommand("AutoSpinUp", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
-		NamedCommands.registerCommand("AutoAim", DriveCommands.autoAimToHub(drivetrain, MaxSpeed).withTimeout(2));
+		NamedCommands.registerCommand("AutoAim",
+				DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED).withTimeout(2));
+	}
+
+	private Command createLeftBlueBumpShootAuto() {
+		String trajectoryName = ChoreoTraj.LeftBlueBump.name();
+		return Commands.sequence(choreoAutoFactory.resetOdometry(trajectoryName),
+				Commands.runOnce(
+						() -> choreoController.reset(drivetrain.getState().Pose, drivetrain.getState().Speeds)),
+				choreoAutoFactory.trajectoryCmd(trajectoryName), Commands.runOnce(drivetrain::stop, drivetrain),
+				createTimedHubShot()).withName("ChoreoLeftBlueBumpShoot");
+	}
+
+	private Command createTimedHubShot() {
+		return Commands.sequence(
+				Commands.deadline(Commands.waitSeconds(1.0), ShooterCommands.hubPreset(shooterFlywheel, hood)),
+				Commands.deadline(Commands.waitSeconds(1.0), ShooterCommands.hubPreset(shooterFlywheel, hood),
+						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor)),
+				Commands.parallel(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor).withTimeout(0.02),
+						ShooterCommands.shooterIdle(shooterFlywheel, hood).withTimeout(0.02)));
+	}
+
+	private void followChoreoSample(SwerveSample sample) {
+		PathPlannerTrajectoryState targetState = new PathPlannerTrajectoryState();
+		targetState.timeSeconds = sample.t;
+		targetState.pose = sample.getPose();
+		targetState.fieldSpeeds = sample.getChassisSpeeds();
+		targetState.linearVelocity = Math.hypot(sample.vx, sample.vy);
+		targetState.heading = targetState.linearVelocity > 1e-6
+				? new Rotation2d(sample.vx, sample.vy)
+				: targetState.pose.getRotation();
+		targetState.feedforwards = new DriveFeedforwards(new double[4], new double[4], new double[4],
+				sample.moduleForcesX(), sample.moduleForcesY());
+
+		drivetrain.setControl(choreoDrive.withSpeeds(ChassisSpeeds.discretize(
+				choreoController.calculateRobotRelativeSpeeds(drivetrain.getState().Pose, targetState),
+				AUTO_LOOP_PERIOD_SECONDS)));
+	}
+
+	public void configureAuto() {
+		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
+				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
+						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
+				.alongWith(
+						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
+
+		autoChooser.addOption("Choreo LeftBlueBump + Shoot", createLeftBlueBumpShootAuto());
+		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
 	}
 
 	/**
@@ -235,18 +301,24 @@ public class RobotContainer {
 
 	/** Logs robot and component transforms for the custom Robot_Remy asset. */
 	public void updateVisualization() {
-		// simulation.visualizationPeriodic();
+		if (Constants.currentMode != Constants.Mode.REAL) {
+			simulation.visualizationPeriodic();
+		}
 	}
 
 	/** Runs simulation-specific autonomous setup if simulation is active. */
 	public void simulationAutonomousInit(Command autonomousCommand) {
-		// simulation.autonomousInit(autonomousCommand);
+		if (Constants.currentMode != Constants.Mode.REAL) {
+			simulation.autonomousInit(autonomousCommand);
+		}
 	}
 
 	/**
 	 * Runs simulation periodic updates and telemetry if simulation is active.
 	 */
 	public void simulationPeriodic() {
-		// simulation.simulationPeriodic();
+		if (Constants.currentMode != Constants.Mode.REAL) {
+			simulation.simulationPeriodic();
+		}
 	}
 }

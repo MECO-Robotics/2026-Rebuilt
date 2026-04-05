@@ -1,7 +1,8 @@
 /**
- * Command implementations for flywheel subsystems.
+ * Command implementations for flywheel and roller subsystems.
  *
  * <p>
- * Includes voltage and velocity command wrappers used by factory methods.
+ * Includes continuous voltage, velocity, and SysId wrappers used by subsystem
+ * factory methods and tuning workflows.
  */
 package frc.robot.commands.flywheel;

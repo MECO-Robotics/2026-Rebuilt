@@ -21,6 +21,27 @@ public final class MapleSimConstants {
 	/** Conversion from flywheel RPS to projectile speed in m/s. */
 	public static final double MPS_PER_FLYWHEEL_RPS = 4.0 * Math.PI * 0.0254; // 4" diameter wheel
 
+	/** Shooter wheel radius used for flywheel-to-ball speed transfer math. */
+	public static final double SHOOTER_WHEEL_RADIUS_METERS = Units.inchesToMeters(2.0);
+
+	/**
+	 * Counter-wheel linear speed divided by main shooter-wheel linear speed.
+	 * <p>
+	 * A value below 1.0 models backspin by reducing net energy transfer to the
+	 * ball.
+	 */
+	public static final double COUNTER_TO_MAIN_SHOOTER_WHEEL_SPEED_RATIO = (48.0 / 54.0) * (1.5 / 4.0);
+
+	/** Simulated fuel mass for flywheel slowdown calculations. */
+	public static final double FUEL_MASS_KG = 0.5 * 0.45359237;
+
+	/** Enables flywheel MOI-based speed reduction during simulated launches. */
+	public static final boolean ENABLE_FLYWHEEL_MOI_SIMULATION = false;
+
+	/** Shooter system inertia used to model flywheel speed drop during launch. */
+	public static final double SHOOTER_SYSTEM_MOI_KG_METERS_SQUARED = 24.0 * 0.45359237
+			* Math.pow(Units.inchesToMeters(1.0), 2);
+
 	/** Minimum flywheel speed before a shot can launch in simulation. */
 	public static final double MIN_FLYWHEEL_RPS_FOR_SHOT = 5.0;
 
@@ -73,7 +94,7 @@ public final class MapleSimConstants {
 	 * Random projectile-speed variation as a fraction of nominal speed (e.g. 0.01 =
 	 * ±1%).
 	 */
-	public static final double SHOT_VELOCITY_RANDOMNESS_RATIO = 0.05;
+	public static final double SHOT_VELOCITY_RANDOMNESS_RATIO = 0.01;
 
 	/**
 	 * Offset behind the alliance hub where scored fuel is respawned on the field.
@@ -90,10 +111,10 @@ public final class MapleSimConstants {
 	 * Offset applied to hood angle (radians) to align mechanism zero with shot
 	 * pitch.
 	 */
-	public static final double HOOD_ANGLE_OFFSET_RADIANS = Math.toRadians(5.0);
+	public static final double HOOD_ANGLE_OFFSET_RADIANS = Math.toRadians(21.0 - 5.0); // 5 deg for backspin
 
 	/** Physical clamp range for launched pitch angle. */
-	public static final double MIN_LAUNCH_ANGLE_RADIANS = Math.toRadians(5.0 - 5);
+	public static final double MIN_LAUNCH_ANGLE_RADIANS = HOOD_ANGLE_OFFSET_RADIANS - Math.toRadians(1.0);
 
-	public static final double MAX_LAUNCH_ANGLE_RADIANS = Math.toRadians(28.0 + 5);
+	public static final double MAX_LAUNCH_ANGLE_RADIANS = HOOD_ANGLE_OFFSET_RADIANS + Math.toRadians(28.0 + 1);
 }

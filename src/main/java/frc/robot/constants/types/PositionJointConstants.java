@@ -18,6 +18,11 @@ public class PositionJointConstants {
 		INTERNAL, EXTERNAL_CANCODER, EXTERNAL_CANCODER_PRO, EXTERNAL_DIO, EXTERNAL_SPARK
 	}
 
+	/** Physical output type for simulation modeling. */
+	public enum MechanismType {
+		ROTATIONAL, LINEAR
+	}
+
 	/** Closed-loop tuning values and profiling constraints for a position joint. */
 	public record PositionJointGains(double kP, double kI, double kD, double kS, double kG, double kV, double kA,
 			double kMaxVelo, double kMaxAccel, double kMinPosition, double kMaxPosition, double kTolerance,
@@ -43,17 +48,23 @@ public class PositionJointConstants {
 	 *            speed / motor speed). For rotation joints, this gear ratio should
 	 *            be multiplied by 2 * Math.PI to convert from rotations to radians.
 	 * @param momentOfInertiaKgMetersSquared
-	 *            Joint mechanism moment of inertia in kg*m^2 for sim modeling.
+	 *            Equivalent inertia reflected to the motor/input shaft in kg*m^2
+	 *            for sim modeling. Simulation code converts this back to
+	 *            output/load inertia using the gear ratio when building the plant.
 	 * @param currentLimit
 	 *            The current limit for the motors in amps.
-	 * @param gravity
-	 *            The gravity model used for feedforward and compensation.
 	 * @param encoderType
 	 *            The type of encoder used for position feedback.
 	 * @param encoderID
 	 *            The ID of the encoder. For external encoders, this is the CAN ID
 	 *            for / a CANCoder or the DIO port for a digital encoder. For
 	 *            internal encoders, this can be set to 0 or ignored.
+	 * @param mechanismType
+	 *            The physical output type. Rotational joints use angular
+	 *            simulation, while linear joints use a linear/elevator model.
+	 * @param outputRadiusMeters
+	 *            Output drum/pulley radius in meters for linear mechanisms.
+	 *            Rotational joints should set this to 0.
 	 * @param encoderOffset
 	 *            The offset to apply to the encoder reading to get the joint
 	 *            position / in the correct reference frame. For example, if the
@@ -63,8 +74,11 @@ public class PositionJointConstants {
 	 *            The CAN bus the motors are on, or an empty string for the rio bus.
 	 */
 	public record PositionJointHardwareConfig(int[] canIds, boolean[] reversed, double gearRatio,
-			double momentOfInertiaKgMetersSquared, int currentLimit, GravityType gravity, EncoderType encoderType,
-			int encoderID, Rotation2d encoderOffset, String canBus) {
+			double momentOfInertiaKgMetersSquared, int currentLimit, EncoderType encoderType, int encoderID,
+			MechanismType mechanismType, double outputRadiusMeters, Rotation2d encoderOffset, String canBus) {
+		public GravityType gravityType() {
+			return mechanismType == MechanismType.LINEAR ? GravityType.CONSTANT : GravityType.COSINE;
+		}
 	}
 
 	/** Reference tuning/config used as a template while creating new joints. */
@@ -73,6 +87,6 @@ public class PositionJointConstants {
 
 	/** Reference hardware config used as a template while creating new joints. */
 	public static final PositionJointHardwareConfig EXAMPLE_CONFIG = new PositionJointHardwareConfig(new int[]{10},
-			new boolean[]{true}, 85.33333 * 2 * Math.PI, 0.01, 40, GravityType.COSINE, EncoderType.EXTERNAL_CANCODER,
-			11, Rotation2d.fromRotations(0.5), "");
+			new boolean[]{true}, 85.33333 * 2 * Math.PI, 0.01, 40, EncoderType.EXTERNAL_CANCODER, 11,
+			MechanismType.ROTATIONAL, 0.0, Rotation2d.fromRotations(0.5), "");
 }

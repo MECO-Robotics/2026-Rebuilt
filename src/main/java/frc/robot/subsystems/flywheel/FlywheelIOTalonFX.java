@@ -7,11 +7,12 @@ import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
@@ -36,7 +37,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	private final TalonFXConfiguration leaderConfig;
 
 	private final VoltageOut voltageRequest = new VoltageOut(0);
-	private final VelocityVoltage velocityRequest = new VelocityVoltage(0);
+	private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0);
 
 	private final StatusSignal<AngularVelocity> velocity;
 	private final StatusSignal<Angle> position;
@@ -172,6 +173,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	public void setGains(FlywheelGains gains) {
 		motors[0].getConfigurator().apply(new Slot0Configs().withKP(gains.kP()).withKI(gains.kI()).withKD(gains.kD())
 				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()));
+		motors[0].getConfigurator().apply(new MotionMagicConfigs().withMotionMagicAcceleration(gains.kMaxAccel()));
 
 		System.out.println(name + " gains set to " + gains);
 	}

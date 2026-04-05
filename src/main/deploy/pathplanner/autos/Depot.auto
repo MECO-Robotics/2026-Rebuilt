@@ -48,12 +48,6 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Fender"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
                   "name": "AutoSpinUp"
                 }
               },

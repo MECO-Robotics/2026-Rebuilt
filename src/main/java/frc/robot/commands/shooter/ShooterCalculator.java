@@ -19,18 +19,12 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
-/**
- * Continuously sets a hood joint position from a distance-to-angle heuristic.
- */
+/** Shot calculators that derive hood and flywheel setpoints from robot pose. */
 public class ShooterCalculator {
-	// - Get drive position
-	// - Find distance between shooter and hub
-	// - run calculation for hood and shooter
-	// - run positionjoint position for hood
-	// - run flywheel velocity for shooter
-
+	/** Translation from robot origin to the shooter exit point used for range. */
 	public static final Translation2d robotToShooter = new Translation2d(-.19, 0);
 
+	/** Uses the interpolated hood and flywheel maps for continuous range-based aiming. */
 	public static Command calculateAndShoot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter) {
 		Supplier<Distance> distance = () -> {
 			Pose2d shooterPosition = drive.getState().Pose
@@ -48,6 +42,7 @@ public class ShooterCalculator {
 		return PositionJoint.setPosition(hood, hoodPosition).alongWith(Flywheel.setVelocity(shooter, shooterVelocity));
 	}
 
+	/** Uses quadratic regression curves instead of the interpolating maps. */
 	public static Command calculateAndShootRegression(CommandSwerveDrivetrain drive, PositionJoint hood,
 			Flywheel shooter) {
 		Supplier<Distance> distance = () -> {
