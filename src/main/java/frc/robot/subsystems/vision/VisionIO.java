@@ -109,7 +109,7 @@ public interface VisionIO {
 	 */
 	public static VisionIO limelightWithSim(String limelightName, Supplier<Rotation2d> rotationSupplier,
 			Transform3d robotToLimelight, Supplier<Pose2d> simPoseSupplier) {
-		return fromMode(() -> new VisionIOLimelight(limelightName, rotationSupplier),
+		return fromMode(() -> new VisionIOLimelight(limelightName, robotToLimelight, rotationSupplier),
 				() -> new VisionIOLimelightSim(limelightName, robotToLimelight, simPoseSupplier));
 	}
 }
