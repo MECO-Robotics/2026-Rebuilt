@@ -19,10 +19,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.drive.TunerConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
+import frc.robot.constants.vision.VisionConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
@@ -97,7 +99,7 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 		vision = new Vision(drivetrain::addVisionMeasurement,
-				VisionIO.limelightMegatag1("limelight"));
+				VisionIO.limelightMegatag1(VisionConstants.limelightName, VisionConstants.robotToLimelight));
 
 		registerNamedCommands();
 
@@ -158,11 +160,16 @@ public class RobotContainer {
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood)
 				.alongWith(Commands.run(() -> SmartDashboard.putBoolean("Flywheel Spinning?", false))));
 
-		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
+		controller.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		controller.y().or(coPilot.y()).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		controller.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
 
-		controller.a().or(coPilot.a()).whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
+		controller.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
+
+		coPilot.x().whileTrue(DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftX(),
+				() -> -controller.getLeftY(), MaxAngularRate / 2));
+
+		coPilot.x().whileTrue(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel));
 
 		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
 	}
@@ -201,6 +208,7 @@ public class RobotContainer {
 	}
 
 	private void registerNamedCommands() {
+		NamedCommands.registerCommand("IdleShooter", ShooterCommands.shooterIdle(shooterFlywheel, hood));
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
 		NamedCommands.registerCommand("FeedRollers",

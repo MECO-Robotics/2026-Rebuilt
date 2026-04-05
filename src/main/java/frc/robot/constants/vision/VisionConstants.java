@@ -21,14 +21,16 @@ public class VisionConstants {
 	// Camera names, must match names configured on coprocessor
 	public static String questName = "QuestNav";
 	public static String arducamName = "arducam";
+	public static String limelightName = "limelight";
 
 	// Robot to camera transforms
-	// (Not used by Limelight, configure in web UI instead)
 	public static Transform3d robotToQuest = new Transform3d(Units.inchesToMeters(-(27.0 / 2.0)),
 			Units.inchesToMeters(0), Units.inchesToMeters(8.5),
 			new Rotation3d(Units.degreesToRadians(180), 0.0, Units.degreesToRadians(180)));
 	public static Transform3d robotToArducam = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(-10),
 			Units.inchesToMeters(22), new Rotation3d(0.0, Units.degreesToRadians(-20), 0.0));
+	public static Transform3d robotToLimelight = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(0),
+			Units.inchesToMeters(21.125), new Rotation3d(0.0, Units.degreesToRadians(45), 0.0));
 
 	// Basic filtering thresholds
 	public static int minTagCountForOdometry = 2;

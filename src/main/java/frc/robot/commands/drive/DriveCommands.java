@@ -21,7 +21,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 /** Factory methods for drivetrain teleop and characterization commands. */
 public class DriveCommands {
 	private static final LoggedTunableNumber DEADBAND = new LoggedTunableNumber("DriveCommands/Deadband", 0.05);
-	private static final LoggedTunableNumber ANGLE_KP = new LoggedTunableNumber("DriveCommands/Angle_KP", 40.0);
+	private static final LoggedTunableNumber ANGLE_KP = new LoggedTunableNumber("DriveCommands/Angle_KP", 35.0);
 	private static final LoggedTunableNumber ANGLE_KD = new LoggedTunableNumber("DriveCommands/Angle_KD", 0.0);
 	private static final LoggedTunableNumber ANGLE_MAX_VELOCITY = new LoggedTunableNumber(
 			"DriveCommands/Angle_Max_Velocity", 25.0);

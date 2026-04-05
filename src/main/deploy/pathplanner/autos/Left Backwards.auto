@@ -19,6 +19,18 @@
                 "data": {
                   "name": "DeployIntake"
                 }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IdleShooter"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IdleRollers"
+                }
               }
             ]
           }
@@ -30,7 +42,7 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "deadline",
           "data": {
             "commands": [
               {
@@ -49,9 +61,22 @@
           }
         },
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "Left Backwards 3"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left Backwards 3"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Fender"
+                }
+              }
+            ]
           }
         },
         {
@@ -59,9 +84,9 @@
           "data": {
             "commands": [
               {
-                "type": "named",
+                "type": "wait",
                 "data": {
-                  "name": "Fender"
+                  "waitTime": 5.0
                 }
               },
               {

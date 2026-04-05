@@ -3,6 +3,7 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
@@ -18,10 +19,12 @@ import java.util.function.Supplier;
 
 /** IO implementation for real Limelight hardware. */
 public class VisionIOLimelight implements VisionIO {
+	private final Transform3d robotToCamera;
 	private final Supplier<Rotation2d> rotationSupplier;
 	private final boolean useMegatag1;
 	private final boolean useMegatag2;
 	private final DoubleArrayPublisher orientationPublisher;
+	private final DoubleArrayPublisher cameraPosePublisher;
 
 	private final DoubleSubscriber heartbeatSubscriber;
 	private final DoubleSubscriber txSubscriber;
@@ -36,9 +39,11 @@ public class VisionIOLimelight implements VisionIO {
 	 * @param name
 	 *            The configured name of the Limelight. Uses MegaTag 1 observations
 	 *            only.
+	 * @param robotToCamera
+	 *            The 3D position of the camera relative to the robot.
 	 */
-	public VisionIOLimelight(String name) {
-		this(name, null, true, false);
+	public VisionIOLimelight(String name, Transform3d robotToCamera) {
+		this(name, robotToCamera, null, true, false);
 	}
 
 	/**
@@ -46,20 +51,24 @@ public class VisionIOLimelight implements VisionIO {
 	 *
 	 * @param name
 	 *            The configured name of the Limelight.
+	 * @param robotToCamera
+	 *            The 3D position of the camera relative to the robot.
 	 * @param rotationSupplier
 	 *            Supplier for the current estimated rotation, used for MegaTag 2.
 	 */
-	public VisionIOLimelight(String name, Supplier<Rotation2d> rotationSupplier) {
-		this(name, rotationSupplier, false, true);
+	public VisionIOLimelight(String name, Transform3d robotToCamera, Supplier<Rotation2d> rotationSupplier) {
+		this(name, robotToCamera, rotationSupplier, false, true);
 	}
 
-	private VisionIOLimelight(String name, Supplier<Rotation2d> rotationSupplier, boolean useMegatag1,
-			boolean useMegatag2) {
+	private VisionIOLimelight(String name, Transform3d robotToCamera, Supplier<Rotation2d> rotationSupplier,
+			boolean useMegatag1, boolean useMegatag2) {
 		var table = NetworkTableInstance.getDefault().getTable(name);
+		this.robotToCamera = robotToCamera;
 		this.rotationSupplier = rotationSupplier;
 		this.useMegatag1 = useMegatag1;
 		this.useMegatag2 = useMegatag2;
 		orientationPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish();
+		cameraPosePublisher = table.getDoubleArrayTopic("camerapose_robotspace_set").publish();
 		heartbeatSubscriber = table.getDoubleTopic("hb").subscribe(0.0);
 		txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
 		tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
@@ -82,6 +91,9 @@ public class VisionIOLimelight implements VisionIO {
 		// Update target observation
 		inputs.latestTargetObservation = new TargetObservation(Rotation2d.fromDegrees(txSubscriber.get()),
 				Rotation2d.fromDegrees(tySubscriber.get()), (int) tidSubscriber.get());
+
+		// Keep camera pose override in sync with the robot-side transform constants.
+		cameraPosePublisher.accept(toLimelightRobotSpace(robotToCamera));
 
 		// Update orientation for MegaTag 2
 		if (useMegatag2) {
@@ -143,6 +155,13 @@ public class VisionIOLimelight implements VisionIO {
 		double ambiguity = type == PoseObservationType.MEGATAG_1 && rawLLArray.length >= 18 ? rawLLArray[17] : 0.0;
 		return new PoseObservation(timestampMicros * 1.0e-6 - rawLLArray[6] * 1.0e-3, parsePose(rawLLArray), ambiguity,
 				tagCount, rawLLArray[9], type);
+	}
+
+	private static double[] toLimelightRobotSpace(Transform3d robotToCamera) {
+		Rotation3d rotation = robotToCamera.getRotation();
+		return new double[]{robotToCamera.getX(), -robotToCamera.getY(), robotToCamera.getZ(),
+				Units.radiansToDegrees(-rotation.getX()), Units.radiansToDegrees(rotation.getY()),
+				Units.radiansToDegrees(-rotation.getZ())};
 	}
 
 	/** Parses the 3D pose from a Limelight botpose array. */

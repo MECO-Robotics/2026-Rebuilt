@@ -1,6 +1,6 @@
 {
-  "robotWidth": 0.85,
-  "robotLength": 0.85,
+  "robotWidth": 0.865,
+  "robotLength": 0.865,
   "holonomicMode": true,
   "pathFolders": [
     "Depot",
@@ -9,7 +9,7 @@
   ],
   "autoFolders": [],
   "defaultMaxVel": 4.0,
-  "defaultMaxAccel": 1.0,
+  "defaultMaxAccel": 2.0,
   "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 360.0,
   "defaultNominalVoltage": 12.0,

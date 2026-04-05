@@ -68,8 +68,8 @@ public interface VisionIO {
 	 * Real mode uses Limelight hardware. Sim and replay return inert/no-op vision
 	 * IO.
 	 */
-	public static VisionIO limelightMegatag1(String limelightName) {
-		return fromMode(() -> new VisionIOLimelight(limelightName), replayFactory());
+	public static VisionIO limelightMegatag1(String limelightName, Transform3d robotToCamera) {
+		return fromMode(() -> new VisionIOLimelight(limelightName, robotToCamera), replayFactory());
 	}
 
 	/**
@@ -79,8 +79,9 @@ public interface VisionIO {
 	 * Real mode uses Limelight hardware. Sim and replay return inert/no-op vision
 	 * IO.
 	 */
-	public static VisionIO limelightMegatag2(String limelightName, Supplier<Rotation2d> rotationSupplier) {
-		return fromMode(() -> new VisionIOLimelight(limelightName, rotationSupplier), replayFactory());
+	public static VisionIO limelightMegatag2(String limelightName, Transform3d robotToCamera,
+			Supplier<Rotation2d> rotationSupplier) {
+		return fromMode(() -> new VisionIOLimelight(limelightName, robotToCamera, rotationSupplier), replayFactory());
 	}
 
 	/**
