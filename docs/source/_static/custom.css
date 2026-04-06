@@ -1,0 +1,188 @@
+/* Update this palette block if the project colors change. */
+:root {
+  --meco-blue: #16478e;
+  --meco-red: #ea1c2d;
+  --meco-grey: #bbbbbb;
+  --meco-tan: #dccba0;
+  --meco-black: #111111;
+  --meco-white: #ffffff;
+  --meco-blue-rgb: 22, 71, 142;
+  --meco-red-rgb: 234, 28, 45;
+  --meco-grey-rgb: 187, 187, 187;
+  --meco-tan-rgb: 220, 203, 160;
+}
+
+body[data-theme="light"] {
+  --color-brand-primary: var(--meco-blue);
+  --color-brand-content: var(--meco-red);
+  --color-api-name: var(--meco-blue);
+  --color-api-pre-name: var(--meco-red);
+  --color-background-primary: var(--meco-white);
+  --color-background-secondary: #f6f7fa;
+  --color-background-border: rgba(var(--meco-blue-rgb), 0.16);
+  --color-foreground-primary: var(--meco-black);
+  --color-foreground-secondary: #404040;
+  --color-sidebar-background: linear-gradient(
+    180deg,
+    rgba(var(--meco-blue-rgb), 0.98) 0%,
+    #0f3264 100%
+  );
+  --color-sidebar-link-text: rgba(255, 255, 255, 0.96);
+  --color-sidebar-link-text--top-level: var(--meco-white);
+  --color-sidebar-link-text--top-level-current: var(--meco-white);
+  --color-sidebar-caption-text: rgba(255, 255, 255, 0.72);
+  --color-sidebar-search-text: var(--meco-white);
+  --color-sidebar-search-background: rgba(255, 255, 255, 0.14);
+  --color-sidebar-search-background--focus: rgba(255, 255, 255, 0.22);
+  --color-sidebar-search-border: rgba(255, 255, 255, 0.18);
+  --color-sidebar-item-background--hover: rgba(255, 255, 255, 0.14);
+  --color-sidebar-item-expander-background--hover: rgba(255, 255, 255, 0.14);
+  --inline-code-background: rgba(var(--meco-tan-rgb), 0.28);
+  --color-admonition-background: rgba(var(--meco-blue-rgb), 0.06);
+  --bot-accent-soft: rgba(var(--meco-blue-rgb), 0.16);
+}
+
+body[data-theme="dark"] {
+  --color-brand-primary: #7fb2ff;
+  --color-brand-content: #ff6b77;
+  --color-api-name: #a8c8ff;
+  --color-api-pre-name: #ff9aa3;
+  --color-background-primary: #10141b;
+  --color-background-secondary: #171d26;
+  --color-background-border: rgba(var(--meco-grey-rgb), 0.18);
+  --color-foreground-primary: #f5f5f5;
+  --color-foreground-secondary: #d7d7d7;
+  --color-sidebar-background: linear-gradient(
+    180deg,
+    #0c2142 0%,
+    #091524 100%
+  );
+  --color-sidebar-link-text: rgba(255, 255, 255, 0.82);
+  --color-sidebar-link-text--top-level: var(--meco-white);
+  --color-sidebar-link-text--top-level-current: #ffe4a8;
+  --color-sidebar-item-background--hover: rgba(255, 255, 255, 0.08);
+  --color-sidebar-item-expander-background--hover: rgba(255, 255, 255, 0.08);
+  --inline-code-background: rgba(var(--meco-red-rgb), 0.14);
+  --color-admonition-background: rgba(var(--meco-blue-rgb), 0.14);
+  --bot-accent-soft: rgba(var(--meco-blue-rgb), 0.3);
+}
+
+.sidebar-brand-text {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.content .toctree-wrapper p.caption {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-brand {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-brand::after {
+  content: "";
+  display: block;
+  width: 3.25rem;
+  height: 0.24rem;
+  margin-top: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--meco-red), var(--meco-tan));
+}
+
+.sidebar-tree .caption {
+  color: var(--color-sidebar-caption-text);
+  font-weight: 700;
+}
+
+.sidebar-scroll,
+.sidebar-drawer,
+.sidebar-container {
+  color: var(--color-sidebar-link-text);
+}
+
+.sidebar-tree a {
+  font-weight: 500;
+}
+
+body[data-theme="light"] .sidebar-tree a,
+body[data-theme="light"] .sidebar-tree summary,
+body[data-theme="light"] .sidebar-tree label,
+body[data-theme="light"] .sidebar-brand-text,
+body[data-theme="light"] .sidebar-scroll a,
+body[data-theme="light"] .sidebar-scroll summary,
+body[data-theme="light"] .sidebar-scroll label {
+  color: var(--meco-white) !important;
+}
+
+body[data-theme="light"] .sidebar-tree .caption,
+body[data-theme="light"] .sidebar-scroll .caption {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+.sidebar-tree .reference {
+  border-radius: 0.55rem;
+}
+
+.sidebar-tree .reference:hover {
+  text-decoration: none;
+}
+
+.sidebar-tree .current > .reference,
+.sidebar-tree .current-page > .reference,
+.sidebar-tree label.current > .reference {
+  background: linear-gradient(
+    90deg,
+    rgba(var(--meco-red-rgb), 0.9) 0%,
+    rgba(var(--meco-red-rgb), 0.72) 100%
+  );
+  box-shadow: 0 0.5rem 1.5rem -1rem rgba(var(--meco-red-rgb), 0.8);
+  color: var(--meco-white) !important;
+  font-weight: 700;
+}
+
+.sidebar-search-container input {
+  border-radius: 999px;
+  border: 1px solid var(--color-sidebar-search-border);
+}
+
+body[data-theme="light"] .sidebar-search-container input,
+body[data-theme="light"] .sidebar-search-container input::placeholder {
+  color: var(--meco-white);
+}
+
+.content h1,
+.content h2,
+.content h3 {
+  letter-spacing: 0.01em;
+}
+
+.content h1 {
+  color: var(--color-brand-primary);
+}
+
+.content a {
+  text-decoration-thickness: 0.08em;
+}
+
+.content code {
+  border-radius: 0.35rem;
+}
+
+.content .highlight,
+.content .admonition,
+.content table.docutils {
+  border: 1px solid var(--color-background-border);
+  border-radius: 0.8rem;
+}
+
+.content .admonition,
+.content .highlight {
+  box-shadow: 0 0.75rem 2rem -1.5rem var(--bot-accent-soft);
+}
+
+.content .admonition-title {
+  font-weight: 700;
+}

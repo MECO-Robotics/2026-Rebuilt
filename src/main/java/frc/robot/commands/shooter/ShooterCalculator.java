@@ -24,7 +24,10 @@ public class ShooterCalculator {
 	/** Translation from robot origin to the shooter exit point used for range. */
 	public static final Translation2d robotToShooter = new Translation2d(-.19, 0);
 
-	/** Uses the interpolated hood and flywheel maps for continuous range-based aiming. */
+	/**
+	 * Uses the interpolated hood and flywheel maps for continuous range-based
+	 * aiming.
+	 */
 	public static Command calculateAndShoot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter) {
 		Supplier<Distance> distance = () -> {
 			Pose2d shooterPosition = drive.getState().Pose

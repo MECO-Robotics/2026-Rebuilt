@@ -213,7 +213,9 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		this(name, config, () -> 0);
 	}
 
-	/** Refreshes Talon, follower, and encoder telemetry used by the subsystem layer. */
+	/**
+	 * Refreshes Talon, follower, and encoder telemetry used by the subsystem layer.
+	 */
 	@Override
 	public void updateInputs(PositionJointIOInputs inputs) {
 		BaseStatusSignal.refreshAll(outputPosition, rotorPosition, velocity);
@@ -269,7 +271,9 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		inputs.encoderConnected = encoderConnected;
 	}
 
-	/** Commands Motion Magic position control with the configured feedforward term. */
+	/**
+	 * Commands Motion Magic position control with the configured feedforward term.
+	 */
 	@Override
 	public void setPosition(double position, double velocity) {
 		positionSetpoint = position;
@@ -282,7 +286,9 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		}
 	}
 
-	/** Commands Motion Magic with temporary cruise velocity and acceleration limits. */
+	/**
+	 * Commands Motion Magic with temporary cruise velocity and acceleration limits.
+	 */
 	@Override
 	public boolean setPositionDynamic(double position, double maxVelocity, double maxAcceleration) {
 		positionSetpoint = position;
