@@ -111,7 +111,10 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		leaderSim = new SparkMaxSim(motors[0], simMotorModel);
 	}
 
-	/** Advances the REV simulation model and publishes synthetic mechanism telemetry. */
+	/**
+	 * Advances the REV simulation model and publishes synthetic mechanism
+	 * telemetry.
+	 */
 	@Override
 	public void updateInputs(PositionJointIOInputs inputs) {
 		currentPosition = getMechanismPosition();
@@ -151,7 +154,9 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		inputs.motorCurrents = motorCurrents;
 	}
 
-	/** Commands the sim joint to a position using the configured MAXMotion profile. */
+	/**
+	 * Commands the sim joint to a position using the configured MAXMotion profile.
+	 */
 	@Override
 	public void setPosition(double position, double velocity) {
 		positionSetpoint = position;
@@ -180,7 +185,9 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		motors[0].setVoltage(voltage);
 	}
 
-	/** Updates PID, feedforward, and MAXMotion limits on the simulated controller. */
+	/**
+	 * Updates PID, feedforward, and MAXMotion limits on the simulated controller.
+	 */
 	@Override
 	public void setGains(PositionJointGains gains) {
 		feedforward.setGains(0.0, gains.kG(), gains.kV(), gains.kA());

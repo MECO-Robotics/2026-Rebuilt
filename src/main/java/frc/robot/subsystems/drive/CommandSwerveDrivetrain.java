@@ -304,14 +304,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		return m_mapleDriveSimulation != null ? m_mapleDriveSimulation.getSimulatedDriveTrainPose() : getState().Pose;
 	}
 
-	/** Returns the simulated chassis speeds when available, otherwise estimator speeds. */
+	/**
+	 * Returns the simulated chassis speeds when available, otherwise estimator
+	 * speeds.
+	 */
 	public ChassisSpeeds getPhysicsSpeeds() {
 		return m_mapleDriveSimulation != null
 				? m_mapleDriveSimulation.getDriveTrainSimulatedChassisSpeedsRobotRelative()
 				: getState().Speeds;
 	}
 
-	/** Returns whether autonomous paths should be mirrored for the current alliance. */
+	/**
+	 * Returns whether autonomous paths should be mirrored for the current alliance.
+	 */
 	public boolean shouldFlipAutoPath() {
 		updateAllianceState();
 		return m_shouldFlipAutoPath;
@@ -326,7 +331,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		});
 	}
 
-	/** Teleports only the simulation state without modifying estimator pose directly. */
+	/**
+	 * Teleports only the simulation state without modifying estimator pose
+	 * directly.
+	 */
 	public void resetSimulationPoseOnly(Pose2d pose) {
 		if (m_mapleDriveSimulation == null) {
 			return;

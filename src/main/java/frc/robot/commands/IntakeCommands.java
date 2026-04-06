@@ -15,7 +15,9 @@ public class IntakeCommands {
 
 	private static IntakeSim intakeSimulation;
 
-	/** Registers the simulation helper used to mirror intake state in desktop sim. */
+	/**
+	 * Registers the simulation helper used to mirror intake state in desktop sim.
+	 */
 	public static void setIntakeSimulation(IntakeSim sim) {
 		intakeSimulation = sim;
 	}

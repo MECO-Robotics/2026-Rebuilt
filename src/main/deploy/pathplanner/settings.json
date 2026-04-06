@@ -4,16 +4,11 @@
   "holonomicMode": true,
   "pathFolders": [
     "Depot",
-    "Left 1678",
+    "Left Backwards",
     "Left Double",
-    "Left Rush",
-    "New New Folder",
-    "Right 1678",
-    "Right Human"
+    "Test"
   ],
-  "autoFolders": [
-    "Old Autos"
-  ],
+  "autoFolders": [],
   "defaultMaxVel": 4.0,
   "defaultMaxAccel": 6.0,
   "defaultMaxAngVel": 540.0,
