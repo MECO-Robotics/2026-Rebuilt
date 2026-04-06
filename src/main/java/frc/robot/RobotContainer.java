@@ -235,8 +235,13 @@ public class RobotContainer {
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
 		NamedCommands.registerCommand("AutoSpinUp", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
-		NamedCommands.registerCommand("AutoAim",
-				DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED).withTimeout(2));
+		// NamedCommands.registerCommand("AutoAim",
+		// 		DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED).withTimeout(2));
+		NamedCommands.registerCommand("AutoAim", 
+				Commands.parallel(
+					DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED),
+					ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)
+				).withTimeout(2));
 	}
 
 	private Command createLeftBlueBumpShootAuto() {
