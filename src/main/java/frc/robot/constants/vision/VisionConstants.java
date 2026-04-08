@@ -30,7 +30,7 @@ public class VisionConstants {
 	public static Transform3d robotToArducam = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(-10),
 			Units.inchesToMeters(22), new Rotation3d(0.0, Units.degreesToRadians(-20), 0.0));
 	public static Transform3d robotToLimelight = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(0),
-			Units.inchesToMeters(21.125), new Rotation3d(0.0, Units.degreesToRadians(45), 0.0));
+			Units.inchesToMeters(21.25), new Rotation3d(0.0, Units.degreesToRadians(20), 0.0));
 
 	// Basic filtering thresholds
 	public static int minTagCountForOdometry = 2;

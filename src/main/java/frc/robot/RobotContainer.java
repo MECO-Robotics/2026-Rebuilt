@@ -244,6 +244,7 @@ public class RobotContainer {
 								.parallel(DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED),
 										ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel))
 								.withTimeout(2));
+
 	}
 
 	private Command createLeftBlueBumpShootAuto() {
