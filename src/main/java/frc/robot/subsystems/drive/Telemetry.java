@@ -96,7 +96,7 @@ public class Telemetry {
 	 * AdvantageKit.
 	 */
 	public void telemeterize(SwerveDriveState state, Pose2d physicsPose, ChassisSpeeds physicsSpeeds,
-			Rotation2d odometryHeading) {
+			Rotation2d rawGyroHeading) {
 		/* Telemeterize the swerve drive state */
 		drivePose.set(state.Pose);
 		drivePhysicsPose.set(physicsPose);
@@ -122,7 +122,9 @@ public class Telemetry {
 		Logger.recordOutput("DriveState/Timestamp", state.Timestamp);
 		Logger.recordOutput("DriveState/OdometryPeriod", state.OdometryPeriod);
 		Logger.recordOutput("DriveState/OdometryFrequency", 1.0 / state.OdometryPeriod);
-		Logger.recordOutput("DriveState/OdometryHeading", odometryHeading);
+		Logger.recordOutput("DriveState/RawGyroHeading", rawGyroHeading);
+		Logger.recordOutput("DriveState/EstimatedHeadingErrorDeg",
+				rawGyroHeading.minus(state.Pose.getRotation()).getDegrees());
 
 		/* Telemeterize the pose to a Field2d */
 		fieldTypePub.set("Field2d");

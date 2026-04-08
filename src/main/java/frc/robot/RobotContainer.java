@@ -112,7 +112,7 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 		vision = new Vision(drivetrain::addVisionMeasurement,
-				VisionIO.limelightWithSim(VisionConstants.limelightName, () -> drivetrain.getState().Pose.getRotation(),
+				VisionIO.limelightMegaTag1WithSim(VisionConstants.limelightName, drivetrain::getRawGyroHeading,
 						VisionConstants.robotToLimelight, drivetrain::getPhysicsPose));
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
