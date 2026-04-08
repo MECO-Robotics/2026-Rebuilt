@@ -24,7 +24,7 @@ public final class ShooterConstants {
 	public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{32},
 			new boolean[]{false}, 1, 0.025, 40, "");
 	public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{31},
-			new boolean[]{false}, 1, 0.025, 40, "MECO CANIvore");
+			new boolean[]{false}, 1, 0.025, 40, "MECO 2");
 	public static final FlywheelGains INDEXER_ROLLER_GAINS = new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
 
 	public static final FlywheelHardwareConfig CONVEYOR_CONFIG = new FlywheelHardwareConfig(new int[]{23},
@@ -32,7 +32,7 @@ public final class ShooterConstants {
 	public static final FlywheelGains CONVEYOR_GAINS = new FlywheelGains(0.0, 0.0, 0.0, 0.0, 0.065, 0.0, 0.0, 0.0);
 
 	public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{34, 35},
-			new boolean[]{false, true}, 22.0 / 14, SHOOTER_SIM_MOI_KG_METERS_SQUARED, 40, "MECO CANIvore");
+			new boolean[]{false, true}, 22.0 / 14, SHOOTER_SIM_MOI_KG_METERS_SQUARED, 40, "MECO 2");
 	public static final FlywheelGains FLYWHEEL_ROLLER_GAINS = new FlywheelGains(0.8, 0.0, 0.01, 0.33, 0.19, 0.15, 100,
 			0.5);
 

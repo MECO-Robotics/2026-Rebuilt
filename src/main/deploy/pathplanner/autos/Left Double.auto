@@ -120,7 +120,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Left Double 3"
+            "pathName": "Left Double 3 V2"
           }
         },
         {
@@ -149,7 +149,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.0
+                  "waitTime": 3.0
                 }
               },
               {
