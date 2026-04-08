@@ -52,6 +52,17 @@ public class VisionIOLimelight implements VisionIO {
 		megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[]{});
 		megatag2Subscriber = table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[]{});
 	}
+	public VisionIOLimelight(String name, LimelightPoseMode poseMode) {
+		var table = NetworkTableInstance.getDefault().getTable(name);
+		this.rotationSupplier = () -> Rotation2d.kZero;
+		this.poseMode = LimelightPoseMode.MEGATAG_1_ONLY;
+		orientationPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish();
+		latencySubscriber = table.getDoubleTopic("tl").subscribe(0.0);
+		txSubscriber = table.getDoubleTopic("tx").subscribe(0.0);
+		tySubscriber = table.getDoubleTopic("ty").subscribe(0.0);
+		megatag1Subscriber = table.getDoubleArrayTopic("botpose_wpiblue").subscribe(new double[]{});
+		megatag2Subscriber = table.getDoubleArrayTopic("botpose_orb_wpiblue").subscribe(new double[]{});
+	}
 
 	@Override
 	public void updateInputs(VisionIOInputs inputs) {
