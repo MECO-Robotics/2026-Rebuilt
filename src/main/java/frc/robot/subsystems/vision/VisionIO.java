@@ -1,11 +1,12 @@
 package frc.robot.subsystems.vision;
 
 import frc.robot.constants.Constants;
+import frc.robot.subsystems.vision.VisionIOLimelight.LimelightPoseMode;
+import java.util.function.Supplier;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
-import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
 /** Hardware abstraction for vision cameras and pose-estimation pipelines. */
@@ -109,7 +110,23 @@ public interface VisionIO {
 	 */
 	public static VisionIO limelightWithSim(String limelightName, Supplier<Rotation2d> rotationSupplier,
 			Transform3d robotToLimelight, Supplier<Pose2d> simPoseSupplier) {
-		return fromMode(() -> new VisionIOLimelight(limelightName, robotToLimelight, rotationSupplier),
+		return fromMode(
+				() -> new VisionIOLimelight(limelightName, robotToLimelight, rotationSupplier, LimelightPoseMode.BOTH),
+				() -> new VisionIOLimelightSim(limelightName, robotToLimelight, simPoseSupplier));
+	}
+
+	/**
+	 * Creates mode-appropriate Limelight MegaTag1-only vision IO.
+	 *
+	 * <p>
+	 * Real mode consumes only Limelight's MegaTag1 stream. Sim mode reuses the
+	 * Limelight simulator, which already produces MegaTag1-style observations.
+	 */
+	public static VisionIO limelightMegaTag1WithSim(String limelightName, Supplier<Rotation2d> rotationSupplier,
+			Transform3d robotToLimelight, Supplier<Pose2d> simPoseSupplier) {
+		return fromMode(
+				() -> new VisionIOLimelight(limelightName, robotToLimelight, rotationSupplier,
+						LimelightPoseMode.MEGATAG_1_ONLY),
 				() -> new VisionIOLimelightSim(limelightName, robotToLimelight, simPoseSupplier));
 	}
 }

@@ -290,7 +290,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
 			updateAllianceState();
 		}
-		telemetry.telemeterize(state, getPhysicsPose(), getPhysicsSpeeds(), getOdometryHeading(state));
+		telemetry.telemeterize(state, getPhysicsPose(), getPhysicsSpeeds(), getRawGyroHeading());
 
 	}
 
@@ -312,6 +312,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		return m_mapleDriveSimulation != null
 				? m_mapleDriveSimulation.getDriveTrainSimulatedChassisSpeedsRobotRelative()
 				: getState().Speeds;
+	}
+
+	/**
+	 * Returns the raw gyro heading used by odometry before estimator corrections.
+	 */
+	public Rotation2d getRawGyroHeading() {
+		var state = getState();
+		if (m_mapleDriveSimulation == null) {
+			return state.RawHeading;
+		}
+
+		return Rotation2d.fromDegrees(getPigeon2().getYaw().refresh().getValueAsDouble());
 	}
 
 	/**
@@ -580,14 +592,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		pigeonSimState.setPitch(0.0);
 		pigeonSimState.setRoll(0.0);
 		pigeonSimState.setAngularVelocityZ(RadiansPerSecond.of(simulatedSpeeds.omegaRadiansPerSecond));
-	}
-
-	private Rotation2d getOdometryHeading(SwerveDriveState state) {
-		if (m_mapleDriveSimulation == null) {
-			return state.RawHeading;
-		}
-
-		return Rotation2d.fromDegrees(getPigeon2().getYaw().refresh().getValueAsDouble());
 	}
 
 	private double trackLengthMeters() {

@@ -1,0 +1,100 @@
+diff --git a/src/main/java/frc/robot/RobotContainer.java b/src/main/java/frc/robot/RobotContainer.java
+index 77f3167..5ed1a66 100644
+--- a/src/main/java/frc/robot/RobotContainer.java
++++ b/src/main/java/frc/robot/RobotContainer.java
+@@ -111,9 +111,8 @@ public class RobotContainer {
+ 				IntakeConstants.INTAKE_RACK_GAINS);
+ 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
+ 				ShooterConstants.HOOD_GAINS);
+-		vision = new Vision(drivetrain::addVisionMeasurement,
+-				VisionIO.limelightWithSim(VisionConstants.limelightName, () -> drivetrain.getState().Pose.getRotation(),
+-						VisionConstants.robotToLimelight, drivetrain::getPhysicsPose));
++		vision = new Vision(drivetrain::addVisionMeasurement, VisionIO.limelightWithSim(VisionConstants.limelightName,
++				drivetrain::getRawGyroHeading, VisionConstants.robotToLimelight, drivetrain::getPhysicsPose));
+ 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
+ 		simulation.bindCommandHooks();
+ 		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,
+diff --git a/src/main/java/frc/robot/subsystems/drive/CommandSwerveDrivetrain.java b/src/main/java/frc/robot/subsystems/drive/CommandSwerveDrivetrain.java
+index 89e698b..19d4f4c 100644
+--- a/src/main/java/frc/robot/subsystems/drive/CommandSwerveDrivetrain.java
++++ b/src/main/java/frc/robot/subsystems/drive/CommandSwerveDrivetrain.java
+@@ -290,7 +290,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
+ 		if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
+ 			updateAllianceState();
+ 		}
+-		telemetry.telemeterize(state, getPhysicsPose(), getPhysicsSpeeds(), getOdometryHeading(state));
++		telemetry.telemeterize(state, getPhysicsPose(), getPhysicsSpeeds(), getRawGyroHeading());
+ 
+ 	}
+ 
+@@ -314,6 +314,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
+ 				: getState().Speeds;
+ 	}
+ 
++	/**
++	 * Returns the raw gyro heading used by odometry before estimator corrections.
++	 */
++	public Rotation2d getRawGyroHeading() {
++		var state = getState();
++		if (m_mapleDriveSimulation == null) {
++			return state.RawHeading;
++		}
++
++		return Rotation2d.fromDegrees(getPigeon2().getYaw().refresh().getValueAsDouble());
++	}
++
+ 	/**
+ 	 * Returns whether autonomous paths should be mirrored for the current alliance.
+ 	 */
+@@ -582,14 +594,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
+ 		pigeonSimState.setAngularVelocityZ(RadiansPerSecond.of(simulatedSpeeds.omegaRadiansPerSecond));
+ 	}
+ 
+-	private Rotation2d getOdometryHeading(SwerveDriveState state) {
+-		if (m_mapleDriveSimulation == null) {
+-			return state.RawHeading;
+-		}
+-
+-		return Rotation2d.fromDegrees(getPigeon2().getYaw().refresh().getValueAsDouble());
+-	}
+-
+ 	private double trackLengthMeters() {
+ 		double minX = Double.POSITIVE_INFINITY;
+ 		double maxX = Double.NEGATIVE_INFINITY;
+diff --git a/src/main/java/frc/robot/subsystems/drive/Telemetry.java b/src/main/java/frc/robot/subsystems/drive/Telemetry.java
+index fec803a..765a6ca 100644
+--- a/src/main/java/frc/robot/subsystems/drive/Telemetry.java
++++ b/src/main/java/frc/robot/subsystems/drive/Telemetry.java
+@@ -96,7 +96,7 @@ public class Telemetry {
+ 	 * AdvantageKit.
+ 	 */
+ 	public void telemeterize(SwerveDriveState state, Pose2d physicsPose, ChassisSpeeds physicsSpeeds,
+-			Rotation2d odometryHeading) {
++			Rotation2d rawGyroHeading) {
+ 		/* Telemeterize the swerve drive state */
+ 		drivePose.set(state.Pose);
+ 		drivePhysicsPose.set(physicsPose);
+@@ -122,7 +122,9 @@ public class Telemetry {
+ 		Logger.recordOutput("DriveState/Timestamp", state.Timestamp);
+ 		Logger.recordOutput("DriveState/OdometryPeriod", state.OdometryPeriod);
+ 		Logger.recordOutput("DriveState/OdometryFrequency", 1.0 / state.OdometryPeriod);
+-		Logger.recordOutput("DriveState/OdometryHeading", odometryHeading);
++		Logger.recordOutput("DriveState/RawGyroHeading", rawGyroHeading);
++		Logger.recordOutput("DriveState/EstimatedHeadingErrorDeg",
++				rawGyroHeading.minus(state.Pose.getRotation()).getDegrees());
+ 
+ 		/* Telemeterize the pose to a Field2d */
+ 		fieldTypePub.set("Field2d");
+diff --git a/src/main/java/frc/robot/subsystems/vision/Vision.java b/src/main/java/frc/robot/subsystems/vision/Vision.java
+index 74b9209..61a3074 100644
+--- a/src/main/java/frc/robot/subsystems/vision/Vision.java
++++ b/src/main/java/frc/robot/subsystems/vision/Vision.java
+@@ -114,6 +114,8 @@ public class Vision extends SubsystemBase {
+ 				// Check whether to reject pose
+ 				boolean rejectPose = (!isQuestNav && observation.tagCount() < minTagCountForOdometry) // Must have
+ 																										// enough tags
++						|| (!isQuestNav && observation.tagCount() == 1 && observation.ambiguity() > maxAmbiguity)
++						// Must not be an ambiguous single-tag solve
+ 						|| (enforceWhitelistedTagMinimum && !hasEnoughWhitelistedTags) // Must include enough
+ 																						// currently-whitelisted tags
+ 						|| Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
