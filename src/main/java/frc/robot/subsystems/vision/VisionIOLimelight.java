@@ -19,6 +19,10 @@ import java.util.function.Supplier;
 
 /** IO implementation for real Limelight hardware. */
 public class VisionIOLimelight implements VisionIO {
+	public static enum LimelightPoseMode {
+		MEGATAG_1_ONLY, MEGATAG_2_ONLY, BOTH
+	}
+
 	private final Transform3d robotToCamera;
 	private final Supplier<Rotation2d> rotationSupplier;
 	private final boolean useMegatag1;
@@ -34,16 +38,29 @@ public class VisionIOLimelight implements VisionIO {
 	private final DoubleArraySubscriber megatag2Subscriber;
 
 	/**
-	 * Creates a new VisionIOLimelight.
+	 * Creates a new VisionIOLimelight using MegaTag 1 observations only.
 	 *
 	 * @param name
-	 *            The configured name of the Limelight. Uses MegaTag 1 observations
-	 *            only.
+	 *            The configured name of the Limelight.
 	 * @param robotToCamera
 	 *            The 3D position of the camera relative to the robot.
 	 */
 	public VisionIOLimelight(String name, Transform3d robotToCamera) {
-		this(name, robotToCamera, null, true, false);
+		this(name, robotToCamera, null, LimelightPoseMode.MEGATAG_1_ONLY);
+	}
+
+	/**
+	 * Creates a new VisionIOLimelight using MegaTag 2 observations only.
+	 *
+	 * @param name
+	 *            The configured name of the Limelight.
+	 * @param robotToCamera
+	 *            The 3D position of the camera relative to the robot.
+	 * @param rotationSupplier
+	 *            Supplier for the current estimated rotation, used for MegaTag 2.
+	 */
+	public VisionIOLimelight(String name, Transform3d robotToCamera, Supplier<Rotation2d> rotationSupplier) {
+		this(name, robotToCamera, rotationSupplier, LimelightPoseMode.MEGATAG_2_ONLY);
 	}
 
 	/**
@@ -54,19 +71,18 @@ public class VisionIOLimelight implements VisionIO {
 	 * @param robotToCamera
 	 *            The 3D position of the camera relative to the robot.
 	 * @param rotationSupplier
-	 *            Supplier for the current estimated rotation, used for MegaTag 2.
+	 *            Supplier for the current estimated rotation, used for MegaTag 2
+	 *            orientation sync.
+	 * @param poseMode
+	 *            Which Limelight pose stream(s) to consume.
 	 */
-	public VisionIOLimelight(String name, Transform3d robotToCamera, Supplier<Rotation2d> rotationSupplier) {
-		this(name, robotToCamera, rotationSupplier, false, true);
-	}
-
-	private VisionIOLimelight(String name, Transform3d robotToCamera, Supplier<Rotation2d> rotationSupplier,
-			boolean useMegatag1, boolean useMegatag2) {
+	public VisionIOLimelight(String name, Transform3d robotToCamera, Supplier<Rotation2d> rotationSupplier,
+			LimelightPoseMode poseMode) {
 		var table = NetworkTableInstance.getDefault().getTable(name);
 		this.robotToCamera = robotToCamera;
 		this.rotationSupplier = rotationSupplier;
-		this.useMegatag1 = useMegatag1;
-		this.useMegatag2 = useMegatag2;
+		this.useMegatag1 = poseMode != LimelightPoseMode.MEGATAG_2_ONLY;
+		this.useMegatag2 = poseMode != LimelightPoseMode.MEGATAG_1_ONLY;
 		orientationPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish();
 		cameraPosePublisher = table.getDoubleArrayTopic("camerapose_robotspace_set").publish();
 		heartbeatSubscriber = table.getDoubleTopic("hb").subscribe(0.0);
@@ -83,25 +99,19 @@ public class VisionIOLimelight implements VisionIO {
 
 	@Override
 	public void updateInputs(VisionIOInputs inputs) {
-		// Update connection status based on whether an update has been seen in the last
-		// 250ms
 		long nowMicros = RobotController.getFPGATime();
 		inputs.connected = ((nowMicros - heartbeatSubscriber.getLastChange()) / 1000) < 250;
 
-		// Update target observation
 		inputs.latestTargetObservation = new TargetObservation(Rotation2d.fromDegrees(txSubscriber.get()),
 				Rotation2d.fromDegrees(tySubscriber.get()), (int) tidSubscriber.get());
 
-		// Keep camera pose override in sync with the robot-side transform constants.
 		cameraPosePublisher.accept(toLimelightRobotSpace(robotToCamera));
 
-		// Update orientation for MegaTag 2
 		if (useMegatag2) {
 			orientationPublisher.accept(new double[]{rotationSupplier.get().getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0});
-			NetworkTableInstance.getDefault().flush(); // Recommended by Limelight for MT2 orientation sync
+			NetworkTableInstance.getDefault().flush();
 		}
 
-		// Read new pose observations from NetworkTables
 		Set<Integer> tagIds = new HashSet<>();
 		List<PoseObservation> poseObservations = new LinkedList<>();
 		if (useMegatag1) {
@@ -123,13 +133,11 @@ public class VisionIOLimelight implements VisionIO {
 			}
 		}
 
-		// Save pose observations to inputs object
 		inputs.poseObservations = new PoseObservation[poseObservations.size()];
 		for (int i = 0; i < poseObservations.size(); i++) {
 			inputs.poseObservations[i] = poseObservations.get(i);
 		}
 
-		// Save tag IDs to inputs objects
 		inputs.tagIds = new int[tagIds.size()];
 		int i = 0;
 		for (int id : tagIds) {
