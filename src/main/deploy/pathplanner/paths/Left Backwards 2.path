@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.805067226890758,
-        "y": 4.538042016806722
+        "x": 8.05481613285884,
+        "y": 6.7732147093712936
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.645384128299209,
-        "y": 6.677795537933482
+        "x": 8.062437981596096,
+        "y": 6.277794541304261
       },
       "isLocked": false,
-      "linkedName": "Left Rush 2 End"
+      "linkedName": "Left Backwards 1 end"
     },
     {
       "anchor": {
-        "x": 3.719031690140846,
-        "y": 7.3883450704225355
+        "x": 8.16240806642942,
+        "y": 4.191008303677343
       },
       "prevControl": {
-        "x": 8.238063380281691,
-        "y": 7.40431338028169
+        "x": 8.08207103063445,
+        "y": 4.454490914718418
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left Rush 3 End"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
@@ -36,19 +36,19 @@
     "maxVelocity": 4.0,
     "maxAcceleration": 6.0,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 720.0,
+    "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -0.8680514497455578
+    "rotation": -88.4088597290391
   },
   "reversed": false,
-  "folder": "Left Rush",
+  "folder": "Left Backwards",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -88.14040066125443
+    "rotation": -90.0
   },
   "useDefaultConstraints": true
 }

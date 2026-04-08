@@ -3,83 +3,76 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.6481343984962407,
-        "y": 7.018552631578948
+        "x": 7.8224671052587045,
+        "y": 4.691381578948916
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.617279135338347,
-        "y": 7.913618421052632
+        "x": 7.924760338345864,
+        "y": 7.0015037593984975
       },
       "isLocked": false,
-      "linkedName": "Left Double 3 end"
+      "linkedName": "Left Double 1 end"
     },
     {
       "anchor": {
-        "x": 5.665784774436089,
-        "y": 7.51296992481203
+        "x": 6.748388157894738,
+        "y": 7.427725563909775
       },
       "prevControl": {
-        "x": 6.2454464285714275,
-        "y": 7.521494360902256
+        "x": 8.035578007518797,
+        "y": 7.427725563909775
       },
       "nextControl": {
-        "x": 5.179869687171843,
-        "y": 7.505824114705201
+        "x": 5.1968325177500185,
+        "y": 7.427725563909775
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.221362831622012,
-        "y": 7.51296992481203
+        "x": 3.9353242481203,
+        "y": 7.427725563909775
       },
       "prevControl": {
-        "x": 4.843640138765188,
-        "y": 7.530255405566005
+        "x": 4.185317988692919,
+        "y": 7.4259564752997305
       },
       "nextControl": {
-        "x": 3.914483132373892,
-        "y": 7.504445488721805
+        "x": 3.6853305075476808,
+        "y": 7.429494652519819
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.7419031954887214,
-        "y": 6.984454887218045
+        "x": 2.6481343984962407,
+        "y": 7.018552631578948
       },
       "prevControl": {
-        "x": 3.534675751879698,
-        "y": 7.385103383458647
+        "x": 2.8717411962462194,
+        "y": 7.130356030453938
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left Double 2 end"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.641943734015336,
+      "waypointRelativePos": 0.9582267689684477,
       "rotationDegrees": 0.0
     },
     {
-      "waypointRelativePos": 1.9411764705882262,
+      "waypointRelativePos": 2.887468030690635,
       "rotationDegrees": 0.0
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [
-    {
-      "name": "AutoSpinUp",
-      "waypointRelativePos": 0,
-      "endWaypointRelativePos": null,
-      "command": null
-    }
-  ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 4.0,
     "maxAcceleration": 6.0,
@@ -90,13 +83,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": -50.30092651652578
   },
   "reversed": false,
   "folder": "Left Double",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -45.90960194283505
+    "rotation": -99.16234704572166
   },
   "useDefaultConstraints": true
 }

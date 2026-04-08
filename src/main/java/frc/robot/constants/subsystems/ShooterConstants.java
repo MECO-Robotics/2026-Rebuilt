@@ -62,7 +62,7 @@ public final class ShooterConstants {
 	/** Intake rotation preset positions. */
 	public static final class HOOD_PRESET {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/Hood/StowPos", 0);
-		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Hood/HubPos", 0.001);
+		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Hood/HubPos", 0.005);
 		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Hood/FerryPos", 0.049);
 		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Hood/TrenchPos", 0.049);
 	}
@@ -80,7 +80,7 @@ public final class ShooterConstants {
 	 * Shooter roller preset voltages. (NOTE: MAINLY FOR TESTING/SHUTTLE (maybe))
 	 */
 	public final class SHOOTER_PRESET {
-		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/HubVeloc", 29);
+		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/HubVeloc", 30);
 		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 45);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Shooter/IdleVeloc", 0);
 		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Shooter/Trench", 38);

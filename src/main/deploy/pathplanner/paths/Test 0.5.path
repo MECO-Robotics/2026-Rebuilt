@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5520756302521015,
-        "y": 0.4146218487394958
+        "x": 3.536523178807947,
+        "y": 0.6518708609271515
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.5354564543269094,
-        "y": 0.6075785372278267
+        "x": 3.8012330444550626,
+        "y": 0.6097681532275164
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.7677154670412258,
-        "y": 0.6331239272175038
+        "x": 2.7669701986754967,
+        "y": 0.6518708609271515
       },
       "prevControl": {
-        "x": 1.8559490806014871,
-        "y": 0.6637783952051166
+        "x": 2.4515523404401263,
+        "y": 0.7021546017953095
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Human 1 End"
+      "linkedName": "Test 0.5 end"
     }
   ],
   "rotationTargets": [],
@@ -36,19 +36,19 @@
     "maxVelocity": 4.0,
     "maxAcceleration": 6.0,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 720.0,
+    "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -179.49594456268196
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": "Right Human",
+  "folder": "Test",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 179.559271927239
+    "rotation": 0.0
   },
   "useDefaultConstraints": true
 }

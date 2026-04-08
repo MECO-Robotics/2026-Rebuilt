@@ -9,9 +9,9 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Left Double 1"
+                  "waitTime": 1.0
                 }
               },
               {
@@ -24,13 +24,19 @@
           }
         },
         {
-          "type": "deadline",
+          "type": "path",
+          "data": {
+            "pathName": "Left Double 1"
+          }
+        },
+        {
+          "type": "parallel",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Left Double 3"
+                  "pathName": "Left Double 2"
                 }
               },
               {
@@ -47,15 +53,40 @@
           "data": {
             "commands": [
               {
+                "type": "wait",
+                "data": {
+                  "waitTime": 0.5
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoAim"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
+              },
+              {
                 "type": "named",
                 "data": {
                   "name": "AutoAim"
                 }
               },
               {
-                "type": "named",
+                "type": "wait",
                 "data": {
-                  "name": "AutoSpinUp"
+                  "waitTime": 1.0
                 }
               },
               {
@@ -72,15 +103,40 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Left Double 4"
+                  "waitTime": 0.01
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "DeployIntake"
+                  "name": "FeedRollers"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Double 3"
+          }
+        },
+        {
+          "type": "deadline",
+          "data": {
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 2.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoAim"
                 }
               }
             ]
@@ -91,24 +147,11 @@
           "data": {
             "commands": [
               {
-                "type": "path",
+                "type": "wait",
                 "data": {
-                  "pathName": "Left Double 6"
+                  "waitTime": 4.0
                 }
               },
-              {
-                "type": "named",
-                "data": {
-                  "name": "AutoSpinUp"
-                }
-              }
-            ]
-          }
-        },
-        {
-          "type": "deadline",
-          "data": {
-            "commands": [
               {
                 "type": "named",
                 "data": {
@@ -116,9 +159,9 @@
                 }
               },
               {
-                "type": "named",
+                "type": "wait",
                 "data": {
-                  "name": "AutoSpinUp"
+                  "waitTime": 1.6
                 }
               },
               {
@@ -134,6 +177,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Old Autos",
+  "folder": null,
   "choreoAuto": false
 }
