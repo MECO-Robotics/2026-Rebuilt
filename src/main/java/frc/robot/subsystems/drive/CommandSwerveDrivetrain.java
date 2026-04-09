@@ -1,11 +1,13 @@
 package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.sim.CANcoderSimState;
 import com.ctre.phoenix6.sim.ChassisReference;
 import com.ctre.phoenix6.sim.Pigeon2SimState;
@@ -16,7 +18,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -34,6 +35,8 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.drive.DrivetrainConstants.TunerSwerveDrivetrain;
+import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
+import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -72,6 +75,27 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private final SwerveDriveSimulation m_mapleDriveSimulation;
 	private final SimulatedMotorController.GenericMotorController[] m_mapleDriveControllers;
 	private final SimulatedMotorController.GenericMotorController[] m_mapleSteerControllers;
+	private final LoggedTunableNumber m_driveKP = new LoggedTunableNumber("Drivetrain/DriveGains/kP",
+			DrivetrainConstants.DRIVE_KP);
+	private final LoggedTunableNumber m_driveKI = new LoggedTunableNumber("Drivetrain/DriveGains/kI",
+			DrivetrainConstants.DRIVE_KI);
+	private final LoggedTunableNumber m_driveKD = new LoggedTunableNumber("Drivetrain/DriveGains/kD",
+			DrivetrainConstants.DRIVE_KD);
+	private final LoggedTunableNumber m_steerKP = new LoggedTunableNumber("Drivetrain/SteerGains/kP",
+			DrivetrainConstants.STEER_KP);
+	private final LoggedTunableNumber m_steerKI = new LoggedTunableNumber("Drivetrain/SteerGains/kI",
+			DrivetrainConstants.STEER_KI);
+	private final LoggedTunableNumber m_steerKD = new LoggedTunableNumber("Drivetrain/SteerGains/kD",
+			DrivetrainConstants.STEER_KD);
+	private final LoggedTunableNumber m_autoTranslationKP = new LoggedTunableNumber("Drivetrain/AutoTranslation/kP",
+			10.0);
+	private final LoggedTunableNumber m_autoTranslationKI = new LoggedTunableNumber("Drivetrain/AutoTranslation/kI",
+			0.0);
+	private final LoggedTunableNumber m_autoTranslationKD = new LoggedTunableNumber("Drivetrain/AutoTranslation/kD",
+			0.0);
+	private final LoggedTunableNumber m_autoRotationKP = new LoggedTunableNumber("Drivetrain/AutoRotation/kP", 7.0);
+	private final LoggedTunableNumber m_autoRotationKI = new LoggedTunableNumber("Drivetrain/AutoRotation/kI", 0.0);
+	private final LoggedTunableNumber m_autoRotationKD = new LoggedTunableNumber("Drivetrain/AutoRotation/kD", 0.0);
 
 	/*
 	 * SysId routine for characterizing translation. This is used to find PID gains
@@ -204,6 +228,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private void configureAutoBuilder() {
 		try {
 			var config = RobotConfig.fromGUISettings();
+			var translationPid = new PIDConstants(m_autoTranslationKP.get(), m_autoTranslationKI.get(),
+					m_autoTranslationKD.get());
+			var rotationPid = new PIDConstants(m_autoRotationKP.get(), m_autoRotationKI.get(), m_autoRotationKD.get());
 			AutoBuilder.configure(() -> getState().Pose, // Supplier of current robot pose
 					this::resetPose, // Consumer for seeding pose against auto
 					() -> getState().Speeds, // Supplier of current robot speeds
@@ -211,11 +238,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 					(speeds, feedforwards) -> {
 						telemetry.logAutoCommandedSpeeds(speeds);
 						setControl(m_pathApplyRobotSpeeds.withSpeeds(ChassisSpeeds.discretize(speeds, 0.020)));
-					}, new PPHolonomicDriveController(
-							// PID constants for translation
-							new PIDConstants(10, 0, 0),
-							// PID constants for rotation
-							new PIDConstants(7, 0, 0)),
+					},
+					new AdvancedPPHolonomicDriveController(translationPid, rotationPid, 0.02, m_autoTranslationKP,
+							m_autoTranslationKI, m_autoTranslationKD, m_autoRotationKP, m_autoRotationKI,
+							m_autoRotationKD),
 					config,
 					// Assume the path needs to be flipped for Red vs Blue, this is normally the
 					// case
@@ -270,6 +296,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	@Override
 	public void periodic() {
+		updateTunableGains();
+
 		if (m_mapleDriveSimulation != null) {
 			syncPhoenixSimStateFromMaple();
 			applyPhoenixOutputsToMaple();
@@ -292,6 +320,29 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		}
 		telemetry.telemeterize(state, getPhysicsPose(), getPhysicsSpeeds(), getRawGyroHeading());
 
+	}
+
+	private void updateTunableGains() {
+		LoggedTunableNumber.ifChanged(hashCode(),
+				(values) -> applyDriveSlot0Gains(DrivetrainConstants.createDriveGains(values[0], values[1], values[2])),
+				m_driveKP, m_driveKI, m_driveKD);
+		LoggedTunableNumber.ifChanged(hashCode(),
+				(values) -> applySteerSlot0Gains(DrivetrainConstants.createSteerGains(values[0], values[1], values[2])),
+				m_steerKP, m_steerKI, m_steerKD);
+	}
+
+	private void applyDriveSlot0Gains(Slot0Configs gains) {
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			int moduleIndex = i;
+			tryUntilOk(5, () -> getModule(moduleIndex).getDriveMotor().getConfigurator().apply(gains));
+		}
+	}
+
+	private void applySteerSlot0Gains(Slot0Configs gains) {
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			int moduleIndex = i;
+			tryUntilOk(5, () -> getModule(moduleIndex).getSteerMotor().getConfigurator().apply(gains));
+		}
 	}
 
 	/** Returns the MapleSim drivetrain instance when running in simulation. */

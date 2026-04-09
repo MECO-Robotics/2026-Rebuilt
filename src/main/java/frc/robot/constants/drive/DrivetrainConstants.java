@@ -52,6 +52,19 @@ public final class DrivetrainConstants {
 	public static final double MAX_SPEED = 5.24;
 	public static final double MAX_ANGULAR_RATE = 5;
 
+	public static final double STEER_KP = 100.0;
+	public static final double STEER_KI = 0.0;
+	public static final double STEER_KD = 0.5;
+	public static final double STEER_KS = 0.2;
+	public static final double STEER_KV = 1.50;
+	public static final double STEER_KA = 0.0;
+
+	public static final double DRIVE_KP = 0.1;
+	public static final double DRIVE_KI = 0.0;
+	public static final double DRIVE_KD = 0.0;
+	public static final double DRIVE_KS = 0.1;
+	public static final double DRIVE_KV = 0.124;
+
 	public static final CANBus CAN_BUS = new CANBus("MECO CANIvore", "./logs/example.hoot");
 	public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.5);
 
@@ -64,10 +77,8 @@ public final class DrivetrainConstants {
 	public static final double kSimDefaultSpawnYMeters = 0.9;
 	public static final double kSimResetSettleSeconds = 0.02;
 
-	private static final Slot0Configs STEER_GAINS = new Slot0Configs().withKP(100).withKI(0).withKD(0.5).withKS(0.2)
-			.withKV(1.50).withKA(0).withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
-	private static final Slot0Configs DRIVE_GAINS = new Slot0Configs().withKP(0.1).withKI(0).withKD(0).withKS(0.1)
-			.withKV(0.124);
+	private static final Slot0Configs STEER_GAINS = createSteerGains(STEER_KP, STEER_KI, STEER_KD);
+	private static final Slot0Configs DRIVE_GAINS = createDriveGains(DRIVE_KP, DRIVE_KI, DRIVE_KD);
 
 	private static final ClosedLoopOutputType STEER_CLOSED_LOOP_OUTPUT = ClosedLoopOutputType.Voltage;
 	private static final ClosedLoopOutputType DRIVE_CLOSED_LOOP_OUTPUT = ClosedLoopOutputType.Voltage;
@@ -140,6 +151,15 @@ public final class DrivetrainConstants {
 
 	public static CommandSwerveDrivetrain createDrivetrain() {
 		return new CommandSwerveDrivetrain(SWERVE_DRIVETRAIN_CONSTANTS, FrontLeft, FrontRight, BackLeft, BackRight);
+	}
+
+	public static Slot0Configs createSteerGains(double kP, double kI, double kD) {
+		return new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKS(STEER_KS).withKV(STEER_KV).withKA(STEER_KA)
+				.withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
+	}
+
+	public static Slot0Configs createDriveGains(double kP, double kI, double kD) {
+		return new Slot0Configs().withKP(kP).withKI(kI).withKD(kD).withKS(DRIVE_KS).withKV(DRIVE_KV);
 	}
 
 	private static SwerveModuleConstants<TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration> createModuleConstants(
