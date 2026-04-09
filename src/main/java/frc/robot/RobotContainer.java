@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.choreo.ChoreoTraj;
@@ -82,6 +83,7 @@ public class RobotContainer {
 
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
+	private final LoggedDashboardChooser<Command> sysIdChooser;
 	private final AutoFactory choreoAutoFactory;
 
 	/**
@@ -121,7 +123,9 @@ public class RobotContainer {
 		registerNamedCommands();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+		sysIdChooser = new LoggedDashboardChooser<>("Drivetrain SysId");
 		configureAuto();
+		configureSysIdChooser();
 
 		SmartDashboard.putBoolean("Flywheel Spinning?", false);
 
@@ -292,16 +296,44 @@ public class RobotContainer {
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
 	}
 
+	private void configureSysIdChooser() {
+		sysIdChooser.addDefaultOption("Disabled", null);
+		sysIdChooser.addOption("Translation Quasistatic Forward", drivetrain.sysIdQuasistatic(
+				CommandSwerveDrivetrain.SysIdRoutineType.TRANSLATION, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption("Translation Quasistatic Reverse", drivetrain.sysIdQuasistatic(
+				CommandSwerveDrivetrain.SysIdRoutineType.TRANSLATION, SysIdRoutine.Direction.kReverse));
+		sysIdChooser.addOption("Translation Dynamic Forward", drivetrain
+				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.TRANSLATION, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption("Translation Dynamic Reverse", drivetrain
+				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.TRANSLATION, SysIdRoutine.Direction.kReverse));
+		sysIdChooser.addOption("Steer Quasistatic Forward", drivetrain
+				.sysIdQuasistatic(CommandSwerveDrivetrain.SysIdRoutineType.STEER, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption("Steer Quasistatic Reverse", drivetrain
+				.sysIdQuasistatic(CommandSwerveDrivetrain.SysIdRoutineType.STEER, SysIdRoutine.Direction.kReverse));
+		sysIdChooser.addOption("Steer Dynamic Forward", drivetrain
+				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.STEER, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption("Steer Dynamic Reverse", drivetrain
+				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.STEER, SysIdRoutine.Direction.kReverse));
+		sysIdChooser.addOption("Rotation Quasistatic Forward", drivetrain
+				.sysIdQuasistatic(CommandSwerveDrivetrain.SysIdRoutineType.ROTATION, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption("Rotation Quasistatic Reverse", drivetrain
+				.sysIdQuasistatic(CommandSwerveDrivetrain.SysIdRoutineType.ROTATION, SysIdRoutine.Direction.kReverse));
+		sysIdChooser.addOption("Rotation Dynamic Forward", drivetrain
+				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.ROTATION, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption("Rotation Dynamic Reverse", drivetrain
+				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.ROTATION, SysIdRoutine.Direction.kReverse));
+	}
+
 	/**
 	 * Use this to pass the autonomous command to the main {@link Robot} class.
 	 *
 	 * @return the command to run in autonomous
 	 */
 	public Command getAutonomousCommand() {
-		// Command sysIdCommand = sysIdChooser.get();
-		// if (sysIdCommand != null) {
-		// return sysIdCommand;
-		// }
+		Command sysIdCommand = sysIdChooser.get();
+		if (sysIdCommand != null) {
+			return sysIdCommand;
+		}
 		Command autoCommand = autoChooser.get();
 		return autoCommand != null ? autoCommand : Commands.none();
 	}

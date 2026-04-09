@@ -142,6 +142,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	/* The SysId routine to test */
 	private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
+	public enum SysIdRoutineType {
+		TRANSLATION, STEER, ROTATION
+	}
+
 	/**
 	 * Constructs a CTRE SwerveDrivetrain using the specified constants.
 	 * <p>
@@ -282,6 +286,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		return m_sysIdRoutineToApply.quasistatic(direction);
 	}
 
+	public Command sysIdQuasistatic(SysIdRoutineType routine, SysIdRoutine.Direction direction) {
+		return selectSysIdRoutine(routine).quasistatic(direction);
+	}
+
 	/**
 	 * Runs the SysId Dynamic test in the given direction for the routine specified
 	 * by {@link #m_sysIdRoutineToApply}.
@@ -292,6 +300,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	 */
 	public Command sysIdDynamic(SysIdRoutine.Direction direction) {
 		return m_sysIdRoutineToApply.dynamic(direction);
+	}
+
+	public Command sysIdDynamic(SysIdRoutineType routine, SysIdRoutine.Direction direction) {
+		return selectSysIdRoutine(routine).dynamic(direction);
+	}
+
+	private SysIdRoutine selectSysIdRoutine(SysIdRoutineType routine) {
+		return switch (routine) {
+			case TRANSLATION -> m_sysIdRoutineTranslation;
+			case STEER -> m_sysIdRoutineSteer;
+			case ROTATION -> m_sysIdRoutineRotation;
+		};
 	}
 
 	@Override
