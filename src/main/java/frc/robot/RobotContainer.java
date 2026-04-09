@@ -125,7 +125,9 @@ public class RobotContainer {
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
 		sysIdChooser = new LoggedDashboardChooser<>("Drivetrain SysId");
 		configureAuto();
-		configureSysIdChooser();
+		if (Constants.ENABLE_DRIVETRAIN_SYSID_AUTOS) {
+			configureSysIdChooser();
+		}
 
 		SmartDashboard.putBoolean("Flywheel Spinning?", false);
 
@@ -330,9 +332,11 @@ public class RobotContainer {
 	 * @return the command to run in autonomous
 	 */
 	public Command getAutonomousCommand() {
-		Command sysIdCommand = sysIdChooser.get();
-		if (sysIdCommand != null) {
-			return sysIdCommand;
+		if (Constants.ENABLE_DRIVETRAIN_SYSID_AUTOS) {
+			Command sysIdCommand = sysIdChooser.get();
+			if (sysIdCommand != null) {
+				return sysIdCommand;
+			}
 		}
 		Command autoCommand = autoChooser.get();
 		return autoCommand != null ? autoCommand : Commands.none();

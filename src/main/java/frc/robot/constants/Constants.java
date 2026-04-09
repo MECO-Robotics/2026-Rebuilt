@@ -16,6 +16,7 @@ public final class Constants {
 	public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
 
 	public static final DoubleSupplier kZERO_SUPPLY = () -> 0.0;
+	public static final boolean ENABLE_DRIVETRAIN_SYSID_AUTOS = false;
 
 	public static boolean tuningMode = true;
 
