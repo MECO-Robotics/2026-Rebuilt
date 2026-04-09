@@ -29,6 +29,8 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.choreo.ChoreoTraj;
+import frc.robot.commands.flywheel.FlywheelSysIdCommands;
+import frc.robot.commands.position_joint.PositionJointSysIdCommands;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.Constants;
@@ -123,9 +125,9 @@ public class RobotContainer {
 		registerNamedCommands();
 		// Keep PathPlanner's built-in chooser behavior (default option is "None").
 		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
-		sysIdChooser = new LoggedDashboardChooser<>("Drivetrain SysId");
+		sysIdChooser = new LoggedDashboardChooser<>("SysId");
 		configureAuto();
-		if (Constants.ENABLE_DRIVETRAIN_SYSID_AUTOS) {
+		if (Constants.ENABLE_SYSID_AUTOS) {
 			configureSysIdChooser();
 		}
 
@@ -324,6 +326,35 @@ public class RobotContainer {
 				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.ROTATION, SysIdRoutine.Direction.kForward));
 		sysIdChooser.addOption("Rotation Dynamic Reverse", drivetrain
 				.sysIdDynamic(CommandSwerveDrivetrain.SysIdRoutineType.ROTATION, SysIdRoutine.Direction.kReverse));
+		addFlywheelSysIdOptions("ShooterFlywheel", shooterFlywheel);
+		addFlywheelSysIdOptions("TopIndexer", topIndexer);
+		addFlywheelSysIdOptions("BottomIndexer", bottomIndexer);
+		addFlywheelSysIdOptions("Conveyor", conveyor);
+		addFlywheelSysIdOptions("IntakeRoller", intakeRoller);
+		addPositionJointSysIdOptions("IntakeRack", intakeRack);
+		addPositionJointSysIdOptions("Hood", hood);
+	}
+
+	private void addFlywheelSysIdOptions(String label, Flywheel flywheel) {
+		sysIdChooser.addOption(label + " Quasistatic Forward",
+				FlywheelSysIdCommands.quasistatic(flywheel, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption(label + " Quasistatic Reverse",
+				FlywheelSysIdCommands.quasistatic(flywheel, SysIdRoutine.Direction.kReverse));
+		sysIdChooser.addOption(label + " Dynamic Forward",
+				FlywheelSysIdCommands.dynamic(flywheel, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption(label + " Dynamic Reverse",
+				FlywheelSysIdCommands.dynamic(flywheel, SysIdRoutine.Direction.kReverse));
+	}
+
+	private void addPositionJointSysIdOptions(String label, PositionJoint positionJoint) {
+		sysIdChooser.addOption(label + " Quasistatic Forward",
+				PositionJointSysIdCommands.quasistatic(positionJoint, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption(label + " Quasistatic Reverse",
+				PositionJointSysIdCommands.quasistatic(positionJoint, SysIdRoutine.Direction.kReverse));
+		sysIdChooser.addOption(label + " Dynamic Forward",
+				PositionJointSysIdCommands.dynamic(positionJoint, SysIdRoutine.Direction.kForward));
+		sysIdChooser.addOption(label + " Dynamic Reverse",
+				PositionJointSysIdCommands.dynamic(positionJoint, SysIdRoutine.Direction.kReverse));
 	}
 
 	/**
@@ -332,7 +363,7 @@ public class RobotContainer {
 	 * @return the command to run in autonomous
 	 */
 	public Command getAutonomousCommand() {
-		if (Constants.ENABLE_DRIVETRAIN_SYSID_AUTOS) {
+		if (Constants.ENABLE_SYSID_AUTOS) {
 			Command sysIdCommand = sysIdChooser.get();
 			if (sysIdCommand != null) {
 				return sysIdCommand;
