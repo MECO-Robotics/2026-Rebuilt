@@ -7,6 +7,9 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -31,6 +34,7 @@ public class VisionIOQuestNavSim implements VisionIO {
 	public void updateInputs(VisionIOInputs inputs) {
 		absoluteVisionIO.updateInputs(absoluteInputs);
 		Logger.processInputs("QuestNav/absolute", absoluteInputs);
+		PoseObservation[] filteredAbsoluteObservations = filterAbsoluteObservations(absoluteInputs);
 
 		double nowSeconds = Timer.getFPGATimestamp();
 		double dtSeconds = Math.max(0.0, nowSeconds - lastTimestampSeconds);
@@ -59,8 +63,8 @@ public class VisionIOQuestNavSim implements VisionIO {
 		inertialPose = new Pose2d(x, y, yaw);
 		lastGroundTruthPose = groundTruthPose;
 
-		if (questNavSimEnableAbsoluteCorrection && absoluteInputs.poseObservations.length > 0) {
-			Pose2d absolutePose = absoluteInputs.poseObservations[0].pose().toPose2d();
+		if (questNavSimEnableAbsoluteCorrection && filteredAbsoluteObservations.length > 0) {
+			Pose2d absolutePose = filteredAbsoluteObservations[0].pose().toPose2d();
 			Translation2d correctedTranslation = new Translation2d(
 					inertialPose.getX()
 							+ (absolutePose.getX() - inertialPose.getX()) * questNavSimTranslationCorrectionAlpha,
@@ -78,5 +82,39 @@ public class VisionIOQuestNavSim implements VisionIO {
 		inputs.tagIds = new int[0];
 
 		Logger.recordOutput("QuestNav/Sim/InertialPose", new Pose3d(inertialPose));
+	}
+
+	private PoseObservation[] filterAbsoluteObservations(VisionIOInputs absoluteInputs) {
+		Set<Integer> whitelistedTagIds = getOdometryTagWhitelistForCurrentAlliance();
+		int observedWhitelistedTagCount = 0;
+		for (int tagId : absoluteInputs.tagIds) {
+			if (whitelistedTagIds.isEmpty() || whitelistedTagIds.contains(tagId)) {
+				observedWhitelistedTagCount++;
+			}
+		}
+		boolean hasEnoughWhitelistedTags = observedWhitelistedTagCount >= minWhitelistedTagCountForOdometry;
+
+		List<PoseObservation> filteredObservations = new ArrayList<>();
+		for (PoseObservation observation : absoluteInputs.poseObservations) {
+			if (isValidAbsoluteObservation(observation, whitelistedTagIds, hasEnoughWhitelistedTags)) {
+				filteredObservations.add(observation);
+			}
+		}
+		return filteredObservations.toArray(new PoseObservation[0]);
+	}
+
+	private boolean isValidAbsoluteObservation(PoseObservation observation, Set<Integer> whitelistedTagIds,
+			boolean hasEnoughWhitelistedTags) {
+		if (observation.type() == PoseObservationType.QUESTNAV) {
+			return false;
+		}
+
+		boolean enforceWhitelistedTagMinimum = !whitelistedTagIds.isEmpty() && minWhitelistedTagCountForOdometry > 0;
+		return observation.tagCount() >= minTagCountForOdometry
+				&& (observation.tagCount() != 1 || observation.ambiguity() <= maxAmbiguity)
+				&& (!enforceWhitelistedTagMinimum || hasEnoughWhitelistedTags)
+				&& Math.abs(observation.pose().getZ()) <= maxZError && observation.pose().getX() >= 0.0
+				&& observation.pose().getX() <= aprilTagLayout.getFieldLength() && observation.pose().getY() >= 0.0
+				&& observation.pose().getY() <= aprilTagLayout.getFieldWidth();
 	}
 }

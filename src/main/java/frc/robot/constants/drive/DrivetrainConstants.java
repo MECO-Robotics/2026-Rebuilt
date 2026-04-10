@@ -50,7 +50,7 @@ import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 // https://v6.docs.ctr-electronics.com/en/stable/docs/tuner/tuner-swerve/index.html
 public final class DrivetrainConstants {
 	public static final double MAX_SPEED = 5.24;
-	public static final double MAX_ANGULAR_RATE = 5;
+	public static final double MAX_ANGULAR_RATE = 7;
 
 	public static final double STEER_KP = 100.0;
 	public static final double STEER_KI = 0.0;
@@ -59,7 +59,7 @@ public final class DrivetrainConstants {
 	public static final double STEER_KV = 1.50;
 	public static final double STEER_KA = 0.0;
 
-	public static final double DRIVE_KP = 0.1;
+	public static final double DRIVE_KP = 0.2;
 	public static final double DRIVE_KI = 0.0;
 	public static final double DRIVE_KD = 0.0;
 	public static final double DRIVE_KS = 0.1;

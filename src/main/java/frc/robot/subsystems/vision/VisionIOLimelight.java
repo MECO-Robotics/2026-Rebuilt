@@ -10,12 +10,14 @@ import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.RobotController;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 /** IO implementation for real Limelight hardware. */
 public class VisionIOLimelight implements VisionIO {
@@ -23,12 +25,14 @@ public class VisionIOLimelight implements VisionIO {
 		MEGATAG_1_ONLY, MEGATAG_2_ONLY, BOTH
 	}
 
+	private final String name;
 	private final Transform3d robotToCamera;
 	private final Supplier<Rotation2d> rotationSupplier;
 	private final boolean useMegatag1;
 	private final boolean useMegatag2;
 	private final DoubleArrayPublisher orientationPublisher;
 	private final DoubleArrayPublisher cameraPosePublisher;
+	private double[] lastPublishedCameraPose = null;
 
 	private final DoubleSubscriber heartbeatSubscriber;
 	private final DoubleSubscriber txSubscriber;
@@ -79,6 +83,7 @@ public class VisionIOLimelight implements VisionIO {
 	public VisionIOLimelight(String name, Transform3d robotToCamera, Supplier<Rotation2d> rotationSupplier,
 			LimelightPoseMode poseMode) {
 		var table = NetworkTableInstance.getDefault().getTable(name);
+		this.name = name;
 		this.robotToCamera = robotToCamera;
 		this.rotationSupplier = rotationSupplier;
 		this.useMegatag1 = poseMode != LimelightPoseMode.MEGATAG_2_ONLY;
@@ -105,7 +110,14 @@ public class VisionIOLimelight implements VisionIO {
 		inputs.latestTargetObservation = new TargetObservation(Rotation2d.fromDegrees(txSubscriber.get()),
 				Rotation2d.fromDegrees(tySubscriber.get()), (int) tidSubscriber.get());
 
-		cameraPosePublisher.accept(toLimelightRobotSpace(robotToCamera));
+		double[] limelightRobotSpace = toLimelightRobotSpace(robotToCamera);
+		if (lastPublishedCameraPose == null || !Arrays.equals(lastPublishedCameraPose, limelightRobotSpace)) {
+			cameraPosePublisher.accept(limelightRobotSpace);
+			NetworkTableInstance.getDefault().flush();
+			lastPublishedCameraPose = limelightRobotSpace.clone();
+		}
+		Logger.recordOutput("Vision/" + name + "/RobotToCamera", new Pose3d().transformBy(robotToCamera));
+		Logger.recordOutput("Vision/" + name + "/RobotSpaceConfig", limelightRobotSpace);
 
 		if (useMegatag2) {
 			orientationPublisher.accept(new double[]{rotationSupplier.get().getDegrees(), 0.0, 0.0, 0.0, 0.0, 0.0});
