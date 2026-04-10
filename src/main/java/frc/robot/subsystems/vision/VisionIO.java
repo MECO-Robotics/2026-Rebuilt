@@ -122,10 +122,9 @@ public interface VisionIO {
 	 * Real mode consumes only Limelight's MegaTag1 stream. Sim mode reuses the
 	 * Limelight simulator, which already produces MegaTag1-style observations.
 	 */
-	public static VisionIO limelightMegaTag1WithSim(String limelightName,
-			Transform3d robotToLimelight, Supplier<Pose2d> simPoseSupplier) {
-		return fromMode(
-				() -> new VisionIOLimelight(limelightName, robotToLimelight),
+	public static VisionIO limelightMegaTag1WithSim(String limelightName, Transform3d robotToLimelight,
+			Supplier<Pose2d> simPoseSupplier) {
+		return fromMode(() -> new VisionIOLimelight(limelightName, robotToLimelight),
 				() -> new VisionIOLimelightSim(limelightName, robotToLimelight, simPoseSupplier));
 	}
 }
