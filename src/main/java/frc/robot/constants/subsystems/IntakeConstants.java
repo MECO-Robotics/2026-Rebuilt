@@ -14,7 +14,7 @@ import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 public final class IntakeConstants {
 	private static final double INTAKE_MASS_KG = Units.lbsToKilograms(15.0);
 	private static final double INTAKE_RACK_DRUM_RADIUS_METERS = Units.inchesToMeters(0.5);
-	private static final double INTAKE_RACK_GEAR_RATIO = (5 * (48.0 / 16.0) * (24.0 / 16.0))
+	private static final double INTAKE_RACK_GEAR_RATIO = (3 * (48.0 / 16.0) * (22.0 / 18.0))
 			/ (((Math.PI * 10.0) / 10.0) * 0.0254);
 	private static final double INTAKE_RACK_LOAD_MOI_KG_METERS_SQUARED = INTAKE_MASS_KG * INTAKE_RACK_DRUM_RADIUS_METERS
 			* INTAKE_RACK_DRUM_RADIUS_METERS;

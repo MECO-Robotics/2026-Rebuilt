@@ -112,7 +112,7 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 		vision = new Vision(drivetrain::addVisionMeasurement,
-				VisionIO.limelightMegaTag1WithSim(VisionConstants.limelightName, drivetrain::getRawGyroHeading,
+				VisionIO.limelightMegaTag1WithSim(VisionConstants.limelightName,
 						VisionConstants.robotToLimelight, drivetrain::getPhysicsPose));
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
@@ -244,6 +244,7 @@ public class RobotContainer {
 								.parallel(DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED),
 										ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel))
 								.withTimeout(2));
+
 	}
 
 	private Command createLeftBlueBumpShootAuto() {

@@ -175,7 +175,7 @@
     },
     {
       "waypointRelativePos": 5.95823665893272,
-      "rotationDegrees": -28.532835707612836
+      "rotationDegrees": -28.53283570761284
     },
     {
       "waypointRelativePos": 6.95,
@@ -204,7 +204,7 @@
   ],
   "globalConstraints": {
     "maxVelocity": 4.0,
-    "maxAcceleration": 6.0,
+    "maxAcceleration": 4.0,
     "maxAngularVelocity": 540.0,
     "maxAngularAcceleration": 720.0,
     "nominalVoltage": 12.0,
@@ -218,7 +218,7 @@
   "folder": "Left Double",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -50.30092651652578
+    "rotation": 0.9403011328907345
   },
   "useDefaultConstraints": true
 }

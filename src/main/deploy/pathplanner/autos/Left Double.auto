@@ -24,13 +24,26 @@
           }
         },
         {
-          "type": "path",
+          "type": "deadline",
           "data": {
-            "pathName": "Left Double 1"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "Left Double 1"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "SpinIntake"
+                }
+              }
+            ]
           }
         },
         {
-          "type": "parallel",
+          "type": "deadline",
           "data": {
             "commands": [
               {
@@ -103,24 +116,24 @@
           "data": {
             "commands": [
               {
-                "type": "wait",
+                "type": "path",
                 "data": {
-                  "waitTime": 0.01
+                  "pathName": "Left Double 3 OCA"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "FeedRollers"
+                  "name": "SpinIntake"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "IdleRollers"
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "Left Double 3"
           }
         },
         {
@@ -149,7 +162,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 4.0
+                  "waitTime": 3.0
                 }
               },
               {
