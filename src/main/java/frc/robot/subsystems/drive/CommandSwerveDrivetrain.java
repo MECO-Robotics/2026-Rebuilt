@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.Utils;
@@ -31,10 +32,13 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.drive.DrivetrainConstants.TunerSwerveDrivetrain;
+import frc.robot.util.SysIdResultsPublisher;
+import frc.robot.util.SysIdRunStats;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
 import org.ironmaple.simulation.SimulatedArena;
@@ -69,6 +73,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
 	private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
 	private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+	private final double[] m_sysIdAppliedOutput = new double[]{0.0};
 
 	private final Telemetry telemetry = new Telemetry(DrivetrainConstants.kSpeedAt12Volts.in(MetersPerSecond));
 	private final SwerveModuleConstants<?, ?, ?>[] m_moduleConstants;
@@ -88,12 +93,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private final LoggedTunableNumber m_steerKD = new LoggedTunableNumber("Drivetrain/SteerGains/kD",
 			DrivetrainConstants.STEER_KD);
 	private final LoggedTunableNumber m_autoTranslationKP = new LoggedTunableNumber("Drivetrain/AutoTranslation/kP",
-			10.0);
+			15.0);
 	private final LoggedTunableNumber m_autoTranslationKI = new LoggedTunableNumber("Drivetrain/AutoTranslation/kI",
 			0.0);
 	private final LoggedTunableNumber m_autoTranslationKD = new LoggedTunableNumber("Drivetrain/AutoTranslation/kD",
 			0.0);
-	private final LoggedTunableNumber m_autoRotationKP = new LoggedTunableNumber("Drivetrain/AutoRotation/kP", 7.0);
+	private final LoggedTunableNumber m_autoRotationKP = new LoggedTunableNumber("Drivetrain/AutoRotation/kP", 10.0);
 	private final LoggedTunableNumber m_autoRotationKI = new LoggedTunableNumber("Drivetrain/AutoRotation/kI", 0.0);
 	private final LoggedTunableNumber m_autoRotationKD = new LoggedTunableNumber("Drivetrain/AutoRotation/kD", 0.0);
 
@@ -107,8 +112,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
 			null, // Use default timeout (10 s)
 			state -> Logger.recordOutput("Drive/SysIdTranslationState", state.toString())),
-			new SysIdRoutine.Mechanism(output -> setControl(m_translationCharacterization.withVolts(output)), null,
-					this));
+			new SysIdRoutine.Mechanism(output -> {
+				m_sysIdAppliedOutput[0] = output.in(Volts);
+				setControl(m_translationCharacterization.withVolts(output));
+			}, null, this));
 
 	/*
 	 * SysId routine for characterizing steer. This is used to find PID gains for
@@ -119,7 +126,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			Volts.of(7), // Use dynamic voltage of 7 V
 			null, // Use default timeout (10 s)
 			state -> Logger.recordOutput("Drive/SysIdSteerState", state.toString())),
-			new SysIdRoutine.Mechanism(volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
+			new SysIdRoutine.Mechanism(volts -> {
+				m_sysIdAppliedOutput[0] = volts.in(Volts);
+				setControl(m_steerCharacterization.withVolts(volts));
+			}, null, this));
 
 	/*
 	 * SysId routine for characterizing rotation. This is used to find PID gains for
@@ -134,6 +144,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			state -> Logger.recordOutput("Drive/SysIdRotationState", state.toString())),
 			new SysIdRoutine.Mechanism(output -> {
 				/* output is actually radians per second, but SysId only supports "volts" */
+				m_sysIdAppliedOutput[0] = output.in(Volts);
 				setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
 				/* also log the requested output for SysId */
 				Logger.recordOutput("Drive/SysIdRotationalRate", output.in(Volts));
@@ -283,11 +294,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	 * @return Command to run
 	 */
 	public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-		return m_sysIdRoutineToApply.quasistatic(direction);
+		return withSysIdResults(m_sysIdRoutineToApply.quasistatic(direction), m_sysIdRoutineTypeToApply,
+				"Drive " + m_sysIdRoutineTypeToApply.name() + " Quasistatic " + direction.name());
 	}
 
 	public Command sysIdQuasistatic(SysIdRoutineType routine, SysIdRoutine.Direction direction) {
-		return selectSysIdRoutine(routine).quasistatic(direction);
+		return withSysIdResults(selectSysIdRoutine(routine).quasistatic(direction), routine,
+				"Drive " + routine.name() + " Quasistatic " + direction.name());
 	}
 
 	/**
@@ -299,12 +312,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	 * @return Command to run
 	 */
 	public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-		return m_sysIdRoutineToApply.dynamic(direction);
+		return withSysIdResults(m_sysIdRoutineToApply.dynamic(direction), m_sysIdRoutineTypeToApply,
+				"Drive " + m_sysIdRoutineTypeToApply.name() + " Dynamic " + direction.name());
 	}
 
 	public Command sysIdDynamic(SysIdRoutineType routine, SysIdRoutine.Direction direction) {
-		return selectSysIdRoutine(routine).dynamic(direction);
+		return withSysIdResults(selectSysIdRoutine(routine).dynamic(direction), routine,
+				"Drive " + routine.name() + " Dynamic " + direction.name());
 	}
+
+	private final SysIdRoutineType m_sysIdRoutineTypeToApply = SysIdRoutineType.TRANSLATION;
 
 	private SysIdRoutine selectSysIdRoutine(SysIdRoutineType routine) {
 		return switch (routine) {
@@ -312,6 +329,69 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			case STEER -> m_sysIdRoutineSteer;
 			case ROTATION -> m_sysIdRoutineRotation;
 		};
+	}
+
+	private Command withSysIdResults(Command sysIdCommand, SysIdRoutineType routine, String testName) {
+		SysIdRunStats stats = new SysIdRunStats(sysIdPositionSupplier(routine), sysIdVelocitySupplier(routine),
+				m_sysIdAppliedOutput);
+		return warmupForSysId().andThen(sysIdCommand.deadlineFor(Commands.run(stats::sample))
+				.beforeStarting(stats::start).finallyDo((interrupted) -> {
+					stats.finish();
+					stop();
+					SysIdResultsPublisher.publish(testName, interrupted, stats);
+				}));
+	}
+
+	private Command warmupForSysId() {
+		return run(this::stop).withTimeout(1.0);
+	}
+
+	private DoubleSupplier sysIdPositionSupplier(SysIdRoutineType routine) {
+		return switch (routine) {
+			case TRANSLATION -> this::averageDriveMotorPosition;
+			case STEER -> this::averageSteerMotorPosition;
+			case ROTATION -> () -> getRawGyroHeading().getRadians();
+		};
+	}
+
+	private DoubleSupplier sysIdVelocitySupplier(SysIdRoutineType routine) {
+		return switch (routine) {
+			case TRANSLATION -> this::averageDriveMotorVelocity;
+			case STEER -> this::averageSteerMotorVelocity;
+			case ROTATION -> () -> getPhysicsSpeeds().omegaRadiansPerSecond;
+		};
+	}
+
+	private double averageDriveMotorPosition() {
+		double total = 0.0;
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			total += getModule(i).getDriveMotor().getPosition().refresh().getValueAsDouble();
+		}
+		return total / m_moduleConstants.length;
+	}
+
+	private double averageDriveMotorVelocity() {
+		double total = 0.0;
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			total += getModule(i).getDriveMotor().getVelocity().refresh().getValueAsDouble();
+		}
+		return total / m_moduleConstants.length;
+	}
+
+	private double averageSteerMotorPosition() {
+		double total = 0.0;
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			total += getModule(i).getSteerMotor().getPosition().refresh().getValueAsDouble();
+		}
+		return total / m_moduleConstants.length;
+	}
+
+	private double averageSteerMotorVelocity() {
+		double total = 0.0;
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			total += getModule(i).getSteerMotor().getVelocity().refresh().getValueAsDouble();
+		}
+		return total / m_moduleConstants.length;
 	}
 
 	@Override
