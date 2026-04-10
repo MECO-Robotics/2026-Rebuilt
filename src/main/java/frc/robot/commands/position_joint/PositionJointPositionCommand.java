@@ -46,6 +46,15 @@ public class PositionJointPositionCommand extends Command {
 
 	@Override
 	public void initialize() {
+		updateSetpoint();
+	}
+
+	@Override
+	public void execute() {
+		updateSetpoint();
+	}
+
+	private void updateSetpoint() {
 		if (maxVelocity != null) {
 			positionJoint.setPosition(position.getAsDouble(), maxVelocity.getAsDouble());
 			return;

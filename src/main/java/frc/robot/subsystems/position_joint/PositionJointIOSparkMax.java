@@ -18,6 +18,7 @@ import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SoftLimitConfig;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
@@ -63,8 +64,10 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	private double currentPosition = 0.0;
 	private double positionSetpoint = 0.0;
 	private double velocitySetpoint = 0.0;
-	private double maxMotionVelocity = Double.NaN;
-	private double maxMotionAcceleration = Double.NaN;
+	private double maxMotionVelocity = 0.0;
+	private double maxMotionAcceleration = 0.0;
+	private double minPosition = Double.NEGATIVE_INFINITY;
+	private double maxPosition = Double.POSITIVE_INFINITY;
 
 	/**
 	 * Creates a SparkMax position-joint IO implementation.
@@ -102,6 +105,9 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 			leaderConfig = new SparkMaxConfig()
 					.apply(new EncoderConfig().positionConversionFactor(1.0 / config.gearRatio())
 							.velocityConversionFactor(1.0 / (60.0 * config.gearRatio())))
+					.apply(new ClosedLoopConfig().apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
+							.maxAcceleration(maxMotionAcceleration)
+							.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
 					.inverted(config.reversed()[0]).smartCurrentLimit(config.currentLimit()).idleMode(IdleMode.kBrake);
 
 		} else {
@@ -109,6 +115,9 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 			leaderConfig = new SparkMaxConfig()
 					.apply(new EncoderConfig().positionConversionFactor(1.0 / config.gearRatio())
 							.velocityConversionFactor(1.0 / (60.0 * config.gearRatio())).inverted(config.reversed()[0]))
+					.apply(new ClosedLoopConfig().apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
+							.maxAcceleration(maxMotionAcceleration)
+							.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
 					.idleMode(IdleMode.kBrake);
 		}
 
@@ -287,10 +296,17 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 		feedforward.setGains(gains.kS(), gains.kG(), gains.kV(), gains.kA());
 		maxMotionVelocity = gains.kMaxVelo();
 		maxMotionAcceleration = gains.kMaxAccel();
+		minPosition = gains.kMinPosition();
+		maxPosition = gains.kMaxPosition();
 
-		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
-				.apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity).maxAcceleration(maxMotionAcceleration)
-						.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal))),
+		motors[0].configure(
+				leaderConfig
+						.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
+								.apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
+										.maxAcceleration(maxMotionAcceleration)
+										.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
+						.apply(new SoftLimitConfig().forwardSoftLimit(maxPosition).forwardSoftLimitEnabled(true)
+								.reverseSoftLimit(minPosition).reverseSoftLimitEnabled(true)),
 				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 
 		System.out.println(name + " gains set to " + gains);

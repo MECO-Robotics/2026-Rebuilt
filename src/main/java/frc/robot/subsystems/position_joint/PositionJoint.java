@@ -89,6 +89,11 @@ public class PositionJoint extends SubsystemBase {
 		positionJoint.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
 
+		Command currentCommand = getCurrentCommand();
+		if (currentCommand == null || currentCommand == getDefaultCommand()) {
+			goalPosition = MathUtil.clamp(kSetpoint.get(), kMinPosition.get(), kMaxPosition.get());
+		}
+
 		boolean usingDynamicOverride = profileMaxVelocityOverride != null
 				&& positionJoint.setPositionDynamic(goalPosition, profileMaxVelocityOverride, kMaxAccel.get());
 		if (!usingDynamicOverride) {
@@ -98,10 +103,9 @@ public class PositionJoint extends SubsystemBase {
 		LoggedTunableNumber.ifChanged(hashCode(), (values) -> {
 			positionJoint.setGains(new PositionJointGains(values[0], values[1], values[2], values[3], values[4],
 					values[5], values[6], values[7], values[8], values[9], values[10], values[11], values[12]));
-
-			goalPosition = MathUtil.clamp(values[12], kMinPosition.get(), kMaxPosition.get());
 		}, kP, kI, kD, kS, kG, kV, kA, kMaxVelo, kMaxAccel, kMinPosition, kMaxPosition, kTolerance, kSetpoint);
 
+		Logger.recordOutput(name + "/GoalPosition", goalPosition);
 		Logger.recordOutput(name + "/isFinished", isFinished());
 	}
 
@@ -131,6 +135,11 @@ public class PositionJoint extends SubsystemBase {
 	/** Adds an offset to the current goal position. */
 	public void incrementPosition(double deltaPosition) {
 		setPosition(goalPosition + deltaPosition);
+	}
+
+	/** Re-seeds the goal from the current measured mechanism position. */
+	public void syncGoalToCurrentPosition() {
+		setPosition(inputs.outputPosition);
 	}
 
 	/** Applies open-loop voltage to the joint leader motor. */

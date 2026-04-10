@@ -12,6 +12,7 @@ import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.Follower;
@@ -329,6 +330,10 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()).withKG(gains.kG()).withGravityType(gravity));
 		motors[0].getConfigurator().apply(new MotionMagicConfigs().withMotionMagicCruiseVelocity(gains.kMaxVelo())
 				.withMotionMagicAcceleration(gains.kMaxAccel()));
+		motors[0].getConfigurator()
+				.apply(new SoftwareLimitSwitchConfigs().withForwardSoftLimitEnable(true)
+						.withForwardSoftLimitThreshold(gains.kMaxPosition()).withReverseSoftLimitEnable(true)
+						.withReverseSoftLimitThreshold(gains.kMinPosition()));
 
 		System.out.println(name + " gains set to " + gains);
 	}
