@@ -203,14 +203,14 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 
 	@Override
 	public void setGains(PositionJointGains gains) {
-		feedforward.setGains(gains.kS(), gains.kG(), gains.kV(), gains.kA());
+		feedforward.setGains(gains.kS(), 0.0, gains.kV(), gains.kA());
 		minPosition = gains.kMinPosition();
 		maxPosition = gains.kMaxPosition();
 		GravityTypeValue gravity = config.gravityType() == GravityType.CONSTANT
 				? GravityTypeValue.Elevator_Static
 				: GravityTypeValue.Arm_Cosine;
 		motors[0].getConfigurator().apply(new Slot0Configs().withKP(gains.kP()).withKI(gains.kI()).withKD(gains.kD())
-				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()).withKG(gains.kG()).withGravityType(gravity));
+				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()).withKG(0.0).withGravityType(gravity));
 		motors[0].getConfigurator().apply(new MotionMagicConfigs().withMotionMagicCruiseVelocity(gains.kMaxVelo())
 				.withMotionMagicAcceleration(gains.kMaxAccel()));
 		motors[0].getConfigurator()

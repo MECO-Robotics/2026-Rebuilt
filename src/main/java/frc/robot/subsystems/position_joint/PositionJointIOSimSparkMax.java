@@ -6,13 +6,13 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.sim.SparkMaxSim;
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
+import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.MAXMotionConfig;
 import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -174,9 +174,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		positionSetpoint = position;
 		velocitySetpoint = velocity;
 		ensureMaxMotionConfig(maxMotionVelocity, maxMotionAcceleration);
-		double ffPosition = currentPosition + feedforwardPositionAddition;
-		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
-				ClosedLoopSlot.kSlot0, feedforward.calculate(ffPosition, currentVelocity, velocity, 0.02));
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl);
 	}
 
 	/** Commands the sim joint with temporary MAXMotion cruise constraints. */
@@ -185,9 +183,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		positionSetpoint = position;
 		velocitySetpoint = 0.0;
 		ensureMaxMotionConfig(Math.abs(maxVelocity), Math.abs(maxAcceleration));
-		double ffPosition = currentPosition + feedforwardPositionAddition;
-		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
-				ClosedLoopSlot.kSlot0, feedforward.calculate(ffPosition, currentVelocity, 0.0, 0.02));
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl);
 		return true;
 	}
 
@@ -202,7 +198,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 	 */
 	@Override
 	public void setGains(PositionJointGains gains) {
-		feedforward.setGains(gains.kS(), gains.kG(), gains.kV(), gains.kA());
+		feedforward.setGains(gains.kS(), 0.0, gains.kV(), gains.kA());
 		maxMotionVelocity = gains.kMaxVelo();
 		maxMotionAcceleration = gains.kMaxAccel();
 		minPosition = gains.kMinPosition();
@@ -210,6 +206,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		motors[0].configure(
 				leaderConfig
 						.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
+								.apply(createBuiltInFeedforwardConfig(gains))
 								.apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
 										.maxAcceleration(maxMotionAcceleration)
 										.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
@@ -334,5 +331,13 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 
 	private double clampPosition(double position) {
 		return Math.max(minPosition, Math.min(maxPosition, position));
+	}
+
+	private FeedForwardConfig createBuiltInFeedforwardConfig(PositionJointGains gains) {
+		FeedForwardConfig config = new FeedForwardConfig().kS(gains.kS()).kA(gains.kA());
+		if (this.config.gravityType() == GravityType.CONSTANT) {
+			return config.kG(gains.kG());
+		}
+		return config.kCos(gains.kG()).kCosRatio(1.0);
 	}
 }

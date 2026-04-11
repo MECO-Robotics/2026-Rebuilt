@@ -89,11 +89,6 @@ public class PositionJoint extends SubsystemBase {
 		positionJoint.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
 
-		Command currentCommand = getCurrentCommand();
-		if (currentCommand == null || currentCommand == getDefaultCommand()) {
-			goalPosition = MathUtil.clamp(kSetpoint.get(), kMinPosition.get(), kMaxPosition.get());
-		}
-
 		boolean usingDynamicOverride = profileMaxVelocityOverride != null
 				&& positionJoint.setPositionDynamic(goalPosition, profileMaxVelocityOverride, kMaxAccel.get());
 		if (!usingDynamicOverride) {
@@ -104,6 +99,12 @@ public class PositionJoint extends SubsystemBase {
 			positionJoint.setGains(new PositionJointGains(values[0], values[1], values[2], values[3], values[4],
 					values[5], values[6], values[7], values[8], values[9], values[10], values[11], values[12]));
 		}, kP, kI, kD, kS, kG, kV, kA, kMaxVelo, kMaxAccel, kMinPosition, kMaxPosition, kTolerance, kSetpoint);
+		LoggedTunableNumber.ifChanged(hashCode() + 1, (values) -> {
+			Command currentCommand = getCurrentCommand();
+			if (currentCommand == null || currentCommand == getDefaultCommand()) {
+				goalPosition = MathUtil.clamp(values[0], values[1], values[2]);
+			}
+		}, kSetpoint, kMinPosition, kMaxPosition);
 
 		Logger.recordOutput(name + "/GoalPosition", goalPosition);
 		Logger.recordOutput(name + "/isFinished", isFinished());
