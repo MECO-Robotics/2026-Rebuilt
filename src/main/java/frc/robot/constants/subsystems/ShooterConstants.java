@@ -37,7 +37,7 @@ public final class ShooterConstants {
 			0.5);
 
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(20, 0.0, 0.0, 0.5, 0.1, 0.0, 0.0, 4.0,
-			8.0, 0.0, 0.049, 0.05, 0.0);
+			100.0, 0.0, 0.049, 0.002, 0.0);
 	public static final PositionJointHardwareConfig HOOD_CONFIG = new PositionJointHardwareConfig(new int[]{33},
 			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, EncoderType.INTERNAL, 0, MechanismType.ROTATIONAL, 0.0,
 			Rotation2d.fromRotations(0), "");
@@ -93,8 +93,8 @@ public final class ShooterConstants {
 		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
 		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(29));
-		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(36));
-		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(40));
-		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(50));
+		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(34.5));
+		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(39.5));
+		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(49.5));
 	}
 }

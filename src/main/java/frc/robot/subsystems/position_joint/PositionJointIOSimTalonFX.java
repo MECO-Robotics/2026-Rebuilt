@@ -12,6 +12,7 @@ import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DynamicMotionMagicVoltage;
 import com.ctre.phoenix6.controls.Follower;
@@ -44,6 +45,9 @@ import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 public class PositionJointIOSimTalonFX implements PositionJointIO {
 	private static final double DEFAULT_LINEAR_MIN_POSITION_METERS = -1.0;
 	private static final double DEFAULT_LINEAR_MAX_POSITION_METERS = 1.0;
+	private static final double ZERO_VOLTAGE_EPSILON = 1e-3;
+	private static final double LINEAR_BRAKE_VELOCITY_EPSILON = 0.02;
+	private static final double ROTATIONAL_BRAKE_VELOCITY_EPSILON = 0.02;
 
 	private final String name;
 	private final PositionJointHardwareConfig config;
@@ -63,6 +67,8 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 	private final double[] motorCurrents;
 	private double positionSetpoint = 0.0;
 	private double velocitySetpoint = 0.0;
+	private double minPosition = Double.NEGATIVE_INFINITY;
+	private double maxPosition = Double.POSITIVE_INFINITY;
 
 	public PositionJointIOSimTalonFX(String name, PositionJointHardwareConfig config, DCMotor simMotorModel) {
 		this.name = name;
@@ -133,8 +139,13 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 		double availableVoltage = RobotController.getBatteryVoltage();
 		syncTalonSimState(currentPosition, currentVelocity, availableVoltage);
 		double appliedVoltage = motors[0].getSimState().getMotorVoltage();
-		setSimulationInputVoltage(appliedVoltage);
-		updateSimulation();
+		if (shouldHoldBrake(appliedVoltage, currentVelocity)) {
+			holdBrakeState(currentPosition);
+		} else {
+			setSimulationInputVoltage(appliedVoltage);
+			updateSimulation();
+			clampToLimits();
+		}
 
 		double loadedBatteryVoltage = BatterySim.calculateDefaultBatteryLoadedVoltage(getSimulationCurrentDrawAmps());
 		RoboRioSim.setVInVoltage(loadedBatteryVoltage);
@@ -170,7 +181,9 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 	public void setPosition(double position, double velocity) {
 		positionSetpoint = position;
 		velocitySetpoint = velocity;
-		motors[0].setControl(positionRequest.withPosition(position));
+		double ffPosition = currentPositionWithFeedforwardOffset();
+		double ffVolts = feedforward.calculate(ffPosition, getMechanismVelocity(), velocity, 0.02);
+		motors[0].setControl(positionRequest.withPosition(position).withFeedForward(ffVolts));
 	}
 
 	@Override
@@ -178,7 +191,8 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 		positionSetpoint = position;
 		velocitySetpoint = 0.0;
 		motors[0].setControl(dynamicPositionRequest.withPosition(position).withVelocity(Math.abs(maxVelocity))
-				.withAcceleration(Math.abs(maxAcceleration)));
+				.withAcceleration(Math.abs(maxAcceleration)).withFeedForward(feedforward
+						.calculate(currentPositionWithFeedforwardOffset(), getMechanismVelocity(), 0.0, 0.02)));
 		return true;
 	}
 
@@ -189,14 +203,20 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 
 	@Override
 	public void setGains(PositionJointGains gains) {
-		feedforward.setGains(0.0, gains.kG(), gains.kV(), gains.kA());
+		feedforward.setGains(gains.kS(), 0.0, gains.kV(), gains.kA());
+		minPosition = gains.kMinPosition();
+		maxPosition = gains.kMaxPosition();
 		GravityTypeValue gravity = config.gravityType() == GravityType.CONSTANT
 				? GravityTypeValue.Elevator_Static
 				: GravityTypeValue.Arm_Cosine;
 		motors[0].getConfigurator().apply(new Slot0Configs().withKP(gains.kP()).withKI(gains.kI()).withKD(gains.kD())
-				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()).withKG(gains.kG()).withGravityType(gravity));
+				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()).withKG(0.0).withGravityType(gravity));
 		motors[0].getConfigurator().apply(new MotionMagicConfigs().withMotionMagicCruiseVelocity(gains.kMaxVelo())
 				.withMotionMagicAcceleration(gains.kMaxAccel()));
+		motors[0].getConfigurator()
+				.apply(new SoftwareLimitSwitchConfigs().withForwardSoftLimitEnable(true)
+						.withForwardSoftLimitThreshold(maxPosition).withReverseSoftLimitEnable(true)
+						.withReverseSoftLimitThreshold(minPosition));
 		System.out.println(name + " gains set to " + gains);
 	}
 
@@ -256,6 +276,13 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 		return rotationalSim.getAngularAcceleration().in(RotationsPerSecondPerSecond);
 	}
 
+	private double currentPositionWithFeedforwardOffset() {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			return getMechanismPosition();
+		}
+		return getMechanismPosition() + feedforwardPositionAddition;
+	}
+
 	private void setSimulationInputVoltage(double voltage) {
 		if (config.mechanismType() == MechanismType.LINEAR) {
 			linearSim.setInputVoltage(voltage);
@@ -277,6 +304,45 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 			return linearSim.getCurrentDrawAmps();
 		}
 		return rotationalSim.getCurrentDrawAmps();
+	}
+
+	private boolean shouldHoldBrake(double appliedVoltage, double mechanismVelocity) {
+		if (Math.abs(appliedVoltage) > ZERO_VOLTAGE_EPSILON) {
+			return false;
+		}
+		double velocityEpsilon = config.mechanismType() == MechanismType.LINEAR
+				? LINEAR_BRAKE_VELOCITY_EPSILON
+				: ROTATIONAL_BRAKE_VELOCITY_EPSILON;
+		return Math.abs(mechanismVelocity) < velocityEpsilon;
+	}
+
+	private void holdBrakeState(double mechanismPosition) {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			linearSim.setInputVoltage(0.0);
+			linearSim.setState(clampPosition(mechanismPosition), 0.0);
+			return;
+		}
+		rotationalSim.setInputVoltage(0.0);
+		rotationalSim.setState(clampPosition(mechanismPosition) * 2.0 * Math.PI, 0.0);
+	}
+
+	private void clampToLimits() {
+		double position = getMechanismPosition();
+		double clampedPosition = clampPosition(position);
+		if (clampedPosition == position) {
+			return;
+		}
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			linearSim.setInputVoltage(0.0);
+			linearSim.setState(clampedPosition, 0.0);
+			return;
+		}
+		rotationalSim.setInputVoltage(0.0);
+		rotationalSim.setState(clampedPosition * 2.0 * Math.PI, 0.0);
+	}
+
+	private double clampPosition(double position) {
+		return Math.max(minPosition, Math.min(maxPosition, position));
 	}
 
 	private void syncTalonSimState(double mechanismPosition, double mechanismVelocity, double supplyVoltage) {

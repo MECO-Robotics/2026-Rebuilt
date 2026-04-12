@@ -5,7 +5,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.flywheel.FlywheelVelocityCommand;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
-import frc.robot.util.mechanical_advantage.LinearProfile;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -14,8 +13,8 @@ import org.littletonrobotics.junction.Logger;
  * Subsystem wrapper for a velocity-controlled flywheel/roller.
  *
  * <p>
- * This class owns profile generation and tunable gains while {@link FlywheelIO}
- * handles hardware-specific control.
+ * This class owns tunable gains and setpoints while {@link FlywheelIO} handles
+ * hardware-specific closed-loop control (Motion Magic/MAX Motion).
  */
 public class Flywheel extends SubsystemBase {
 	private final FlywheelIO flywheel;
@@ -36,7 +35,6 @@ public class Flywheel extends SubsystemBase {
 
 	private final LoggedTunableNumber kSetpoint;
 
-	private final LinearProfile profile;
 	private double velocitySetpoint;
 
 	private boolean voltageMode = false;
@@ -69,8 +67,6 @@ public class Flywheel extends SubsystemBase {
 
 		kSetpoint = new LoggedTunableNumber(name + "/Gains/kSetpoint", 0.0);
 
-		profile = new LinearProfile(gains.kMaxAccel(), 0.02);
-
 		// Load the configured gains immediately so sim IO PID/FF are initialized at
 		// startup.
 		flywheel.setGains(gains);
@@ -81,8 +77,12 @@ public class Flywheel extends SubsystemBase {
 		flywheel.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
 
+		Command currentCommand = getCurrentCommand();
+		if (currentCommand == null || currentCommand == getDefaultCommand()) {
+			velocitySetpoint = kSetpoint.get();
+		}
+
 		if (!voltageMode) {
-			velocitySetpoint = profile.calculateSetpoint();
 			flywheel.setVelocity(velocitySetpoint);
 		}
 
@@ -90,16 +90,16 @@ public class Flywheel extends SubsystemBase {
 			flywheel.setGains(new FlywheelGains(values[0], values[1], values[2], values[3], values[4], values[5],
 					values[6], values[7]));
 
-			profile.setGoal(values[8], velocitySetpoint);
-
-			profile.setMaxAcceleration(values[6]);
+			if (currentCommand == null || currentCommand == getDefaultCommand()) {
+				velocitySetpoint = values[8];
+			}
 		}, kP, kI, kD, kS, kV, kA, kMaxAccel, kTolerance, kSetpoint);
 	}
 
-	/** Sets a new velocity goal for profiled closed-loop control. */
+	/** Sets a new velocity goal for closed-loop control. */
 	public void setVelocity(double velocity) {
 		voltageMode = false;
-		profile.setGoal(velocity, velocitySetpoint);
+		velocitySetpoint = velocity;
 	}
 
 	/** Enables open-loop control and applies a direct voltage command. */

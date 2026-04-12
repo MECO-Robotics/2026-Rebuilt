@@ -6,17 +6,18 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.sim.SparkMaxSim;
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
+import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.MAXMotionConfig;
 import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SoftLimitConfig;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
@@ -36,6 +37,9 @@ import frc.robot.util.feedforwards.TunableElevatorFeedforward;
 public class PositionJointIOSimSparkMax implements PositionJointIO {
 	private static final double DEFAULT_LINEAR_MIN_POSITION_METERS = -1.0;
 	private static final double DEFAULT_LINEAR_MAX_POSITION_METERS = 1.0;
+	private static final double ZERO_VOLTAGE_EPSILON = 1e-3;
+	private static final double LINEAR_BRAKE_VELOCITY_EPSILON = 0.02;
+	private static final double ROTATIONAL_BRAKE_VELOCITY_EPSILON = 0.02;
 
 	private final String name;
 	private final PositionJointHardwareConfig config;
@@ -55,8 +59,10 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 	private double velocitySetpoint = 0.0;
 	private double currentPosition = 0.0;
 	private double currentVelocity = 0.0;
-	private double maxMotionVelocity = Double.NaN;
-	private double maxMotionAcceleration = Double.NaN;
+	private double maxMotionVelocity = 0.0;
+	private double maxMotionAcceleration = 0.0;
+	private double minPosition = Double.NEGATIVE_INFINITY;
+	private double maxPosition = Double.POSITIVE_INFINITY;
 
 	/**
 	 * Creates a Spark Max simulation-backed joint using either an arm or elevator
@@ -120,10 +126,16 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		currentPosition = getMechanismPosition();
 		currentVelocity = getMechanismVelocity();
 		double availableVoltage = RobotController.getBatteryVoltage();
+		leaderSim.setPosition(currentPosition);
 		leaderSim.iterate(currentVelocity, availableVoltage, 0.02);
 		double appliedVoltage = leaderSim.getAppliedOutput() * availableVoltage;
-		setSimulationInputVoltage(appliedVoltage);
-		updateSimulation();
+		if (shouldHoldBrake(appliedVoltage, currentVelocity)) {
+			holdBrakeState(currentPosition);
+		} else {
+			setSimulationInputVoltage(appliedVoltage);
+			updateSimulation();
+			clampToLimits();
+		}
 
 		double loadedBatteryVoltage = BatterySim.calculateDefaultBatteryLoadedVoltage(getSimulationCurrentDrawAmps());
 		RoboRioSim.setVInVoltage(loadedBatteryVoltage);
@@ -162,9 +174,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		positionSetpoint = position;
 		velocitySetpoint = velocity;
 		ensureMaxMotionConfig(maxMotionVelocity, maxMotionAcceleration);
-		double ffPosition = currentPosition + feedforwardPositionAddition;
-		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
-				ClosedLoopSlot.kSlot0, feedforward.calculate(ffPosition, currentVelocity, velocity, 0.02));
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl);
 	}
 
 	/** Commands the sim joint with temporary MAXMotion cruise constraints. */
@@ -173,9 +183,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		positionSetpoint = position;
 		velocitySetpoint = 0.0;
 		ensureMaxMotionConfig(Math.abs(maxVelocity), Math.abs(maxAcceleration));
-		double ffPosition = currentPosition + feedforwardPositionAddition;
-		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
-				ClosedLoopSlot.kSlot0, feedforward.calculate(ffPosition, currentVelocity, 0.0, 0.02));
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl);
 		return true;
 	}
 
@@ -190,12 +198,20 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 	 */
 	@Override
 	public void setGains(PositionJointGains gains) {
-		feedforward.setGains(0.0, gains.kG(), gains.kV(), gains.kA());
+		feedforward.setGains(gains.kS(), 0.0, gains.kV(), gains.kA());
 		maxMotionVelocity = gains.kMaxVelo();
 		maxMotionAcceleration = gains.kMaxAccel();
-		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
-				.apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity).maxAcceleration(maxMotionAcceleration)
-						.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal))),
+		minPosition = gains.kMinPosition();
+		maxPosition = gains.kMaxPosition();
+		motors[0].configure(
+				leaderConfig
+						.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
+								.apply(createBuiltInFeedforwardConfig(gains))
+								.apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
+										.maxAcceleration(maxMotionAcceleration)
+										.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
+						.apply(new SoftLimitConfig().forwardSoftLimit(maxPosition).forwardSoftLimitEnabled(true)
+								.reverseSoftLimit(minPosition).reverseSoftLimitEnabled(true)),
 				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
 		System.out.println(name + " gains set to " + gains);
 	}
@@ -211,6 +227,8 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		SparkMaxConfig leader = new SparkMaxConfig();
 		leader.apply(new EncoderConfig().positionConversionFactor(1.0 / config.gearRatio())
 				.velocityConversionFactor(1.0 / (60.0 * config.gearRatio())));
+		leader.apply(new ClosedLoopConfig().apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
+				.maxAcceleration(maxMotionAcceleration).positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)));
 		leader.inverted(config.reversed()[0]).smartCurrentLimit(config.currentLimit()).idleMode(IdleMode.kBrake);
 		if (config.encoderType() == frc.robot.constants.types.PositionJointConstants.EncoderType.EXTERNAL_SPARK) {
 			leader.apply(new AbsoluteEncoderConfig().positionConversionFactor(1.0).velocityConversionFactor(1.0)
@@ -274,5 +292,52 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 			return linearSim.getCurrentDrawAmps();
 		}
 		return rotationalSim.getCurrentDrawAmps();
+	}
+
+	private boolean shouldHoldBrake(double appliedVoltage, double mechanismVelocity) {
+		if (Math.abs(appliedVoltage) > ZERO_VOLTAGE_EPSILON) {
+			return false;
+		}
+		double velocityEpsilon = config.mechanismType() == MechanismType.LINEAR
+				? LINEAR_BRAKE_VELOCITY_EPSILON
+				: ROTATIONAL_BRAKE_VELOCITY_EPSILON;
+		return Math.abs(mechanismVelocity) < velocityEpsilon;
+	}
+
+	private void holdBrakeState(double mechanismPosition) {
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			linearSim.setInputVoltage(0.0);
+			linearSim.setState(clampPosition(mechanismPosition), 0.0);
+			return;
+		}
+		rotationalSim.setInputVoltage(0.0);
+		rotationalSim.setState(clampPosition(mechanismPosition) * 2.0 * Math.PI, 0.0);
+	}
+
+	private void clampToLimits() {
+		double position = getMechanismPosition();
+		double clampedPosition = clampPosition(position);
+		if (clampedPosition == position) {
+			return;
+		}
+		if (config.mechanismType() == MechanismType.LINEAR) {
+			linearSim.setInputVoltage(0.0);
+			linearSim.setState(clampedPosition, 0.0);
+			return;
+		}
+		rotationalSim.setInputVoltage(0.0);
+		rotationalSim.setState(clampedPosition * 2.0 * Math.PI, 0.0);
+	}
+
+	private double clampPosition(double position) {
+		return Math.max(minPosition, Math.min(maxPosition, position));
+	}
+
+	private FeedForwardConfig createBuiltInFeedforwardConfig(PositionJointGains gains) {
+		FeedForwardConfig config = new FeedForwardConfig().kS(gains.kS()).kA(gains.kA());
+		if (this.config.gravityType() == GravityType.CONSTANT) {
+			return config.kG(gains.kG());
+		}
+		return config.kCos(gains.kG()).kCosRatio(1.0);
 	}
 }

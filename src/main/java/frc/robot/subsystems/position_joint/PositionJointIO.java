@@ -46,6 +46,7 @@ public interface PositionJointIO {
 		public double[] motorVoltages = {0.0};
 		/** Per-motor current draw telemetry. */
 		public double[] motorCurrents = {0.0};
+
 	}
 
 	/** Refreshes all sensor and diagnostic inputs. */

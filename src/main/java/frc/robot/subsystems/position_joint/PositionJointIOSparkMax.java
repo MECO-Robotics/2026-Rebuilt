@@ -6,18 +6,20 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.REVLibError;
 import com.revrobotics.ResetMode;
-import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.FeedbackSensor;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.MAXMotionConfig;
-import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.config.AbsoluteEncoderConfig;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
+import com.revrobotics.spark.config.FeedForwardConfig;
+import com.revrobotics.spark.config.MAXMotionConfig;
+import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SoftLimitConfig;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
@@ -63,8 +65,10 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	private double currentPosition = 0.0;
 	private double positionSetpoint = 0.0;
 	private double velocitySetpoint = 0.0;
-	private double maxMotionVelocity = Double.NaN;
-	private double maxMotionAcceleration = Double.NaN;
+	private double maxMotionVelocity = 0.0;
+	private double maxMotionAcceleration = 0.0;
+	private double minPosition = Double.NEGATIVE_INFINITY;
+	private double maxPosition = Double.POSITIVE_INFINITY;
 
 	/**
 	 * Creates a SparkMax position-joint IO implementation.
@@ -102,6 +106,9 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 			leaderConfig = new SparkMaxConfig()
 					.apply(new EncoderConfig().positionConversionFactor(1.0 / config.gearRatio())
 							.velocityConversionFactor(1.0 / (60.0 * config.gearRatio())))
+					.apply(new ClosedLoopConfig().apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
+							.maxAcceleration(maxMotionAcceleration)
+							.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
 					.inverted(config.reversed()[0]).smartCurrentLimit(config.currentLimit()).idleMode(IdleMode.kBrake);
 
 		} else {
@@ -109,6 +116,9 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 			leaderConfig = new SparkMaxConfig()
 					.apply(new EncoderConfig().positionConversionFactor(1.0 / config.gearRatio())
 							.velocityConversionFactor(1.0 / (60.0 * config.gearRatio())).inverted(config.reversed()[0]))
+					.apply(new ClosedLoopConfig().apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity)
+							.maxAcceleration(maxMotionAcceleration)
+							.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
 					.idleMode(IdleMode.kBrake);
 		}
 
@@ -117,9 +127,9 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 				externalEncoder = new IAbsoluteEncoder() {
 				};
 
-				encoderAlert = new Alert(name, name + " does not use an external encoder 💀", AlertType.kInfo);
+				encoderAlert = new Alert(name, name + " does not use an external encoder ðŸ’€", AlertType.kInfo);
 
-				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				motors[0].configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 				break;
 			case EXTERNAL_CANCODER :
 				externalEncoder = new AbsoluteCancoder(config.encoderID(), config.canBus(),
@@ -130,7 +140,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 				encoderAlert = new Alert(name, name + " CANCoder Disconnected! CAN ID: " + config.encoderID(),
 						AlertType.kError);
 
-				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				motors[0].configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 				motors[0].getEncoder().setPosition(externalEncoder.getAbsoluteAngle().getRotations());
 				break;
 			case EXTERNAL_CANCODER_PRO :
@@ -141,7 +151,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 				encoderAlert = new Alert(name, name + " DIO Encoder Disconnected! DIO ID: " + config.encoderID(),
 						AlertType.kWarning);
 
-				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				motors[0].configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 				motors[0].getEncoder()
 						.setPosition(externalEncoder.getAbsoluteAngle().plus(config.encoderOffset()).getRotations());
 				break;
@@ -155,7 +165,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 						.apply(new AbsoluteEncoderConfig().positionConversionFactor(1.0).velocityConversionFactor(1.0)
 								.zeroOffset(config.encoderOffset().getRotations()).averageDepth(2));
 
-				motors[0].configure(leaderConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+				motors[0].configure(leaderConfig, ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 				motors[0].getEncoder().setPosition(
 						motors[0].getAbsoluteEncoder().getPosition() + config.encoderOffset().getRotations());
 				break;
@@ -163,7 +173,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 			default :
 				externalEncoder = new IAbsoluteEncoder() {
 				};
-				encoderAlert = new Alert(name, name + " does not use an external encoder 💀", AlertType.kInfo);
+				encoderAlert = new Alert(name, name + " does not use an external encoder ðŸ’€", AlertType.kInfo);
 				break;
 		}
 
@@ -173,7 +183,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 		for (int i = 1; i < config.canIds().length; i++) {
 			motors[i] = new SparkMax(config.canIds()[i], isBrushless ? MotorType.kBrushless : MotorType.kBrushed);
 			motors[i].configure(new SparkMaxConfig().follow(motors[0], config.reversed()[i]).idleMode(IdleMode.kBrake),
-					ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+					ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
 			motorAlerts[i] = new Alert(name,
 					name + " Follower Motor " + i + " Disconnected! CAN ID: " + config.canIds()[i], AlertType.kError);
@@ -253,14 +263,8 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	public void setPosition(double desiredPosition, double desiredVelocity) {
 		positionSetpoint = desiredPosition;
 		ensureMaxMotionConfig(maxMotionVelocity, maxMotionAcceleration);
-
-		double ffposition = currentPosition + feedforward_position_addition;
-
-		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
-				ClosedLoopSlot.kSlot0, feedforward.calculate(ffposition, velocitySetpoint, desiredVelocity, 0.02)
-						+ externalFeedforward.getAsDouble());
-
 		velocitySetpoint = desiredVelocity;
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl);
 	}
 
 	@Override
@@ -268,12 +272,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 		positionSetpoint = position;
 		velocitySetpoint = 0.0;
 		ensureMaxMotionConfig(Math.abs(maxVelocity), Math.abs(maxAcceleration));
-
-		double ffposition = currentPosition + feedforward_position_addition;
-		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl,
-				ClosedLoopSlot.kSlot0,
-				feedforward.calculate(ffposition, motors[0].getEncoder().getVelocity(), 0.0, 0.02)
-						+ externalFeedforward.getAsDouble());
+		motors[0].getClosedLoopController().setSetpoint(positionSetpoint, ControlType.kMAXMotionPositionControl);
 		return true;
 	}
 
@@ -287,11 +286,21 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 		feedforward.setGains(gains.kS(), gains.kG(), gains.kV(), gains.kA());
 		maxMotionVelocity = gains.kMaxVelo();
 		maxMotionAcceleration = gains.kMaxAccel();
+		minPosition = gains.kMinPosition();
+		maxPosition = gains.kMaxPosition();
 
-		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig().pid(gains.kP(), gains.kI(), gains.kD())
+		motors[0].configure(leaderConfig.apply(new ClosedLoopConfig()
+				.feedbackSensor(hardwareConfig
+						.encoderType() == frc.robot.constants.types.PositionJointConstants.EncoderType.EXTERNAL_SPARK
+								? FeedbackSensor.kAbsoluteEncoder
+								: FeedbackSensor.kPrimaryEncoder)
+				.pid(gains.kP(), gains.kI(), gains.kD()).outputRange(-1.0, 1.0)
+				.apply(createBuiltInFeedforwardConfig(gains))
 				.apply(new MAXMotionConfig().cruiseVelocity(maxMotionVelocity).maxAcceleration(maxMotionAcceleration)
-						.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal))),
-				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+						.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)))
+				.apply(new SoftLimitConfig().forwardSoftLimit(maxPosition).forwardSoftLimitEnabled(true)
+						.reverseSoftLimit(minPosition).reverseSoftLimitEnabled(true)),
+				ResetMode.kResetSafeParameters, PersistMode.kNoPersistParameters);
 
 		System.out.println(name + " gains set to " + gains);
 	}
@@ -322,5 +331,13 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 						new MAXMotionConfig().cruiseVelocity(maxMotionVelocity).maxAcceleration(maxMotionAcceleration)
 								.positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal))),
 				ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+	}
+
+	private FeedForwardConfig createBuiltInFeedforwardConfig(PositionJointGains gains) {
+		FeedForwardConfig config = new FeedForwardConfig().kS(gains.kS()).kA(gains.kA());
+		if (hardwareConfig.gravityType() == GravityType.CONSTANT) {
+			return config.kG(gains.kG());
+		}
+		return config.kCos(gains.kG()).kCosRatio(1.0);
 	}
 }

@@ -25,6 +25,11 @@ public class PositionJointVelocityCommand extends Command {
 	}
 
 	@Override
+	public void initialize() {
+		positionJoint.syncGoalToCurrentPosition();
+	}
+
+	@Override
 	public void execute() {
 		positionJoint.incrementPosition(velocity.getAsDouble() * 0.02);
 	}
