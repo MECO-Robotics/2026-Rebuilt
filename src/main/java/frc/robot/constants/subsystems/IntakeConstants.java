@@ -29,7 +29,7 @@ public final class IntakeConstants {
 
 	public static final FlywheelGains INTAKE_ROLLER_GAINS = new FlywheelGains(0, 0.0, 0.0, 0, 0, 0.0, 1, 0.1);
 
-	public static final PositionJointGains INTAKE_RACK_GAINS = new PositionJointGains(200, 0.0, 0, 0.4, 0.03, 0, 0.0,
+	public static final PositionJointGains INTAKE_RACK_GAINS = new PositionJointGains(175, 0.0, 0, 0.4, 0.03, 0, 0.0,
 			0.5, 100.0, 0, 0.35, 0.02, 0.0);
 	public static final PositionJointHardwareConfig INTAKE_RACK_CONFIG = new PositionJointHardwareConfig(new int[]{21},
 			new boolean[]{false}, INTAKE_RACK_GEAR_RATIO, INTAKE_RACK_INPUT_SHAFT_MOI_KG_METERS_SQUARED, 40,
