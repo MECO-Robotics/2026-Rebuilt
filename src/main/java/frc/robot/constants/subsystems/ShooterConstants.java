@@ -22,7 +22,7 @@ public final class ShooterConstants {
 	}
 
 	public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{32},
-			new boolean[]{true}, 1, 0.025, 40, "");
+			new boolean[]{false}, 1, 0.025, 40, "");
 	public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{31},
 			new boolean[]{false}, 1, 0.025, 40, "MECO 2");
 	public static final FlywheelGains INDEXER_ROLLER_GAINS = new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
