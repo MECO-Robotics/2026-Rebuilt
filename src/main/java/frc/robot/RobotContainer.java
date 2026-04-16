@@ -241,7 +241,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("FeedRollers",
 				ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly());
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
-		NamedCommands.registerCommand("Agitate Intake", ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
+		NamedCommands.registerCommand("Agitate", ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
 		NamedCommands.registerCommand("AutoSpinUp", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
