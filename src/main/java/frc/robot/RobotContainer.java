@@ -205,11 +205,11 @@ public class RobotContainer {
 		// Shooter presets
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		coPilot.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
+		coPilot.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood).repeatedly());
 
-		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
 
-		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
+		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood).repeatedly());
 	}
 
 	public void updateDashboardOutputs() {
