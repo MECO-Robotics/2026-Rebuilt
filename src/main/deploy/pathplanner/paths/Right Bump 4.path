@@ -16,12 +16,12 @@
     },
     {
       "anchor": {
-        "x": 5.7871026490066235,
-        "y": 2.8008112582781464
+        "x": 6.171957295373667,
+        "y": 3.6315302491103196
       },
       "prevControl": {
-        "x": 5.140968543046359,
-        "y": 1.9368791390728477
+        "x": 5.892218268090155,
+        "y": 1.4796915776986936
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,16 +33,16 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 4.5,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 5.0,
+    "maxAcceleration": 4.0,
     "maxAngularVelocity": 600.0,
-    "maxAngularAcceleration": 400.0,
+    "maxAngularAcceleration": 600.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 4.0,
-    "rotation": 41.0548137709625
+    "rotation": 91.25904520717532
   },
   "reversed": false,
   "folder": "Right Trench Bump",

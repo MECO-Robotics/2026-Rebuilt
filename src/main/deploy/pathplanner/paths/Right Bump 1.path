@@ -28,31 +28,26 @@
       "linkedName": "Right Bump 1 end"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.5193704600484258,
-      "rotationDegrees": 59.99999999999999
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 4.5,
-    "maxAcceleration": 3.0,
+    "maxVelocity": 5.0,
+    "maxAcceleration": 4.0,
     "maxAngularVelocity": 600.0,
-    "maxAngularAcceleration": 400.0,
+    "maxAngularAcceleration": 600.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
+    "velocity": 1.0,
     "rotation": 39.80557109226519
   },
   "reversed": false,
   "folder": "Right Trench Bump",
   "idealStartingState": {
-    "velocity": 4.0,
+    "velocity": 5.0,
     "rotation": 136.0
   },
   "useDefaultConstraints": true

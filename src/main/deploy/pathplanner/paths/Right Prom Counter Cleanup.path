@@ -1,65 +1,59 @@
 {
-    "version":  "2025.0",
-    "waypoints":  [
-                      {
-                          "anchor":  {
-                                         "x":  2.98476821192053,
-                                         "y":  2.2635761589403973
-                                     },
-                          "prevControl":  null,
-                          "nextControl":  {
-                                              "x":  4.807011589403974,
-                                              "y":  2.3434354304635772
-                                          },
-                          "isLocked":  false,
-                          "linkedName":  "Prom Counter Start end"
-                      },
-                      {
-                          "anchor":  {
-                                         "x":  5.910521523178808,
-                                         "y":  4.0059602649006631
-                                     },
-                          "prevControl":  {
-                                              "x":  5.997640728476821,
-                                              "y":  2.4087748344370867
-                                          },
-                          "nextControl":  null,
-                          "isLocked":  false,
-                          "linkedName":  "Prom Counter Cleanup end"
-                      }
-                  ],
-    "rotationTargets":  [
-                            {
-                                "waypointRelativePos":  0.596852300242136,
-                                "rotationDegrees":  45
-                            }
-                        ],
-    "constraintZones":  [
-
-                        ],
-    "pointTowardsZones":  [
-
-                          ],
-    "eventMarkers":  [
-
-                     ],
-    "globalConstraints":  {
-                              "maxVelocity":  4.5,
-                              "maxAcceleration":  3.0,
-                              "maxAngularVelocity":  600.0,
-                              "maxAngularAcceleration":  400.0,
-                              "nominalVoltage":  12.0,
-                              "unlimited":  false
-                          },
-    "goalEndState":  {
-                         "velocity":  0,
-                         "rotation":  110
-                     },
-    "reversed":  false,
-    "folder":  "Prom Counter",
-    "idealStartingState":  {
-                               "velocity":  0,
-                               "rotation":  47.91083782616775
-                           },
-    "useDefaultConstraints":  true
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.98476821192053,
+        "y": 2.2635761589404
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 4.807011589403974,
+        "y": 2.34343543046358
+      },
+      "isLocked": false,
+      "linkedName": "Prom Counter Start end"
+    },
+    {
+      "anchor": {
+        "x": 5.910521523178808,
+        "y": 4.00596026490066
+      },
+      "prevControl": {
+        "x": 5.997640728476821,
+        "y": 2.4087748344370894
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Prom Counter Cleanup end"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.596852300242136,
+      "rotationDegrees": 45.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 600.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 110.0
+  },
+  "reversed": false,
+  "folder": "Right Prom Counter",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 47.91083782616775
+  },
+  "useDefaultConstraints": true
 }

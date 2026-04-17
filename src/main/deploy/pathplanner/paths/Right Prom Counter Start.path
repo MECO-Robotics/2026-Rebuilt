@@ -1,121 +1,115 @@
 {
-    "version":  "2025.0",
-    "waypoints":  [
-                      {
-                          "anchor":  {
-                                         "x":  4.12452170659171,
-                                         "y":  0.61261740347667537
-                                     },
-                          "prevControl":  null,
-                          "nextControl":  {
-                                              "x":  7.761804635761589,
-                                              "y":  0.3469536423841042
-                                          },
-                          "isLocked":  false,
-                          "linkedName":  null
-                      },
-                      {
-                          "anchor":  {
-                                         "x":  7.950562913907284,
-                                         "y":  2.749991721854304
-                                     },
-                          "prevControl":  {
-                                              "x":  7.907003311258277,
-                                              "y":  1.4214238410596023
-                                          },
-                          "nextControl":  {
-                                              "x":  7.967217807695917,
-                                              "y":  3.2579659824076472
-                                          },
-                          "isLocked":  false,
-                          "linkedName":  null
-                      },
-                      {
-                          "anchor":  {
-                                         "x":  6.912392384105959,
-                                         "y":  4.3108774834437078
-                                     },
-                          "prevControl":  {
-                                              "x":  8.199108228752133,
-                                              "y":  4.5774942800821057
-                                          },
-                          "nextControl":  {
-                                              "x":  6.106539735099338,
-                                              "y":  4.1438990066225152
-                                          },
-                          "isLocked":  false,
-                          "linkedName":  null
-                      },
-                      {
-                          "anchor":  {
-                                         "x":  6.222698675496689,
-                                         "y":  2.6338327814569524
-                                     },
-                          "prevControl":  {
-                                              "x":  6.69070095655126,
-                                              "y":  3.0808012521270474
-                                          },
-                          "nextControl":  {
-                                              "x":  5.5765645695364245,
-                                              "y":  2.0167384105960275
-                                          },
-                          "isLocked":  false,
-                          "linkedName":  null
-                      },
-                      {
-                          "anchor":  {
-                                         "x":  2.98476821192053,
-                                         "y":  2.2635761589403973
-                                     },
-                          "prevControl":  {
-                                              "x":  4.748932119205298,
-                                              "y":  2.6628725165562912
-                                          },
-                          "nextControl":  null,
-                          "isLocked":  false,
-                          "linkedName":  "Prom Counter Start end"
-                      }
-                  ],
-    "rotationTargets":  [
-                            {
-                                "waypointRelativePos":  0.5,
-                                "rotationDegrees":  74.9517263999016
-                            },
-                            {
-                                "waypointRelativePos":  1.2881355932203333,
-                                "rotationDegrees":  109.4226804793996
-                            },
-                            {
-                                "waypointRelativePos":  2.164648910411617,
-                                "rotationDegrees":  -105.98546035395739
-                            }
-                        ],
-    "constraintZones":  [
-
-                        ],
-    "pointTowardsZones":  [
-
-                          ],
-    "eventMarkers":  [
-
-                     ],
-    "globalConstraints":  {
-                              "maxVelocity":  4.5,
-                              "maxAcceleration":  3.0,
-                              "maxAngularVelocity":  600.0,
-                              "maxAngularAcceleration":  400.0,
-                              "nominalVoltage":  12.0,
-                              "unlimited":  false
-                          },
-    "goalEndState":  {
-                         "velocity":  4.0,
-                         "rotation":  47.91083782616775
-                     },
-    "reversed":  false,
-    "folder":  "Prom Counter",
-    "idealStartingState":  {
-                               "velocity":  0,
-                               "rotation":  179.9640335072485
-                           },
-    "useDefaultConstraints":  true
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.12452170659171,
+        "y": 0.61261740347668
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 7.761804635761589,
+        "y": 0.3469536423841
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.950562913907284,
+        "y": 2.7499917218543
+      },
+      "prevControl": {
+        "x": 7.907003311258277,
+        "y": 1.4214238410596
+      },
+      "nextControl": {
+        "x": 7.967217807695917,
+        "y": 3.25796598240765
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.912392384105959,
+        "y": 4.31087748344371
+      },
+      "prevControl": {
+        "x": 8.199108228752133,
+        "y": 4.57749428008211
+      },
+      "nextControl": {
+        "x": 6.106539735099338,
+        "y": 4.14389900662252
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.222698675496689,
+        "y": 2.63383278145695
+      },
+      "prevControl": {
+        "x": 6.69070095655126,
+        "y": 3.08080125212705
+      },
+      "nextControl": {
+        "x": 5.5765645695364245,
+        "y": 2.01673841059603
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.98476821192053,
+        "y": 2.2635761589404
+      },
+      "prevControl": {
+        "x": 4.748932119205298,
+        "y": 2.66287251655629
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Prom Counter Start end"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 74.9517263999016
+    },
+    {
+      "waypointRelativePos": 1.2881355932203333,
+      "rotationDegrees": 109.4226804793996
+    },
+    {
+      "waypointRelativePos": 2.164648910411617,
+      "rotationDegrees": -105.9854603539574
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.0,
+    "maxAcceleration": 4.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 600.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 4.0,
+    "rotation": 47.91083782616775
+  },
+  "reversed": false,
+  "folder": "Right Prom Counter",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 179.9640335072485
+  },
+  "useDefaultConstraints": true
 }

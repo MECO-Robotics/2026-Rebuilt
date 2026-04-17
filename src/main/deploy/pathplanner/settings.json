@@ -13,10 +13,10 @@
     "Right Rush"
   ],
   "autoFolders": [],
-  "defaultMaxVel": 4.5,
-  "defaultMaxAccel": 3.0,
+  "defaultMaxVel": 5.0,
+  "defaultMaxAccel": 4.0,
   "defaultMaxAngVel": 600.0,
-  "defaultMaxAngAccel": 400.0,
+  "defaultMaxAngAccel": 600.0,
   "defaultNominalVoltage": 12.0,
   "robotMass": 61.0,
   "robotMOI": 6.883,

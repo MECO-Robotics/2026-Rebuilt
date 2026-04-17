@@ -51,17 +51,17 @@
     },
     {
       "waypointRelativePos": 1.0631578947368414,
-      "rotationDegrees": -21.5404564874483
+      "rotationDegrees": -21.540456487448303
     }
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 4.5,
+    "maxVelocity": 5.0,
     "maxAcceleration": 4.0,
-    "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 400.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 600.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
@@ -70,7 +70,7 @@
     "rotation": 131.51672853100243
   },
   "reversed": false,
-  "folder": "Left Bump X3",
+  "folder": null,
   "idealStartingState": {
     "velocity": 0,
     "rotation": -51.351165176973055
