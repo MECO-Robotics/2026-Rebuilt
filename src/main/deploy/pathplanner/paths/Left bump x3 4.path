@@ -3,48 +3,57 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5460416666666665,
-        "y": 0.6186333333333334
+        "x": 7.922316666672236,
+        "y": 6.521691666659837
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.729741666666667,
-        "y": 0.7924749999999992
+        "x": 6.652516666666667,
+        "y": 7.700791666666667
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "left bump x3 3 end"
     },
     {
       "anchor": {
-        "x": 1.9512333333333332,
-        "y": 1.1855083333333334
+        "x": 4.271641666666667,
+        "y": 7.4286916666666665
       },
       "prevControl": {
-        "x": 2.669275,
-        "y": 1.1855083333333334
+        "x": 5.480338537699358,
+        "y": 7.386650036369877
       },
       "nextControl": {
-        "x": 1.3457169512033564,
-        "y": 1.1855083333333334
+        "x": 2.533225,
+        "y": 7.489158333333333
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 0.39421666666666666,
-        "y": 0.6186333333333334
+        "x": 2.9867250000000003,
+        "y": 5.5769
       },
       "prevControl": {
-        "x": 1.2256333333333334,
-        "y": 0.8453833333333329
+        "x": 1.8832083333333332,
+        "y": 6.861816666666666
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "left bump x3 4 end"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 1.178947368421053,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -58,13 +67,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -48.911571812528635
   },
   "reversed": false,
-  "folder": "Depot",
+  "folder": "Left Bump X3",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 131.51672853100243
   },
   "useDefaultConstraints": true
 }
