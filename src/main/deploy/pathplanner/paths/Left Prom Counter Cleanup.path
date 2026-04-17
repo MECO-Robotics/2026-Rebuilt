@@ -3,39 +3,35 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.108553388657205,
-        "y": 7.376805383969757
+        "x": 2.98476821192053,
+        "y": 5.806423841059603
       },
       "prevControl": null,
       "nextControl": {
-        "x": 8.173610863398528,
-        "y": 7.524846674480608
+        "x": 4.807011589403974,
+        "y": 5.726564569536423
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left Prom Counter Start end"
     },
     {
       "anchor": {
-        "x": 6.879266666666667,
-        "y": 5.229216666666666
+        "x": 5.910521523178808,
+        "y": 4.064039735099337
       },
       "prevControl": {
-        "x": 9.68053845858949,
-        "y": 6.8832251593407054
+        "x": 5.997640728476821,
+        "y": 5.6612251655629136
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left bump x3 1 end"
+      "linkedName": "Left Prom Counter Cleanup end"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 0.3052631578947363,
-      "rotationDegrees": 180.0
-    },
-    {
-      "waypointRelativePos": 0.5973684210526332,
-      "rotationDegrees": -111.26706519324424
+      "waypointRelativePos": 0.596852300242136,
+      "rotationDegrees": -45.0
     }
   ],
   "constraintZones": [],
@@ -43,7 +39,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 400.0,
     "nominalVoltage": 12.0,
@@ -51,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -135.00000000000009
+    "rotation": -110.0
   },
   "reversed": false,
-  "folder": "Left Bump X3",
+  "folder": "Left Prom Counter",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -179.70309597610805
+    "rotation": -47.91083782616775
   },
   "useDefaultConstraints": true
 }

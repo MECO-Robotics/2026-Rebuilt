@@ -127,4 +127,20 @@ public interface VisionIO {
 		return fromMode(() -> new VisionIOLimelight(limelightName, robotToLimelight),
 				() -> new VisionIOLimelightSim(limelightName, robotToLimelight, simPoseSupplier));
 	}
+
+	/**
+	 * Creates mode-appropriate Limelight IO that uses MegaTag1 normally and
+	 * MegaTag2 only when exactly one tag is visible.
+	 *
+	 * <p>
+	 * Real mode reads both Limelight streams and gates them by tag count. Sim mode
+	 * reuses the Limelight simulator.
+	 */
+	public static VisionIO limelightMegaTag1WithMegaTag2SingleTagWithSim(String limelightName,
+			Supplier<Rotation2d> rotationSupplier, Transform3d robotToLimelight, Supplier<Pose2d> simPoseSupplier) {
+		return fromMode(
+				() -> new VisionIOLimelight(limelightName, robotToLimelight, rotationSupplier,
+						LimelightPoseMode.MEGATAG_1_WITH_MEGATAG_2_SINGLE_TAG),
+				() -> new VisionIOLimelightSim(limelightName, robotToLimelight, simPoseSupplier));
+	}
 }

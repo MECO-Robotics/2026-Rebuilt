@@ -1,0 +1,85 @@
+{
+    "version":  "2025.0",
+    "waypoints":  [
+                      {
+                          "anchor":  {
+                                         "x":  3.333245033112583,
+                                         "y":  5.3635678807947027
+                                     },
+                          "prevControl":  null,
+                          "nextControl":  {
+                                              "x":  5.682476585077355,
+                                              "y":  6.2186182391088742
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  "Left Rush 0 end"
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  6.0557201986754965,
+                                         "y":  4.0712996688741736
+                                     },
+                          "prevControl":  {
+                                              "x":  6.0557201986754965,
+                                              "y":  5.0712996688741727
+                                          },
+                          "nextControl":  {
+                                              "x":  6.0557201986754965,
+                                              "y":  3.0712996688741727
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  3.333245033112583,
+                                         "y":  2.67
+                                     },
+                          "prevControl":  {
+                                              "x":  5.682476585077355,
+                                              "y":  1.8149496416858293
+                                          },
+                          "nextControl":  null,
+                          "isLocked":  false,
+                          "linkedName":  "Left Bump Around end"
+                      }
+                  ],
+    "rotationTargets":  [
+                            {
+                                "waypointRelativePos":  0.9854721549636858,
+                                "rotationDegrees":  -90
+                            },
+                            {
+                                "waypointRelativePos":  1.4455205811137999,
+                                "rotationDegrees":  -138.76022409235571
+                            }
+                        ],
+    "constraintZones":  [
+
+                        ],
+    "pointTowardsZones":  [
+
+                          ],
+    "eventMarkers":  [
+
+                     ],
+    "globalConstraints":  {
+                              "maxVelocity":  4.5,
+                              "maxAcceleration":  3.0,
+                              "maxAngularVelocity":  600.0,
+                              "maxAngularAcceleration":  400.0,
+                              "nominalVoltage":  12.0,
+                              "unlimited":  false
+                          },
+    "goalEndState":  {
+                         "velocity":  4.0,
+                         "rotation":  45
+                     },
+    "reversed":  false,
+    "folder":  "Left Rush",
+    "idealStartingState":  {
+                               "velocity":  0,
+                               "rotation":  -45
+                           },
+    "useDefaultConstraints":  true
+}

@@ -3,43 +3,38 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 6.879266666666667,
-        "y": 5.229216666666666
+        "x": 2.98476821192053,
+        "y": 5.806423841059603
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.629798781019559,
-        "y": 5.727667201761803
+        "x": 5.601720047449585,
+        "y": 5.9124792408066424
       },
       "isLocked": false,
-      "linkedName": "Left bump x3 1 end"
+      "linkedName": "Left Prom Counter Start end"
     },
     {
       "anchor": {
-        "x": 2.9479476527676867,
-        "y": 5.480111713000092
+        "x": 7.678244365361804,
+        "y": 4.685931198102017
       },
       "prevControl": {
-        "x": 5.175947051623089,
-        "y": 5.663486149119879
+        "x": 6.946619217081851,
+        "y": 5.966275207591933
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Left bump x3 2 end"
+      "linkedName": null
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.9223684210526302,
-      "rotationDegrees": -131.26059389556636
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 400.0,
     "nominalVoltage": 12.0,
@@ -47,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -51.351165176973055
+    "rotation": -41.82016988013578
   },
   "reversed": false,
-  "folder": "Left Bump X3",
+  "folder": "Left Prom Counter",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -135.00000000000009
+    "rotation": -47.91083782616775
   },
   "useDefaultConstraints": true
 }

@@ -1,0 +1,66 @@
+{
+    "version":  "2025.0",
+    "waypoints":  [
+                      {
+                          "anchor":  {
+                                         "x":  7.159230132450332,
+                                         "y":  4.9933112582781458
+                                     },
+                          "prevControl":  null,
+                          "nextControl":  {
+                                              "x":  6.7962334437086085,
+                                              "y":  4.8626324503311267
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  "Left Trench Bump 0 end"
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  3.205916666666667,
+                                         "y":  5.6850000000000005
+                                     },
+                          "prevControl":  {
+                                              "x":  4.030198675496688,
+                                              "y":  6.1403807947019864
+                                          },
+                          "nextControl":  null,
+                          "isLocked":  false,
+                          "linkedName":  "Left Trench Bump 1 end"
+                      }
+                  ],
+    "rotationTargets":  [
+                            {
+                                "waypointRelativePos":  0.5193704600484258,
+                                "rotationDegrees":  -59.999999999999993
+                            }
+                        ],
+    "constraintZones":  [
+
+                        ],
+    "pointTowardsZones":  [
+
+                          ],
+    "eventMarkers":  [
+
+                     ],
+    "globalConstraints":  {
+                              "maxVelocity":  4.5,
+                              "maxAcceleration":  3.0,
+                              "maxAngularVelocity":  600.0,
+                              "maxAngularAcceleration":  400.0,
+                              "nominalVoltage":  12.0,
+                              "unlimited":  false
+                          },
+    "goalEndState":  {
+                         "velocity":  0,
+                         "rotation":  -45
+                     },
+    "reversed":  false,
+    "folder":  "Left Trench Bump",
+    "idealStartingState":  {
+                               "velocity":  4.0,
+                               "rotation":  -136
+                           },
+    "useDefaultConstraints":  true
+}
+
