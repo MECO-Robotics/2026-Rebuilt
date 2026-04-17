@@ -3,13 +3,12 @@
   "robotLength": 0.85,
   "holonomicMode": true,
   "pathFolders": [
-    "Depot",
     "Left Backwards",
     "Left Bump",
     "Left Double",
+    "Left Bump X3",
     "Right Bump",
-    "Right Double",
-    "Test"
+    "Right Double"
   ],
   "autoFolders": [],
   "defaultMaxVel": 4.5,

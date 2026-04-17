@@ -3,32 +3,37 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.39421666666666666,
-        "y": 0.6186333333333334
+        "x": 6.879266666666667,
+        "y": 5.229216666666666
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1477499999999994,
-        "y": 1.790174999999999
+        "x": 5.629798781019559,
+        "y": 5.727667201761803
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left bump x3 1 end"
     },
     {
       "anchor": {
-        "x": 3.440225,
-        "y": 3.3169583333333335
+        "x": 2.9479476527676867,
+        "y": 5.480111713000092
       },
       "prevControl": {
-        "x": 2.1704250000000003,
-        "y": 1.9337833333333339
+        "x": 5.175947051623089,
+        "y": 5.663486149119879
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left bump x3 2 end"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.9223684210526302,
+      "rotationDegrees": -131.26059389556636
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 31.827446576673115
+    "rotation": -51.351165176973055
   },
   "reversed": false,
-  "folder": "Depot",
+  "folder": "Left Bump X3",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": -135.00000000000009
   },
   "useDefaultConstraints": true
 }
