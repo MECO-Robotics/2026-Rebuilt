@@ -88,7 +88,7 @@ public final class DrivetrainConstants {
 
 	private static final Current SLIP_CURRENT = Amps.of(50);
 	private static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS = new TalonFXConfiguration().withCurrentLimits(
-			new CurrentLimitsConfigs().withSupplyCurrentLimit(50).withSupplyCurrentLimitEnable(true));
+			new CurrentLimitsConfigs().withSupplyCurrentLimit(55).withSupplyCurrentLimitEnable(true));
 	private static final TalonFXConfiguration STEER_INITIAL_CONFIGS = new TalonFXConfiguration().withCurrentLimits(
 			new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(30)).withStatorCurrentLimitEnable(true));
 	private static final CANcoderConfiguration ENCODER_INITIAL_CONFIGS = new CANcoderConfiguration();
