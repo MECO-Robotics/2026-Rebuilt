@@ -8,24 +8,24 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.433236754966887,
-        "y": 3.773642384105959
+        "x": 7.064850993377482,
+        "y": 4.666614238410595
       },
       "isLocked": false,
       "linkedName": "Right Bump 4 end"
     },
     {
       "anchor": {
-        "x": 8.40067880794702,
-        "y": 3.083948675496689
+        "x": 8.603956953642383,
+        "y": 2.633832781456953
       },
       "prevControl": {
-        "x": 7.761804635761589,
-        "y": 4.36169701986755
+        "x": 8.516546113423937,
+        "y": 4.059722112520339
       },
       "nextControl": {
-        "x": 10.059258307039574,
-        "y": -0.2332103226884099
+        "x": 8.720115894039736,
+        "y": 0.7389900662251647
       },
       "isLocked": false,
       "linkedName": null
@@ -47,11 +47,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 1.1864406779661036,
-      "rotationDegrees": -108.25289317176289
-    },
-    {
-      "waypointRelativePos": 1.4963680387409288,
-      "rotationDegrees": -173.72734759537875
+      "rotationDegrees": -126.6573888681769
     },
     {
       "waypointRelativePos": 1.830508474576272,
@@ -64,7 +60,7 @@
   "globalConstraints": {
     "maxVelocity": 4.5,
     "maxAcceleration": 4.0,
-    "maxAngularVelocity": 540.0,
+    "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 400.0,
     "nominalVoltage": 12.0,
     "unlimited": false
