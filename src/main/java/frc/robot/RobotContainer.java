@@ -207,7 +207,7 @@ public class RobotContainer {
 		// Shooter presets
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		coPilot.x().onTrue(ShooterCommands.hubPreset(shooterFlywheel, hood).repeatedly());
+		controller.x().or(coPilot.x()).onTrue(ShooterCommands.hubPreset(shooterFlywheel, hood).repeatedly());
 
 		coPilot.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
 
