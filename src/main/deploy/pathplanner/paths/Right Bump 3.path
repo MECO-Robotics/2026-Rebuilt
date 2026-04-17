@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.6873344370860925,
-        "y": 1.0511672185430458
+        "x": 6.559288256227758,
+        "y": 0.6619928825622778
       },
       "isLocked": false,
       "linkedName": "Right Bump 2 end"
@@ -31,7 +31,7 @@
   "rotationTargets": [
     {
       "waypointRelativePos": 0.7276029055690079,
-      "rotationDegrees": 168.25597282560292
+      "rotationDegrees": -177.3669713322526
     }
   ],
   "constraintZones": [],
