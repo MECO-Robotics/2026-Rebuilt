@@ -69,6 +69,7 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	private double maxMotionAcceleration = 0.0;
 	private double minPosition = Double.NEGATIVE_INFINITY;
 	private double maxPosition = Double.POSITIVE_INFINITY;
+	private boolean brakeModeEnabled = true;
 
 	/**
 	 * Creates a SparkMax position-joint IO implementation.
@@ -279,6 +280,23 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 	@Override
 	public void setVoltage(double voltage) {
 		motors[0].setVoltage(voltage);
+	}
+
+	@Override
+	public void setBrakeMode(boolean enabled) {
+		if (brakeModeEnabled == enabled) {
+			return;
+		}
+
+		brakeModeEnabled = enabled;
+		IdleMode idleMode = enabled ? IdleMode.kBrake : IdleMode.kCoast;
+		motors[0].configureAsync(new SparkMaxConfig().idleMode(idleMode), ResetMode.kNoResetSafeParameters,
+				PersistMode.kNoPersistParameters);
+		for (int i = 1; i < motors.length; i++) {
+			motors[i].configureAsync(
+					new SparkMaxConfig().follow(motors[0], hardwareConfig.reversed()[i]).idleMode(idleMode),
+					ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+		}
 	}
 
 	@Override

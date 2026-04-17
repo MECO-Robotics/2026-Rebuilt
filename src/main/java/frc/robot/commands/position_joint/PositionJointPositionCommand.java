@@ -11,6 +11,7 @@ public class PositionJointPositionCommand extends Command {
 	private final PositionJoint positionJoint;
 	private final DoubleSupplier position;
 	private final DoubleSupplier maxVelocity;
+	private final boolean complianceAfterTarget;
 
 	/**
 	 * Creates a position setpoint command for a position joint.
@@ -21,7 +22,7 @@ public class PositionJointPositionCommand extends Command {
 	 *            supplier for desired position
 	 */
 	public PositionJointPositionCommand(PositionJoint positionJoint, DoubleSupplier position) {
-		this(positionJoint, position, null);
+		this(positionJoint, position, null, false);
 	}
 
 	/**
@@ -37,15 +38,26 @@ public class PositionJointPositionCommand extends Command {
 	 */
 	public PositionJointPositionCommand(PositionJoint positionJoint, DoubleSupplier position,
 			DoubleSupplier maxVelocity) {
+		this(positionJoint, position, maxVelocity, false);
+	}
+
+	/**
+	 * Creates a position setpoint command for a position joint with optional
+	 * compliance mode after reaching target.
+	 */
+	public PositionJointPositionCommand(PositionJoint positionJoint, DoubleSupplier position,
+			DoubleSupplier maxVelocity, boolean complianceAfterTarget) {
 		this.positionJoint = positionJoint;
 		this.position = position;
 		this.maxVelocity = maxVelocity;
+		this.complianceAfterTarget = complianceAfterTarget;
 
 		addRequirements(positionJoint);
 	}
 
 	@Override
 	public void initialize() {
+		positionJoint.setComplianceAfterTarget(complianceAfterTarget);
 		updateSetpoint();
 	}
 
