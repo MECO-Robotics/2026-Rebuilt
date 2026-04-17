@@ -3,35 +3,35 @@
     "waypoints":  [
                       {
                           "anchor":  {
-                                         "x":  2.98476821192053,
-                                         "y":  2.2635761589404
+                                         "x":  7.159230132450332,
+                                         "y":  4.9933112582781458
                                      },
                           "prevControl":  null,
                           "nextControl":  {
-                                              "x":  4.807011589403974,
-                                              "y":  2.34343543046358
+                                              "x":  6.7962334437086085,
+                                              "y":  4.8626324503311267
                                           },
                           "isLocked":  false,
-                          "linkedName":  "Prom Counter Start end"
+                          "linkedName":  "Left Trench Bump 0 end"
                       },
                       {
                           "anchor":  {
-                                         "x":  5.910521523178808,
-                                         "y":  4.00596026490066
+                                         "x":  3.205916666666667,
+                                         "y":  5.6850000000000005
                                      },
                           "prevControl":  {
-                                              "x":  5.997640728476821,
-                                              "y":  2.40877483443709
+                                              "x":  4.030198675496688,
+                                              "y":  6.1403807947019864
                                           },
                           "nextControl":  null,
                           "isLocked":  false,
-                          "linkedName":  "Prom Counter Cleanup end"
+                          "linkedName":  "Left Trench Bump 1 end"
                       }
                   ],
     "rotationTargets":  [
                             {
-                                "waypointRelativePos":  0.596852300242136,
-                                "rotationDegrees":  45
+                                "waypointRelativePos":  0.5193704600484258,
+                                "rotationDegrees":  -59.999999999999993
                             }
                         ],
     "constraintZones":  [
@@ -53,13 +53,14 @@
                           },
     "goalEndState":  {
                          "velocity":  0,
-                         "rotation":  110
+                         "rotation":  -45
                      },
     "reversed":  false,
-    "folder":  "Prom Counter",
+    "folder":  "Left Trench Bump",
     "idealStartingState":  {
-                               "velocity":  0,
-                               "rotation":  47.91083782616775
+                               "velocity":  4.0,
+                               "rotation":  -136
                            },
     "useDefaultConstraints":  true
 }
+

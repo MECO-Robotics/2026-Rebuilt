@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.98476821192053,
+        "y": 5.806423841059603
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 5.601720047449585,
+        "y": 5.9124792408066424
+      },
+      "isLocked": false,
+      "linkedName": "Left Prom Counter Start end"
+    },
+    {
+      "anchor": {
+        "x": 7.678244365361804,
+        "y": 4.685931198102017
+      },
+      "prevControl": {
+        "x": 6.946619217081851,
+        "y": 5.966275207591933
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 400.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -41.82016988013578
+  },
+  "reversed": false,
+  "folder": "Left Prom Counter",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -47.91083782616775
+  },
+  "useDefaultConstraints": true
+}

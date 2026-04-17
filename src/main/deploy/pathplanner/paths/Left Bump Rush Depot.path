@@ -1,0 +1,97 @@
+{
+    "version":  "2025.0",
+    "waypoints":  [
+                      {
+                          "anchor":  {
+                                         "x":  3.333245033112583,
+                                         "y":  2.67
+                                     },
+                          "prevControl":  null,
+                          "nextControl":  {
+                                              "x":  2.7306705298013245,
+                                              "y":  1.7844205298013254
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  "Left Bump Around end"
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  1.126225165562914,
+                                         "y":  0.90596854304635865
+                                     },
+                          "prevControl":  {
+                                              "x":  1.8756747009500165,
+                                              "y":  0.40633551945495672
+                                          },
+                          "nextControl":  {
+                                              "x":  0.3857119205298013,
+                                              "y":  1.3996440397351009
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  0.9592466887417217,
+                                         "y":  2.4595943708609278
+                                     },
+                          "prevControl":  {
+                                              "x":  0.799528145695364,
+                                              "y":  2.1111175496688741
+                                          },
+                          "nextControl":  {
+                                              "x":  1.1505095283576232,
+                                              "y":  2.876895111841077
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  3.333245033112583,
+                                         "y":  2.67
+                                     },
+                          "prevControl":  {
+                                              "x":  3.0784778842602165,
+                                              "y":  2.6758286359980206
+                                          },
+                          "nextControl":  null,
+                          "isLocked":  false,
+                          "linkedName":  "Left Bump Around end"
+                      }
+                  ],
+    "rotationTargets":  [
+                            {
+                                "waypointRelativePos":  1.547215496368028,
+                                "rotationDegrees":  126.27140541715735
+                            }
+                        ],
+    "constraintZones":  [
+
+                        ],
+    "pointTowardsZones":  [
+
+                          ],
+    "eventMarkers":  [
+
+                     ],
+    "globalConstraints":  {
+                              "maxVelocity":  4.5,
+                              "maxAcceleration":  3.0,
+                              "maxAngularVelocity":  600.0,
+                              "maxAngularAcceleration":  400.0,
+                              "nominalVoltage":  12.0,
+                              "unlimited":  false
+                          },
+    "goalEndState":  {
+                         "velocity":  0,
+                         "rotation":  45
+                     },
+    "reversed":  false,
+    "folder":  "Left Rush",
+    "idealStartingState":  {
+                               "velocity":  0,
+                               "rotation":  45
+                           },
+    "useDefaultConstraints":  true
+}
