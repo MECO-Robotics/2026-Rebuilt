@@ -202,14 +202,16 @@ public class RobotContainer {
 								() -> -controller.getLeftX(), DrivetrainConstants.MAX_SPEED),
 						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
 
+		controller.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
+
 		// Shooter presets
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		coPilot.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood).repeatedly());
+		coPilot.x().onTrue(ShooterCommands.hubPreset(shooterFlywheel, hood).repeatedly());
 
-		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
+		coPilot.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
 
-		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood).repeatedly());
+		coPilot.a().onTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood).repeatedly());
 	}
 
 	public void updateDashboardOutputs() {

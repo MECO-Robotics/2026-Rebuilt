@@ -81,7 +81,7 @@ public final class ShooterConstants {
 	 */
 	public final class SHOOTER_PRESET {
 		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/HubVeloc", 30);
-		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 45);
+		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 50);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Shooter/IdleVeloc", 0);
 		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Shooter/Trench", 35);
 	}
@@ -93,8 +93,8 @@ public final class ShooterConstants {
 		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
 		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(29));
-		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(34.5));
-		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(39.5));
-		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(49.5));
+		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(33.5));
+		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(38.5));
+		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(48.5));
 	}
 }
