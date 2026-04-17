@@ -4,12 +4,13 @@
   "holonomicMode": true,
   "pathFolders": [
     "Left Bump",
+    "Left Double",
     "Left Prom Counter",
     "Left Rush",
     "Left Trench Bump",
-    "Left Double",
-    "Prom Counter",
+    "Moses Auto",
     "Right Bump",
+    "Right Prom Counter",
     "Right Rush"
   ],
   "autoFolders": [],
