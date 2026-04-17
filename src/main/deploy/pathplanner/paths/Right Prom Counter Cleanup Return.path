@@ -3,38 +3,43 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 6.082529411764707,
-        "y": 1.3216218487394962
+        "x": 6.099279801324503,
+        "y": 4.071299668874172
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.083459141340549,
-        "y": 1.6317881716888634
+        "x": 6.099279801324503,
+        "y": 2.590273178807948
       },
       "isLocked": false,
-      "linkedName": "Test 1 end"
+      "linkedName": "Prom Counter Cleanup end"
     },
     {
       "anchor": {
-        "x": 6.082529411764707,
-        "y": 3.4938487394957987
+        "x": 2.98476821192053,
+        "y": 2.263576158940397
       },
       "prevControl": {
-        "x": 6.082475358277184,
-        "y": 3.1361379489279324
+        "x": 5.409586092715232,
+        "y": 2.190976821192054
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Test 2 end"
+      "linkedName": "Prom Counter Start end"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.7215496368038739,
+      "rotationDegrees": 45.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 400.0,
     "nominalVoltage": 12.0,
@@ -42,13 +47,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 89.56921278299137
+    "rotation": 47.91083782616775
   },
   "reversed": false,
-  "folder": "Test",
+  "folder": "Prom Counter",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 90.0
+    "rotation": 55.35905248808363
   },
   "useDefaultConstraints": true
 }

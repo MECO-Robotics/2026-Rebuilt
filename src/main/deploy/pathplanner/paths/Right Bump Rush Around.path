@@ -3,55 +3,55 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.7871026490066235,
-        "y": 2.8008112582781464
+        "x": 3.333245033112583,
+        "y": 2.7064321192052976
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.064850993377482,
-        "y": 4.666614238410595
+        "x": 5.682476585077355,
+        "y": 1.8513817608911258
       },
       "isLocked": false,
-      "linkedName": "Right Bump 4 end"
+      "linkedName": "Right Rush 0 end"
     },
     {
       "anchor": {
-        "x": 8.603956953642383,
-        "y": 2.633832781456953
+        "x": 6.0557201986754965,
+        "y": 3.9987003311258276
       },
       "prevControl": {
-        "x": 8.516546113423937,
-        "y": 4.059722112520339
+        "x": 6.0557201986754965,
+        "y": 2.9987003311258276
       },
       "nextControl": {
-        "x": 8.720115894039736,
-        "y": 0.7389900662251647
+        "x": 6.0557201986754965,
+        "y": 4.998700331125828
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.549172185430464,
-        "y": 0.8406291390728484
+        "x": 3.333245033112583,
+        "y": 5.4
       },
       "prevControl": {
-        "x": 4.857831125827814,
-        "y": 0.5720115894039737
+        "x": 5.682476585077355,
+        "y": 6.255050358314171
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Right Bump 3 end"
+      "linkedName": "Right Bump Around end"
     }
   ],
   "rotationTargets": [
     {
-      "waypointRelativePos": 1.1864406779661036,
-      "rotationDegrees": -126.6573888681769
+      "waypointRelativePos": 0.9854721549636858,
+      "rotationDegrees": 90.0
     },
     {
-      "waypointRelativePos": 1.830508474576272,
-      "rotationDegrees": 180.0
+      "waypointRelativePos": 1.4455205811137999,
+      "rotationDegrees": 138.7602240923557
     }
   ],
   "constraintZones": [],
@@ -66,14 +66,14 @@
     "unlimited": false
   },
   "goalEndState": {
-    "velocity": 0,
-    "rotation": 57.763213447869774
+    "velocity": 4.0,
+    "rotation": -45.0
   },
   "reversed": false,
-  "folder": "Right Bump",
+  "folder": "Right Rush",
   "idealStartingState": {
-    "velocity": 4.0,
-    "rotation": 41.0548137709625
+    "velocity": 0,
+    "rotation": 45.0
   },
   "useDefaultConstraints": true
 }

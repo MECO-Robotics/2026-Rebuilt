@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.39421666666666666,
-        "y": 0.6186333333333334
+        "x": 2.98476821192053,
+        "y": 2.263576158940397
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.1477499999999994,
-        "y": 1.790174999999999
+        "x": 4.494834437086093,
+        "y": 2.3361754966887416
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Prom Counter Start end"
     },
     {
       "anchor": {
-        "x": 3.440225,
-        "y": 3.3169583333333335
+        "x": 6.099279801324503,
+        "y": 4.071299668874172
       },
       "prevControl": {
-        "x": 2.1704250000000003,
-        "y": 1.9337833333333339
+        "x": 5.997640728476821,
+        "y": 2.0820778145695376
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Prom Counter Cleanup end"
     }
   ],
   "rotationTargets": [],
@@ -34,7 +34,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 400.0,
     "nominalVoltage": 12.0,
@@ -42,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 31.827446576673115
+    "rotation": 55.35905248808363
   },
   "reversed": false,
-  "folder": "Depot",
+  "folder": "Prom Counter",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 180.0
+    "rotation": 47.91083782616775
   },
   "useDefaultConstraints": true
 }

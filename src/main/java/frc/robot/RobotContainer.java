@@ -117,8 +117,10 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 		vision = new Vision(drivetrain::addVisionMeasurement,
-				new VisionIOQuestNav(VisionConstants.robotToQuest, VisionIO.limelightMegaTag1WithSim(
-						VisionConstants.limelightName, VisionConstants.robotToLimelight, drivetrain::getPhysicsPose)));
+				new VisionIOQuestNav(VisionConstants.robotToQuest,
+						VisionIO.limelightMegaTag1WithMegaTag2SingleTagWithSim(VisionConstants.limelightName,
+								() -> drivetrain.getState().Pose.getRotation(), VisionConstants.robotToLimelight,
+								drivetrain::getPhysicsPose)));
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
 		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,

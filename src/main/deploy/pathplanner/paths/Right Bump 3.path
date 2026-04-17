@@ -9,7 +9,7 @@
       "prevControl": null,
       "nextControl": {
         "x": 6.6873344370860925,
-        "y": 1.051167218543046
+        "y": 1.0511672185430458
       },
       "isLocked": false,
       "linkedName": "Right Bump 2 end"
@@ -39,7 +39,7 @@
   "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 4.5,
-    "maxAcceleration": 4.0,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 600.0,
     "maxAngularAcceleration": 400.0,
     "nominalVoltage": 12.0,
