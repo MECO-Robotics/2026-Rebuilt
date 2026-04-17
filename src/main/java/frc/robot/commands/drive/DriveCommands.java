@@ -5,6 +5,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.constants.FieldConstants.Hub;
@@ -24,7 +26,6 @@ public class DriveCommands {
 	private static final LoggedTunableNumber ANGLE_KD = new LoggedTunableNumber("DriveCommands/Angle_KD", 0.01);
 	private static final LoggedTunableNumber ANGLE_MAX_VELOCITY = new LoggedTunableNumber(
 			"DriveCommands/Angle_Max_Velocity", 25.0);
-	private static final Rotation2d HUB_AIM_OFFSET = Rotation2d.k180deg;
 	// private static final LoggedTunableNumber FF_START_DELAY = new
 	// LoggedTunableNumber("DriveCommands/FF_Start_Delay",
 	// 2.0); // Secs
@@ -93,7 +94,7 @@ public class DriveCommands {
 			DoubleSupplier ySupplier, double maxSpeed) {
 
 		Supplier<Rotation2d> angleToHub = () -> Hub.hubPosition().minus(drive.getState().Pose.getTranslation())
-				.getAngle().plus(HUB_AIM_OFFSET);
+				.getAngle().plus(getHubAimOffset());
 
 		return joystickDriveAtAngle(drive, xSupplier, ySupplier, angleToHub, maxSpeed);
 	}
@@ -101,9 +102,15 @@ public class DriveCommands {
 	/** Auto aim to the hub. */
 	public static Command autoAimToHub(CommandSwerveDrivetrain drive, double maxspeed) {
 		Supplier<Rotation2d> angleToHub = () -> Hub.hubPosition().minus(drive.getState().Pose.getTranslation())
-				.getAngle().plus(HUB_AIM_OFFSET);
+				.getAngle().plus(getHubAimOffset());
 
 		return joystickDriveAtAngle(drive, () -> 0.0, () -> 0.0, angleToHub, maxspeed);
+	}
+
+	private static Rotation2d getHubAimOffset() {
+		return DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
+				? Rotation2d.kZero
+				: Rotation2d.k180deg;
 	}
 
 	// // public static Command azimuthTuning()
