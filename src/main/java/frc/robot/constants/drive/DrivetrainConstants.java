@@ -86,11 +86,11 @@ public final class DrivetrainConstants {
 	private static final SteerMotorArrangement STEER_MOTOR_TYPE = SteerMotorArrangement.TalonFX_Integrated;
 	private static final SteerFeedbackType STEER_FEEDBACK_TYPE = SteerFeedbackType.FusedCANcoder;
 
-	private static final Current SLIP_CURRENT = Amps.of(120);
+	private static final Current SLIP_CURRENT = Amps.of(50);
 	private static final TalonFXConfiguration DRIVE_INITIAL_CONFIGS = new TalonFXConfiguration().withCurrentLimits(
-			new CurrentLimitsConfigs().withSupplyCurrentLimit(70).withSupplyCurrentLimitEnable(true));
+			new CurrentLimitsConfigs().withSupplyCurrentLimit(50).withSupplyCurrentLimitEnable(true));
 	private static final TalonFXConfiguration STEER_INITIAL_CONFIGS = new TalonFXConfiguration().withCurrentLimits(
-			new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(60)).withStatorCurrentLimitEnable(true));
+			new CurrentLimitsConfigs().withStatorCurrentLimit(Amps.of(30)).withStatorCurrentLimitEnable(true));
 	private static final CANcoderConfiguration ENCODER_INITIAL_CONFIGS = new CANcoderConfiguration();
 	private static final Pigeon2Configuration PIGEON_CONFIGS = null;
 
