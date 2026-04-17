@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.7962334437086085,
-        "y": 3.2073675496688736
+        "x": 6.6668801897983405,
+        "y": 3.297995255041518
       },
       "isLocked": false,
       "linkedName": "Right Bump 0 end"
     },
     {
       "anchor": {
-        "x": 3.205916666666667,
-        "y": 2.385
+        "x": 2.6967378410438916,
+        "y": 2.437259786476868
       },
       "prevControl": {
-        "x": 4.030198675496688,
-        "y": 1.9296192052980143
+        "x": 3.4929181494661923,
+        "y": 1.6410794780545663
       },
       "nextControl": null,
       "isLocked": false,
@@ -47,10 +47,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 45.0
+    "rotation": 39.80557109226519
   },
   "reversed": false,
-  "folder": "Right Bump",
+  "folder": "Right Trench Bump",
   "idealStartingState": {
     "velocity": 4.0,
     "rotation": 136.0

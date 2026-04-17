@@ -41,7 +41,7 @@
                                           },
                           "nextControl":  null,
                           "isLocked":  false,
-                          "linkedName":  "Left Trench Bump 3 end"
+                          "linkedName":  "Right Bump 3 end"
                       }
                   ],
     "rotationTargets":  [
@@ -83,4 +83,3 @@
                            },
     "useDefaultConstraints":  true
 }
-

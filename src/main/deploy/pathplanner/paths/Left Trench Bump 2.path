@@ -3,13 +3,13 @@
     "waypoints":  [
                       {
                           "anchor":  {
-                                         "x":  3.205916666666667,
-                                         "y":  5.6850000000000005
+                                         "x":  2.6967378410438916,
+                                         "y":  5.6327402135231317
                                      },
                           "prevControl":  null,
                           "nextControl":  {
-                                              "x":  6.8252731788079455,
-                                              "y":  6.0605215231788092
+                                              "x":  6.31609435318517,
+                                              "y":  6.0082617367019413
                                           },
                           "isLocked":  false,
                           "linkedName":  "Left Trench Bump 1 end"
@@ -75,8 +75,7 @@
     "folder":  "Left Trench Bump",
     "idealStartingState":  {
                                "velocity":  0,
-                               "rotation":  -45
+                               "rotation":  -39.80557109226519
                            },
     "useDefaultConstraints":  true
 }
-

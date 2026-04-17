@@ -8,20 +8,20 @@
                                      },
                           "prevControl":  null,
                           "nextControl":  {
-                                              "x":  6.7962334437086085,
-                                              "y":  4.8626324503311267
+                                              "x":  6.6668801897983405,
+                                              "y":  4.7720047449584824
                                           },
                           "isLocked":  false,
                           "linkedName":  "Left Trench Bump 0 end"
                       },
                       {
                           "anchor":  {
-                                         "x":  3.205916666666667,
-                                         "y":  5.6850000000000005
+                                         "x":  2.6967378410438916,
+                                         "y":  5.6327402135231317
                                      },
                           "prevControl":  {
-                                              "x":  4.030198675496688,
-                                              "y":  6.1403807947019864
+                                              "x":  3.4929181494661923,
+                                              "y":  6.4289205219454342
                                           },
                           "nextControl":  null,
                           "isLocked":  false,
@@ -53,7 +53,7 @@
                           },
     "goalEndState":  {
                          "velocity":  0,
-                         "rotation":  -45
+                         "rotation":  -39.80557109226519
                      },
     "reversed":  false,
     "folder":  "Left Trench Bump",
@@ -63,4 +63,3 @@
                            },
     "useDefaultConstraints":  true
 }
-
