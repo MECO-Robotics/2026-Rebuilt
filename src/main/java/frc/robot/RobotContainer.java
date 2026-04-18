@@ -204,7 +204,8 @@ public class RobotContainer {
 				.whileTrue(Commands.parallel(
 						DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftY(),
 								() -> -controller.getLeftX(), DrivetrainConstants.MAX_SPEED),
-						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
+						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)))
+						.whileFalse(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
 		controller.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
 
