@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.549172185430464,
-        "y": 0.8406291390728484
+        "x": 2.6106642941874263,
+        "y": 2.4802965599051015
       },
       "prevControl": null,
       "nextControl": {
-        "x": 4.192265717674971,
-        "y": 3.4055871886121
+        "x": 5.139797215625627,
+        "y": 2.707402501365383
       },
       "isLocked": false,
       "linkedName": "Right Bump 3 end"
@@ -20,8 +20,8 @@
         "y": 2.7277580071174374
       },
       "prevControl": {
-        "x": 6.107402135231317,
-        "y": 2.5018149466192168
+        "x": 5.723069348339621,
+        "y": 2.6143368070715933
       },
       "nextControl": null,
       "isLocked": false,
@@ -48,7 +48,7 @@
   "folder": "Right Bump",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 57.763213447869774
+    "rotation": 37.64216129953213
   },
   "useDefaultConstraints": true
 }

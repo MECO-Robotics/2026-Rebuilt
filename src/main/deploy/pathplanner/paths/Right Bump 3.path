@@ -3,37 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.892483443708608,
-        "y": 2.125637417218544
+        "x": 7.172562277580072,
+        "y": 2.415741399762752
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.559288256227758,
-        "y": 0.6619928825622778
+        "x": 5.009964412811388,
+        "y": 2.136002372479239
       },
       "isLocked": false,
       "linkedName": "Right Bump 2 end"
     },
     {
       "anchor": {
-        "x": 2.549172185430464,
-        "y": 0.8406291390728484
+        "x": 2.6106642941874263,
+        "y": 2.4802965599051015
       },
       "prevControl": {
-        "x": 5.006939293598233,
-        "y": 0.3779884105960265
+        "x": 4.676429418742587,
+        "y": 2.383463819691577
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Right Bump 3 end"
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 0.7276029055690079,
-      "rotationDegrees": -177.3669713322526
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -47,13 +42,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 57.763213447869774
+    "rotation": 37.64216129953213
   },
   "reversed": false,
-  "folder": "Right Trench Bump",
+  "folder": null,
   "idealStartingState": {
     "velocity": 4.0,
-    "rotation": -130.36453657309696
+    "rotation": -178.78112476486865
   },
   "useDefaultConstraints": true
 }
