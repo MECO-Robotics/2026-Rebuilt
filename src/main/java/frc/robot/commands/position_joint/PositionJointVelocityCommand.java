@@ -26,6 +26,7 @@ public class PositionJointVelocityCommand extends Command {
 
 	@Override
 	public void initialize() {
+		positionJoint.setComplianceAfterTarget(false);
 		positionJoint.syncGoalToCurrentPosition();
 	}
 

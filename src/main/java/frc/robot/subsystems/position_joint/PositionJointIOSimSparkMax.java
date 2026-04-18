@@ -63,6 +63,7 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 	private double maxMotionAcceleration = 0.0;
 	private double minPosition = Double.NEGATIVE_INFINITY;
 	private double maxPosition = Double.POSITIVE_INFINITY;
+	private boolean brakeModeEnabled = true;
 
 	/**
 	 * Creates a Spark Max simulation-backed joint using either an arm or elevator
@@ -193,6 +194,11 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		motors[0].setVoltage(voltage);
 	}
 
+	@Override
+	public void setBrakeMode(boolean enabled) {
+		brakeModeEnabled = enabled;
+	}
+
 	/**
 	 * Updates PID, feedforward, and MAXMotion limits on the simulated controller.
 	 */
@@ -295,6 +301,9 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 	}
 
 	private boolean shouldHoldBrake(double appliedVoltage, double mechanismVelocity) {
+		if (!brakeModeEnabled) {
+			return false;
+		}
 		if (Math.abs(appliedVoltage) > ZERO_VOLTAGE_EPSILON) {
 			return false;
 		}
