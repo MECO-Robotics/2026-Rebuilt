@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.constants.FieldConstants.Hub;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.drive.Telemetry;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import java.util.function.DoubleSupplier;
