@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.3042052980132453,
-        "y": 3.432425496688742
+        "x": 4.192265717674971,
+        "y": 3.4055871886121
       },
       "isLocked": false,
       "linkedName": "Right Bump 3 end"
     },
     {
       "anchor": {
-        "x": 6.171957295373667,
-        "y": 3.6315302491103196
+        "x": 8.291518386714117,
+        "y": 2.7277580071174374
       },
       "prevControl": {
-        "x": 5.892218268090155,
-        "y": 1.4796915776986936
+        "x": 6.107402135231317,
+        "y": 2.5018149466192168
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,19 +33,19 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 5.0,
-    "maxAcceleration": 4.0,
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
     "maxAngularVelocity": 600.0,
-    "maxAngularAcceleration": 600.0,
+    "maxAngularAcceleration": 400.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 4.0,
-    "rotation": 91.25904520717532
+    "rotation": -8.746162262555181
   },
   "reversed": false,
-  "folder": "Right Trench Bump",
+  "folder": "Right Bump",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 57.763213447869774

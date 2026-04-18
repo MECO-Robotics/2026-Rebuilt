@@ -22,13 +22,13 @@ public final class ShooterConstants {
 	}
 
 	public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{32},
-			new boolean[]{false}, 1, 0.025, 40, "");
+			new boolean[]{false}, 1, 0.025, 30, "");
 	public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{31},
-			new boolean[]{false}, 1, 0.025, 40, "MECO 2");
+			new boolean[]{false}, 1, 0.025, 30, "MECO 2");
 	public static final FlywheelGains INDEXER_ROLLER_GAINS = new FlywheelGains(0, 0, 0, 0, 0, 0, 0, 0);
 
 	public static final FlywheelHardwareConfig CONVEYOR_CONFIG = new FlywheelHardwareConfig(new int[]{23},
-			new boolean[]{false}, 1, 0.025, 40, "");
+			new boolean[]{false}, 1, 0.025, 30, "");
 	public static final FlywheelGains CONVEYOR_GAINS = new FlywheelGains(0.0, 0.0, 0.0, 0.0, 0.065, 0.0, 0.0, 0.0);
 
 	public static final FlywheelHardwareConfig FLYWHEEL_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{34, 35},
@@ -39,7 +39,7 @@ public final class ShooterConstants {
 	public static final PositionJointGains HOOD_GAINS = new PositionJointGains(20, 0.0, 0.0, 0.5, 0.1, 0.0, 0.0, 4.0,
 			100.0, 0.0, 0.049, 0.002, 0.0);
 	public static final PositionJointHardwareConfig HOOD_CONFIG = new PositionJointHardwareConfig(new int[]{33},
-			new boolean[]{false}, (21 / 1) * 5, 0.01, 60, EncoderType.INTERNAL, 0, MechanismType.ROTATIONAL, 0.0,
+			new boolean[]{false}, (21 / 1) * 5, 0.01, 40, EncoderType.INTERNAL, 0, MechanismType.ROTATIONAL, 0.0,
 			Rotation2d.fromRotations(0), "");
 
 	// Regression constants for hood and shooter velocity. These are used to
@@ -81,7 +81,7 @@ public final class ShooterConstants {
 	 */
 	public final class SHOOTER_PRESET {
 		public static final LoggedTunableNumber HUB = new LoggedTunableNumber("Presets/Shooter/HubVeloc", 30);
-		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 50);
+		public static final LoggedTunableNumber FERRY = new LoggedTunableNumber("Presets/Shooter/FerryVeloc", 55);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/Shooter/IdleVeloc", 0);
 		public static final LoggedTunableNumber TRENCH = new LoggedTunableNumber("Presets/Shooter/Trench", 35);
 	}
@@ -92,9 +92,9 @@ public final class ShooterConstants {
 		hoodMap.put(Units.Inches.of(163), Units.Rotations.of(0.049));
 		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
-		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(29));
-		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(34));
-		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(39));
-		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(49));
+		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(28.5));
+		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(35));
+		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(40));
+		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(51));
 	}
 }

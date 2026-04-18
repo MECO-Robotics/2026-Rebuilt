@@ -1,0 +1,99 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.636291390728477,
+        "y": 4.957011589403972
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.9992880794701984,
+        "y": 5.958882450327495
+      },
+      "isLocked": false,
+      "linkedName": "Moses 1 end"
+    },
+    {
+      "anchor": {
+        "x": 5.16274834437086,
+        "y": 5.7410844370860925
+      },
+      "prevControl": {
+        "x": 4.954735770778398,
+        "y": 5.879759486130397
+      },
+      "nextControl": {
+        "x": 6.56912585194774,
+        "y": 4.803499432152058
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.3969370860927155,
+        "y": 1.2471854304635759
+      },
+      "prevControl": {
+        "x": 8.989400250334999,
+        "y": -0.2110750994227042
+      },
+      "nextControl": {
+        "x": 6.048460264900663,
+        "y": 1.4432036423841055
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.810753311258278,
+        "y": 3.8462417218543044
+      },
+      "prevControl": {
+        "x": 6.0557201986754965,
+        "y": 3.6066639072847684
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.4,
+      "rotationDegrees": -48.58169634206209
+    },
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": -28.61045966546324
+    },
+    {
+      "waypointRelativePos": 2,
+      "rotationDegrees": -130.03025927188978
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 400.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 34.777831366363806
+  },
+  "reversed": false,
+  "folder": "Moses Auto",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": -36.74056202040742
+  },
+  "useDefaultConstraints": true
+}
