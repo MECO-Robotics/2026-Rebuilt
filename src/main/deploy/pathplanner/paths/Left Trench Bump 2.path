@@ -3,29 +3,45 @@
     "waypoints":  [
                       {
                           "anchor":  {
-                                         "x":  3.205916666666667,
-                                         "y":  5.6850000000000005
+                                         "x":  2.6967378410438916,
+                                         "y":  5.6327402135231317
                                      },
                           "prevControl":  null,
                           "nextControl":  {
-                                              "x":  6.8252731788079455,
-                                              "y":  6.0605215231788092
+                                              "x":  3.8264531435349944,
+                                              "y":  5.8586832740213524
                                           },
                           "isLocked":  false,
                           "linkedName":  "Left Trench Bump 1 end"
                       },
                       {
                           "anchor":  {
-                                         "x":  7.514966887417218,
-                                         "y":  3.9769205298013253
+                                         "x":  6.171957295373667,
+                                         "y":  5.18085409252669
                                      },
                           "prevControl":  {
-                                              "x":  6.206557516844372,
-                                              "y":  4.0253801361188373
+                                              "x":  5.696961158625992,
+                                              "y":  5.7058498226162264
                                           },
                           "nextControl":  {
-                                              "x":  8.299039735099337,
-                                              "y":  3.9478807947019883
+                                              "x":  6.785231316725978,
+                                              "y":  4.5030249110320284
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  7.721281138790035,
+                                         "y":  2.7277580071174388
+                                     },
+                          "prevControl":  {
+                                              "x":  6.83902728351127,
+                                              "y":  2.781553973902728
+                                          },
+                          "nextControl":  {
+                                              "x":  8.696366962074087,
+                                              "y":  2.6683015544781687
                                           },
                           "isLocked":  false,
                           "linkedName":  null
@@ -36,8 +52,8 @@
                                          "y":  5.9443625827814568
                                      },
                           "prevControl":  {
-                                              "x":  8.560397350993377,
-                                              "y":  5.2038493377483448
+                                              "x":  9.083112582781457,
+                                              "y":  4.5940149006622519
                                           },
                           "nextControl":  null,
                           "isLocked":  false,
@@ -46,8 +62,20 @@
                   ],
     "rotationTargets":  [
                             {
-                                "waypointRelativePos":  0.6803874092009693,
-                                "rotationDegrees":  -19.315607096307
+                                "waypointRelativePos":  0.5,
+                                "rotationDegrees":  0
+                            },
+                            {
+                                "waypointRelativePos":  1.337477797513319,
+                                "rotationDegrees":  -72.675629113927585
+                            },
+                            {
+                                "waypointRelativePos":  2.024866785079927,
+                                "rotationDegrees":  6.09084094397711
+                            },
+                            {
+                                "waypointRelativePos":  2.56053268765132,
+                                "rotationDegrees":  83.293190629913923
                             }
                         ],
     "constraintZones":  [
@@ -60,10 +88,10 @@
 
                      ],
     "globalConstraints":  {
-                              "maxVelocity":  4.5,
+                              "maxVelocity":  5.0,
                               "maxAcceleration":  3.0,
                               "maxAngularVelocity":  600.0,
-                              "maxAngularAcceleration":  400.0,
+                              "maxAngularAcceleration":  600.0,
                               "nominalVoltage":  12.0,
                               "unlimited":  false
                           },
@@ -75,7 +103,7 @@
     "folder":  "Left Trench Bump",
     "idealStartingState":  {
                                "velocity":  0,
-                               "rotation":  -45
+                               "rotation":  -39.80557109226519
                            },
     "useDefaultConstraints":  true
 }
