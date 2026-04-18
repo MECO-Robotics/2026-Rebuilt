@@ -93,8 +93,9 @@ public final class ShooterConstants {
 		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
 		shooterVelocityMap.put(Units.Inches.of(58.0), Units.RevolutionsPerSecond.of(28.5));
-		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(35));
+		shooterVelocityMap.put(Units.Inches.of(114.25), Units.RevolutionsPerSecond.of(34));
 		shooterVelocityMap.put(Units.Inches.of(163), Units.RevolutionsPerSecond.of(40));
+		shooterVelocityMap.put(Units.Inches.of(192), Units.RevolutionsPerSecond.of(46));
 		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(51));
 	}
 }

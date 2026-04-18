@@ -177,6 +177,8 @@ public class RobotContainer {
 		// Run intake
 		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
 				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
+		controller.leftTrigger().whileTrue(IntakeCommands.reverseIntake(intakeRoller))
+				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
 
 		// Deploy intake setpoint
 		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));

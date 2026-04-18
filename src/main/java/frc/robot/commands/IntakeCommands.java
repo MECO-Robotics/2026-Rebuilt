@@ -75,6 +75,12 @@ public class IntakeCommands {
 		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE), activateIntakeSimulation());
 	}
 
+	/** Runs only the intake roller at the configured intake voltage. */
+	public static Command reverseIntake(Flywheel rollerMotor) {
+		return Commands.parallel(Flywheel.setVoltage(rollerMotor, () -> -ROLLER_PRESETS.INTAKE.get()),
+				activateIntakeSimulation());
+	}
+
 	/** Stops the intake roller and clears the simulated intake-running state. */
 	public static Command idleIntake(Flywheel rollerMotor) {
 		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE), deactivateIntakeSimulation());

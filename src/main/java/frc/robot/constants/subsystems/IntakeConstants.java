@@ -24,8 +24,8 @@ public final class IntakeConstants {
 	private IntakeConstants() {
 	}
 
-	public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{22, 53},
-			new boolean[]{false, true}, 1.5, 0.025, 40, "");
+	public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{53, 22},
+			new boolean[]{true, true}, 1.5, 0.025, 40, "");
 
 	public static final FlywheelGains INTAKE_ROLLER_GAINS = new FlywheelGains(0, 0.0, 0.0, 0, 0, 0.0, 1, 0.1);
 
