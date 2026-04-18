@@ -1,54 +1,62 @@
 {
-  "version": "2025.0",
-  "waypoints": [
-    {
-      "anchor": {
-        "x": 2.549172185430464,
-        "y": 7.229370860927152
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 3.3042052980132453,
-        "y": 4.637574503311258
-      },
-      "isLocked": false,
-      "linkedName": "Left Trench Bump 3 end"
-    },
-    {
-      "anchor": {
-        "x": 6.171957295373667,
-        "y": 4.438469750889681
-      },
-      "prevControl": {
-        "x": 5.892218268090155,
-        "y": 6.590308422301307
-      },
-      "nextControl": null,
-      "isLocked": false,
-      "linkedName": "Left Trench Bump 4 end"
-    }
-  ],
-  "rotationTargets": [],
-  "constraintZones": [],
-  "pointTowardsZones": [],
-  "eventMarkers": [],
-  "globalConstraints": {
-    "maxVelocity": 5.0,
-    "maxAcceleration": 3.0,
-    "maxAngularVelocity": 600.0,
-    "maxAngularAcceleration": 600.0,
-    "nominalVoltage": 12.0,
-    "unlimited": false
-  },
-  "goalEndState": {
-    "velocity": 4.0,
-    "rotation": -91.25904520717533
-  },
-  "reversed": false,
-  "folder": "Left Trench Bump",
-  "idealStartingState": {
-    "velocity": 0,
-    "rotation": -57.763213447869774
-  },
-  "useDefaultConstraints": true
+    "version":  "2025.0",
+    "waypoints":  [
+                      {
+                          "anchor":  {
+                                         "x":  2.549172185430464,
+                                         "y":  7.2293708609271521
+                                     },
+                          "prevControl":  null,
+                          "nextControl":  {
+                                              "x":  4.192265717674971,
+                                              "y":  4.6644128113879
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  "Left Trench Bump 3 end"
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  8.291518386714117,
+                                         "y":  5.3422419928825633
+                                     },
+                          "prevControl":  {
+                                              "x":  6.107402135231317,
+                                              "y":  5.568185053380784
+                                          },
+                          "nextControl":  null,
+                          "isLocked":  false,
+                          "linkedName":  "Left Trench Bump 4 end"
+                      }
+                  ],
+    "rotationTargets":  [
+
+                        ],
+    "constraintZones":  [
+
+                        ],
+    "pointTowardsZones":  [
+
+                          ],
+    "eventMarkers":  [
+
+                     ],
+    "globalConstraints":  {
+                              "maxVelocity":  4.5,
+                              "maxAcceleration":  3.0,
+                              "maxAngularVelocity":  600.0,
+                              "maxAngularAcceleration":  400.0,
+                              "nominalVoltage":  12.0,
+                              "unlimited":  false
+                          },
+    "goalEndState":  {
+                         "velocity":  4.0,
+                         "rotation":  8.7461622625551811
+                     },
+    "reversed":  false,
+    "folder":  "Left Trench Bump",
+    "idealStartingState":  {
+                               "velocity":  0,
+                               "rotation":  -57.763213447869774
+                           },
+    "useDefaultConstraints":  true
 }

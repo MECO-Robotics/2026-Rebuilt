@@ -1,0 +1,83 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 4.429495033112583,
+        "y": 7.381829470198674
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 8.850794701986755,
+        "y": 7.9045447019867545
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.81262417218543,
+        "y": 3.9478807947019856
+      },
+      "prevControl": {
+        "x": 7.740024834437085,
+        "y": 5.806423841059601
+      },
+      "nextControl": {
+        "x": 7.884761908926382,
+        "y": 2.1011547341336163
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.3168543046357617,
+        "y": 2.35069536423841
+      },
+      "prevControl": {
+        "x": 2.839569536423841,
+        "y": 2.35069536423841
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Moses 0 end"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.10895883777240367,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 0.33171912832929906,
+      "rotationDegrees": -90.0
+    },
+    {
+      "waypointRelativePos": 1.41646489104116,
+      "rotationDegrees": -50.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 400.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 37.81573260757318
+  },
+  "reversed": false,
+  "folder": "Moses Auto",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}
