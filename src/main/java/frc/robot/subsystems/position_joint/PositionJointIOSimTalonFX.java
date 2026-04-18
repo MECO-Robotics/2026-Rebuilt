@@ -69,6 +69,7 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 	private double velocitySetpoint = 0.0;
 	private double minPosition = Double.NEGATIVE_INFINITY;
 	private double maxPosition = Double.POSITIVE_INFINITY;
+	private boolean brakeModeEnabled = true;
 
 	public PositionJointIOSimTalonFX(String name, PositionJointHardwareConfig config, DCMotor simMotorModel) {
 		this.name = name;
@@ -202,6 +203,11 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 	}
 
 	@Override
+	public void setBrakeMode(boolean enabled) {
+		brakeModeEnabled = enabled;
+	}
+
+	@Override
 	public void setGains(PositionJointGains gains) {
 		feedforward.setGains(gains.kS(), 0.0, gains.kV(), gains.kA());
 		minPosition = gains.kMinPosition();
@@ -307,6 +313,9 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 	}
 
 	private boolean shouldHoldBrake(double appliedVoltage, double mechanismVelocity) {
+		if (!brakeModeEnabled) {
+			return false;
+		}
 		if (Math.abs(appliedVoltage) > ZERO_VOLTAGE_EPSILON) {
 			return false;
 		}

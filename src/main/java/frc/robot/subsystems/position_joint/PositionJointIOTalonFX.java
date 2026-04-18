@@ -81,6 +81,7 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 
 	private double positionSetpoint = 0.0;
 	private double velocitySetpoint = 0.0;
+	private boolean brakeModeEnabled = true;
 
 	private MotorAlignmentValue motorval;
 
@@ -311,6 +312,19 @@ public class PositionJointIOTalonFX implements PositionJointIO {
 		for (int i = 1; i < motors.length; i++) {
 			motorval = hardwareConfig.reversed()[i] ? MotorAlignmentValue.Opposed : MotorAlignmentValue.Aligned;
 			motors[i].setControl(new Follower(motors[0].getDeviceID(), motorval));
+		}
+	}
+
+	@Override
+	public void setBrakeMode(boolean enabled) {
+		if (brakeModeEnabled == enabled) {
+			return;
+		}
+
+		brakeModeEnabled = enabled;
+		NeutralModeValue neutralMode = enabled ? NeutralModeValue.Brake : NeutralModeValue.Coast;
+		for (TalonFX motor : motors) {
+			motor.setNeutralMode(neutralMode);
 		}
 	}
 

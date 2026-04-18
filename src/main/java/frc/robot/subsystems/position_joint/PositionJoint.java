@@ -43,6 +43,8 @@ public class PositionJoint extends SubsystemBase {
 	private final LoggedTunableNumber kSetpoint;
 	private Double profileMaxVelocityOverride = null;
 	private double goalPosition;
+	private boolean complianceAfterTarget = false;
+	private boolean complianceActive = false;
 
 	/**
 	 * Creates a position-joint subsystem.
@@ -89,10 +91,19 @@ public class PositionJoint extends SubsystemBase {
 		positionJoint.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
 
-		boolean usingDynamicOverride = profileMaxVelocityOverride != null
-				&& positionJoint.setPositionDynamic(goalPosition, profileMaxVelocityOverride, kMaxAccel.get());
-		if (!usingDynamicOverride) {
-			positionJoint.setPosition(goalPosition, 0.0);
+		boolean atTarget = isFinished();
+		if (complianceAfterTarget && atTarget) {
+			if (!complianceActive) {
+				positionJoint.setBrakeMode(false);
+				positionJoint.setVoltage(0.0);
+				complianceActive = true;
+			}
+		} else {
+			boolean usingDynamicOverride = profileMaxVelocityOverride != null
+					&& positionJoint.setPositionDynamic(goalPosition, profileMaxVelocityOverride, kMaxAccel.get());
+			if (!usingDynamicOverride) {
+				positionJoint.setPosition(goalPosition, 0.0);
+			}
 		}
 
 		LoggedTunableNumber.ifChanged(hashCode(), (values) -> {
@@ -107,11 +118,14 @@ public class PositionJoint extends SubsystemBase {
 		}, kSetpoint, kMinPosition, kMaxPosition);
 
 		Logger.recordOutput(name + "/GoalPosition", goalPosition);
-		Logger.recordOutput(name + "/isFinished", isFinished());
+		Logger.recordOutput(name + "/isFinished", atTarget);
+		Logger.recordOutput(name + "/ComplianceAfterTarget", complianceAfterTarget);
+		Logger.recordOutput(name + "/ComplianceActive", complianceActive);
 	}
 
 	/** Sets a new goal position, clamped to configured mechanism limits. */
 	public void setPosition(double position) {
+		disableComplianceHold();
 		goalPosition = MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get());
 	}
 
@@ -131,6 +145,14 @@ public class PositionJoint extends SubsystemBase {
 		}
 
 		profileMaxVelocityOverride = null;
+	}
+
+	/** Enables/disables post-target compliance mode for impact absorption. */
+	public void setComplianceAfterTarget(boolean enabled) {
+		complianceAfterTarget = enabled;
+		if (!enabled) {
+			disableComplianceHold();
+		}
 	}
 
 	/** Adds an offset to the current goal position. */
@@ -172,6 +194,7 @@ public class PositionJoint extends SubsystemBase {
 	public void resetPosition() {
 		positionJoint.resetPosition();
 		goalPosition = 0;
+		disableComplianceHold();
 	}
 
 	/** Builds a command that continuously sets position from a supplier. */
@@ -185,8 +208,34 @@ public class PositionJoint extends SubsystemBase {
 		return new PositionJointPositionCommand(positionJoint, positionSupplier, maxVelocitySupplier);
 	}
 
+	/**
+	 * Builds a command that sets position with a temporary max-velocity limit and
+	 * optional compliance mode after reaching target.
+	 */
+	public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier,
+			DoubleSupplier maxVelocitySupplier, boolean complianceAfterTarget) {
+		return new PositionJointPositionCommand(positionJoint, positionSupplier, maxVelocitySupplier,
+				complianceAfterTarget);
+	}
+
+	/**
+	 * Builds a command that optionally enters compliance once target tolerance is
+	 * reached.
+	 */
+	public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier,
+			boolean complianceAfterTarget) {
+		return new PositionJointPositionCommand(positionJoint, positionSupplier, null, complianceAfterTarget);
+	}
+
 	/** Builds a command that continuously sets velocity from a supplier. */
 	public static Command setVelocity(PositionJoint positionJoint, DoubleSupplier velocitySupplier) {
 		return new PositionJointVelocityCommand(positionJoint, velocitySupplier);
+	}
+
+	private void disableComplianceHold() {
+		if (complianceActive) {
+			positionJoint.setBrakeMode(true);
+			complianceActive = false;
+		}
 	}
 }
