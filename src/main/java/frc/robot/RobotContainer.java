@@ -117,8 +117,10 @@ public class RobotContainer {
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
 		vision = new Vision(drivetrain::addVisionMeasurement,
-				new VisionIOQuestNav(VisionConstants.robotToQuest, VisionIO.limelightMegaTag1WithSim(
-						VisionConstants.limelightName, VisionConstants.robotToLimelight, drivetrain::getPhysicsPose)));
+				new VisionIOQuestNav(VisionConstants.robotToQuest,
+						VisionIO.limelightMegaTag1WithMegaTag2SingleTagWithSim(VisionConstants.limelightName,
+								() -> drivetrain.getState().Pose.getRotation(), VisionConstants.robotToLimelight,
+								drivetrain::getPhysicsPose)));
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
 		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,
@@ -175,6 +177,8 @@ public class RobotContainer {
 		// Run intake
 		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
 				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
+		controller.leftTrigger().whileTrue(IntakeCommands.reverseIntake(intakeRoller))
+				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
 
 		// Deploy intake setpoint
 		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
@@ -200,16 +204,19 @@ public class RobotContainer {
 				.whileTrue(Commands.parallel(
 						DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftY(),
 								() -> -controller.getLeftX(), DrivetrainConstants.MAX_SPEED),
-						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
+						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)))
+				.whileFalse(ShooterCommands.shooterIdle(shooterFlywheel, hood));
+
+		controller.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
 
 		// Shooter presets
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		coPilot.x().whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
+		controller.x().or(coPilot.x()).onTrue(ShooterCommands.hubPreset(shooterFlywheel, hood).repeatedly());
 
-		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		coPilot.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
 
-		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
+		coPilot.a().onTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood).repeatedly());
 	}
 
 	public void updateDashboardOutputs() {
@@ -241,6 +248,7 @@ public class RobotContainer {
 		NamedCommands.registerCommand("FeedRollers",
 				ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly());
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+		NamedCommands.registerCommand("Agitate", ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
 		NamedCommands.registerCommand("AutoSpinUp", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));

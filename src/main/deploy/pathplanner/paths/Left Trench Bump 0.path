@@ -1,0 +1,90 @@
+{
+    "version":  "2025.0",
+    "waypoints":  [
+                      {
+                          "anchor":  {
+                                         "x":  4.12452170659171,
+                                         "y":  7.4573825965233249
+                                     },
+                          "prevControl":  null,
+                          "nextControl":  {
+                                              "x":  7.503121085593406,
+                                              "y":  7.5569624217135178
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  7.827144039735099,
+                                         "y":  6.3436589403973516
+                                     },
+                          "prevControl":  {
+                                              "x":  7.681945364238411,
+                                              "y":  6.6848758278145732
+                                          },
+                          "nextControl":  {
+                                              "x":  8.032201842740617,
+                                              "y":  5.8617731033343805
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  7.159230132450332,
+                                         "y":  4.9933112582781458
+                                     },
+                          "prevControl":  {
+                                              "x":  7.710985099337748,
+                                              "y":  5.094950331125828
+                                          },
+                          "nextControl":  null,
+                          "isLocked":  false,
+                          "linkedName":  "Left Trench Bump 0 end"
+                      }
+                  ],
+    "rotationTargets":  [
+                            {
+                                "waypointRelativePos":  0.1355932203389811,
+                                "rotationDegrees":  -180
+                            },
+                            {
+                                "waypointRelativePos":  0.6029055690072659,
+                                "rotationDegrees":  -49.321748474686032
+                            }
+                        ],
+    "constraintZones":  [
+
+                        ],
+    "pointTowardsZones":  [
+
+                          ],
+    "eventMarkers":  [
+                         {
+                             "name":  "SpinIntake",
+                             "waypointRelativePos":  0.45,
+                             "endWaypointRelativePos":  null,
+                             "command":  null
+                         }
+                     ],
+    "globalConstraints":  {
+                              "maxVelocity":  5.0,
+                              "maxAcceleration":  3.0,
+                              "maxAngularVelocity":  600.0,
+                              "maxAngularAcceleration":  600.0,
+                              "nominalVoltage":  12.0,
+                              "unlimited":  false
+                          },
+    "goalEndState":  {
+                         "velocity":  5.0,
+                         "rotation":  -136
+                     },
+    "reversed":  false,
+    "folder":  "Left Trench Bump",
+    "idealStartingState":  {
+                               "velocity":  0,
+                               "rotation":  -179.9640335072485
+                           },
+    "useDefaultConstraints":  true
+}

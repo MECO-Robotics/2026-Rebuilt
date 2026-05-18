@@ -22,12 +22,13 @@ import org.littletonrobotics.junction.Logger;
 /** IO implementation for real Limelight hardware. */
 public class VisionIOLimelight implements VisionIO {
 	public static enum LimelightPoseMode {
-		MEGATAG_1_ONLY, MEGATAG_2_ONLY, BOTH
+		MEGATAG_1_ONLY, MEGATAG_2_ONLY, BOTH, MEGATAG_1_WITH_MEGATAG_2_SINGLE_TAG
 	}
 
 	private final String name;
 	private final Transform3d robotToCamera;
 	private final Supplier<Rotation2d> rotationSupplier;
+	private final LimelightPoseMode poseMode;
 	private final boolean useMegatag1;
 	private final boolean useMegatag2;
 	private final DoubleArrayPublisher orientationPublisher;
@@ -86,6 +87,7 @@ public class VisionIOLimelight implements VisionIO {
 		this.name = name;
 		this.robotToCamera = robotToCamera;
 		this.rotationSupplier = rotationSupplier;
+		this.poseMode = poseMode;
 		this.useMegatag1 = poseMode != LimelightPoseMode.MEGATAG_2_ONLY;
 		this.useMegatag2 = poseMode != LimelightPoseMode.MEGATAG_1_ONLY;
 		orientationPublisher = table.getDoubleArrayTopic("robot_orientation_set").publish();
@@ -128,6 +130,10 @@ public class VisionIOLimelight implements VisionIO {
 		List<PoseObservation> poseObservations = new LinkedList<>();
 		if (useMegatag1) {
 			for (var rawSample : megatag1Subscriber.readQueue()) {
+				int tagCount = getTagCount(rawSample.value);
+				if (poseMode == LimelightPoseMode.MEGATAG_1_WITH_MEGATAG_2_SINGLE_TAG && tagCount == 1) {
+					continue;
+				}
 				PoseObservation observation = parseObservation(rawSample.value, rawSample.timestamp,
 						PoseObservationType.MEGATAG_1, tagIds);
 				if (observation != null) {
@@ -137,6 +143,10 @@ public class VisionIOLimelight implements VisionIO {
 		}
 		if (useMegatag2) {
 			for (var rawSample : megatag2Subscriber.readQueue()) {
+				int tagCount = getTagCount(rawSample.value);
+				if (poseMode == LimelightPoseMode.MEGATAG_1_WITH_MEGATAG_2_SINGLE_TAG && tagCount != 1) {
+					continue;
+				}
 				PoseObservation observation = parseObservation(rawSample.value, rawSample.timestamp,
 						PoseObservationType.MEGATAG_2, tagIds);
 				if (observation != null) {
@@ -175,6 +185,13 @@ public class VisionIOLimelight implements VisionIO {
 		double ambiguity = type == PoseObservationType.MEGATAG_1 && rawLLArray.length >= 18 ? rawLLArray[17] : 0.0;
 		return new PoseObservation(timestampMicros * 1.0e-6 - rawLLArray[6] * 1.0e-3, parsePose(rawLLArray), ambiguity,
 				tagCount, rawLLArray[9], type);
+	}
+
+	private static int getTagCount(double[] rawLLArray) {
+		if (rawLLArray.length < 8) {
+			return 0;
+		}
+		return (int) rawLLArray[7];
 	}
 
 	private static double[] toLimelightRobotSpace(Transform3d robotToCamera) {

@@ -47,7 +47,7 @@ public class IntakeCommands {
 	 * and conveyor inward.
 	 */
 	public static Command stowIntake(PositionJoint rack, Flywheel roller, Flywheel conveyer) {
-		return Commands.parallel(PositionJoint.setPosition(rack, RACK_PRESETS.SAFE),
+		return Commands.parallel(PositionJoint.setPosition(rack, RACK_PRESETS.SAFE, true),
 				Flywheel.setVoltage(conveyer, () -> -ROLLER_PRESETS.INTAKE.getAsDouble()),
 				Flywheel.setVoltage(roller, ROLLER_PRESETS.INTAKE), deactivateIntakeSimulation());
 	}
@@ -66,13 +66,19 @@ public class IntakeCommands {
 	 * idle.
 	 */
 	public static Command deployIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
-		return Commands.parallel(PositionJoint.setPosition(rotationMotor, RACK_PRESETS.DEPLOY),
+		return Commands.parallel(PositionJoint.setPosition(rotationMotor, RACK_PRESETS.DEPLOY, true),
 				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE), activateIntakeSimulation());
 	}
 
 	/** Runs only the intake roller at the configured intake voltage. */
 	public static Command spinIntake(Flywheel rollerMotor) {
 		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE), activateIntakeSimulation());
+	}
+
+	/** Runs only the intake roller at the configured intake voltage. */
+	public static Command reverseIntake(Flywheel rollerMotor) {
+		return Commands.parallel(Flywheel.setVoltage(rollerMotor, () -> -ROLLER_PRESETS.INTAKE.get()),
+				activateIntakeSimulation());
 	}
 
 	/** Stops the intake roller and clears the simulated intake-running state. */

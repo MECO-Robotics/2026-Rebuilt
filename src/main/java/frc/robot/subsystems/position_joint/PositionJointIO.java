@@ -71,6 +71,12 @@ public interface PositionJointIO {
 	public default void setVoltage(double voltage) {
 	}
 
+	/**
+	 * Sets whether motor neutral mode should brake or coast when output is zero.
+	 */
+	public default void setBrakeMode(boolean enabled) {
+	}
+
 	/** Applies controller/feedforward gains. */
 	public default void setGains(PositionJointGains gains) {
 	}

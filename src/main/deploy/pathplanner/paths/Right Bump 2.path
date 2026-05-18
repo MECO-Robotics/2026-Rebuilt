@@ -1,0 +1,103 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.234092526690392,
+        "y": 2.415741399762752
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.234092526690392,
+        "y": 0.8448991696322663
+      },
+      "isLocked": false,
+      "linkedName": "Right Bump 1 end"
+    },
+    {
+      "anchor": {
+        "x": 4.654911032028471,
+        "y": 0.5759193357058121
+      },
+      "prevControl": {
+        "x": 3.148021331481197,
+        "y": 0.5698917769036229
+      },
+      "nextControl": {
+        "x": 7.344709371293003,
+        "y": 0.5866785290628707
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.721281138790035,
+        "y": 5.3422419928825615
+      },
+      "prevControl": {
+        "x": 6.010569395017794,
+        "y": 5.223890865954923
+      },
+      "nextControl": {
+        "x": 8.695848522291584,
+        "y": 5.409664893627951
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 7.172562277580072,
+        "y": 2.415741399762752
+      },
+      "prevControl": {
+        "x": 9.292123368920523,
+        "y": 2.663202846975089
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Right Bump 2 end"
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.9538188277087023,
+      "rotationDegrees": 0.0
+    },
+    {
+      "waypointRelativePos": 1.337477797513319,
+      "rotationDegrees": 72.67562911392758
+    },
+    {
+      "waypointRelativePos": 1.8596802841918287,
+      "rotationDegrees": 47.918204788769785
+    },
+    {
+      "waypointRelativePos": 2.56053268765132,
+      "rotationDegrees": -85.02557077958166
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 5.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 600.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 4.0,
+    "rotation": -178.78112476486865
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 35.044186295992226
+  },
+  "useDefaultConstraints": true
+}

@@ -1,0 +1,109 @@
+{
+    "version":  "2025.0",
+    "waypoints":  [
+                      {
+                          "anchor":  {
+                                         "x":  2.6967378410438916,
+                                         "y":  5.6327402135231317
+                                     },
+                          "prevControl":  null,
+                          "nextControl":  {
+                                              "x":  3.8264531435349944,
+                                              "y":  5.8586832740213524
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  "Left Trench Bump 1 end"
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  6.171957295373667,
+                                         "y":  5.18085409252669
+                                     },
+                          "prevControl":  {
+                                              "x":  5.696961158625992,
+                                              "y":  5.7058498226162264
+                                          },
+                          "nextControl":  {
+                                              "x":  6.785231316725978,
+                                              "y":  4.5030249110320284
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  7.721281138790035,
+                                         "y":  2.7277580071174388
+                                     },
+                          "prevControl":  {
+                                              "x":  6.83902728351127,
+                                              "y":  2.781553973902728
+                                          },
+                          "nextControl":  {
+                                              "x":  8.696366962074087,
+                                              "y":  2.6683015544781687
+                                          },
+                          "isLocked":  false,
+                          "linkedName":  null
+                      },
+                      {
+                          "anchor":  {
+                                         "x":  7.892483443708608,
+                                         "y":  5.9443625827814568
+                                     },
+                          "prevControl":  {
+                                              "x":  9.083112582781457,
+                                              "y":  4.5940149006622519
+                                          },
+                          "nextControl":  null,
+                          "isLocked":  false,
+                          "linkedName":  "Left Trench Bump 2 end"
+                      }
+                  ],
+    "rotationTargets":  [
+                            {
+                                "waypointRelativePos":  0.5,
+                                "rotationDegrees":  0
+                            },
+                            {
+                                "waypointRelativePos":  1.337477797513319,
+                                "rotationDegrees":  -72.675629113927585
+                            },
+                            {
+                                "waypointRelativePos":  2.024866785079927,
+                                "rotationDegrees":  6.09084094397711
+                            },
+                            {
+                                "waypointRelativePos":  2.56053268765132,
+                                "rotationDegrees":  83.293190629913923
+                            }
+                        ],
+    "constraintZones":  [
+
+                        ],
+    "pointTowardsZones":  [
+
+                          ],
+    "eventMarkers":  [
+
+                     ],
+    "globalConstraints":  {
+                              "maxVelocity":  5.0,
+                              "maxAcceleration":  3.0,
+                              "maxAngularVelocity":  600.0,
+                              "maxAngularAcceleration":  600.0,
+                              "nominalVoltage":  12.0,
+                              "unlimited":  false
+                          },
+    "goalEndState":  {
+                         "velocity":  4.0,
+                         "rotation":  130.36453657309696
+                     },
+    "reversed":  false,
+    "folder":  "Left Trench Bump",
+    "idealStartingState":  {
+                               "velocity":  0,
+                               "rotation":  -39.80557109226519
+                           },
+    "useDefaultConstraints":  true
+}
