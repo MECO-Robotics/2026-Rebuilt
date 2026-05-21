@@ -19,6 +19,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -41,6 +42,7 @@ import frc.robot.util.SysIdResultsPublisher;
 import frc.robot.util.SysIdRunStats;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
+import frc.robot.util.pathplanner.LocalADStarAK;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -242,6 +244,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	private void configureAutoBuilder() {
 		try {
+			Pathfinding.setPathfinder(new LocalADStarAK());
 			var config = RobotConfig.fromGUISettings();
 			var translationPid = new PIDConstants(m_autoTranslationKP.get(), m_autoTranslationKI.get(),
 					m_autoTranslationKD.get());

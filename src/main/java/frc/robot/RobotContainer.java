@@ -14,6 +14,13 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
 import com.pathplanner.lib.util.DriveFeedforwards;
 
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.IntegerPublisher;
+import edu.wpi.first.networktables.IntegerSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -21,9 +28,15 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.IntakeCommands;
@@ -34,6 +47,7 @@ import frc.robot.commands.position_joint.PositionJointSysIdCommands;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.constants.Constants;
+import frc.robot.constants.FieldConstants.AutoDrivePoses;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
@@ -59,6 +73,39 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  */
 public class RobotContainer {
 	private static final double AUTO_LOOP_PERIOD_SECONDS = 0.020;
+	private static final double[] DEFAULT_CLICKED_POSE = new double[]{0.0, 0.0, 0.0};
+	private static final String DRIVE_TO_POSE_X_KEY = "Drive To Pose/Target X Meters";
+	private static final String DRIVE_TO_POSE_Y_KEY = "Drive To Pose/Target Y Meters";
+	private static final String DRIVE_TO_POSE_HEADING_KEY = "Drive To Pose/Target Heading Degrees";
+	private static final AutoDriveTarget[] AUTO_DRIVE_TARGETS = new AutoDriveTarget[]{
+			new AutoDriveTarget("Fender", AutoDrivePoses.FENDER),
+			new AutoDriveTarget("Left Trench", AutoDrivePoses.LEFT_TRENCH),
+			new AutoDriveTarget("Left Trench Return", AutoDrivePoses.LEFT_TRENCH_RETURN),
+			new AutoDriveTarget("Left Trench Far", AutoDrivePoses.LEFT_TRENCH_FAR),
+			new AutoDriveTarget("Left Trench Corner", AutoDrivePoses.LEFT_TRENCH_CORNER),
+			new AutoDriveTarget("Left Trench Cleanup", AutoDrivePoses.LEFT_TRENCH_CLEANUP),
+			new AutoDriveTarget("Right Trench", AutoDrivePoses.RIGHT_TRENCH),
+			new AutoDriveTarget("Right Trench Return", AutoDrivePoses.RIGHT_TRENCH_RETURN),
+			new AutoDriveTarget("Right Trench Far", AutoDrivePoses.RIGHT_TRENCH_FAR),
+			new AutoDriveTarget("Right Trench Corner", AutoDrivePoses.RIGHT_TRENCH_CORNER),
+			new AutoDriveTarget("Right Trench Cleanup", AutoDrivePoses.RIGHT_TRENCH_CLEANUP),
+			new AutoDriveTarget("Left Depot", AutoDrivePoses.LEFT_DEPOT),
+			new AutoDriveTarget("Right Depot", AutoDrivePoses.RIGHT_DEPOT),
+			new AutoDriveTarget("Left Rush Start", AutoDrivePoses.LEFT_RUSH_START),
+			new AutoDriveTarget("Right Rush Start", AutoDrivePoses.RIGHT_RUSH_START),
+			new AutoDriveTarget("Left Bump", AutoDrivePoses.LEFT_BUMP),
+			new AutoDriveTarget("Left Bump Far", AutoDrivePoses.LEFT_BUMP_FAR),
+			new AutoDriveTarget("Right Bump", AutoDrivePoses.RIGHT_BUMP),
+			new AutoDriveTarget("Right Bump Near", AutoDrivePoses.RIGHT_BUMP_NEAR),
+			new AutoDriveTarget("Right Bump Far", AutoDrivePoses.RIGHT_BUMP_FAR),
+			new AutoDriveTarget("Right Bump Corner", AutoDrivePoses.RIGHT_BUMP_CORNER),
+			new AutoDriveTarget("Right Bump Cleanup", AutoDrivePoses.RIGHT_BUMP_CLEANUP),
+			new AutoDriveTarget("Left Prom Counter", AutoDrivePoses.LEFT_PROM_COUNTER),
+			new AutoDriveTarget("Left Prom Counter Send", AutoDrivePoses.LEFT_PROM_COUNTER_SEND),
+			new AutoDriveTarget("Left Prom Counter Cleanup", AutoDrivePoses.LEFT_PROM_COUNTER_CLEANUP),
+			new AutoDriveTarget("Right Prom Counter", AutoDrivePoses.RIGHT_PROM_COUNTER),
+			new AutoDriveTarget("Right Prom Counter Send", AutoDrivePoses.RIGHT_PROM_COUNTER_SEND),
+			new AutoDriveTarget("Right Prom Counter Cleanup", AutoDrivePoses.RIGHT_PROM_COUNTER_CLEANUP)};
 
 	// Subsystems
 	public final CommandSwerveDrivetrain drivetrain = DrivetrainConstants.createDrivetrain();
@@ -87,6 +134,17 @@ public class RobotContainer {
 	// Dashboard inputs
 	private final LoggedDashboardChooser<Command> autoChooser;
 	private final LoggedDashboardChooser<Command> sysIdChooser;
+	private final SendableChooser<Pose2d> driveToPoseChooser = new SendableChooser<>();
+	private final Field2d autoDriveField = new Field2d();
+	private final NetworkTable autoDriveTable = NetworkTableInstance.getDefault().getTable("AutoDrive");
+	private final DoubleArrayPublisher clickedPosePublisher = autoDriveTable.getDoubleArrayTopic("ClickedPose")
+			.publish();
+	private final IntegerPublisher clickedPoseRequestPublisher = autoDriveTable.getIntegerTopic("RequestId").publish();
+	private final DoubleArraySubscriber clickedPoseSubscriber = autoDriveTable.getDoubleArrayTopic("ClickedPose")
+			.subscribe(DEFAULT_CLICKED_POSE);
+	private final IntegerSubscriber clickedPoseRequestSubscriber = autoDriveTable.getIntegerTopic("RequestId")
+			.subscribe(0);
+	private long lastClickedPoseRequestId = 0;
 	private final AutoFactory choreoAutoFactory;
 
 	/**
@@ -136,9 +194,107 @@ public class RobotContainer {
 		}
 
 		SmartDashboard.putBoolean("Flywheel Spinning?", false);
+		configureDriveToPoseDashboard();
 
 		// Configure the button bindings
 		configureButtonBindings();
+	}
+
+	private void configureDriveToPoseDashboard() {
+		SmartDashboard.putNumber(DRIVE_TO_POSE_X_KEY, drivetrain.getState().Pose.getX());
+		SmartDashboard.putNumber(DRIVE_TO_POSE_Y_KEY, drivetrain.getState().Pose.getY());
+		SmartDashboard.putNumber(DRIVE_TO_POSE_HEADING_KEY, drivetrain.getState().Pose.getRotation().getDegrees());
+		addDriveToPoseOption("Manual Fields", null, true);
+		for (AutoDriveTarget target : AUTO_DRIVE_TARGETS) {
+			addDriveToPoseOption(target.name, target.pose, false);
+		}
+		SmartDashboard.putData("Drive To Pose/Target", driveToPoseChooser);
+		SmartDashboard.putData("Drive To Pose/Run",
+				DriveCommands.pathfindAndAlignToPose(drivetrain, this::getDashboardDriveToPose)
+						.withName("Pathfind And Align To Pose"));
+		configureAutoDriveShuffleboard();
+		configureClickedPoseInput();
+		updateAutoDriveField();
+	}
+
+	private void addDriveToPoseOption(String name, Pose2d pose, boolean isDefault) {
+		if (isDefault) {
+			driveToPoseChooser.setDefaultOption(name, pose);
+		} else {
+			driveToPoseChooser.addOption(name, pose);
+		}
+	}
+
+	private Pose2d getDashboardDriveToPose() {
+		Pose2d selectedPose = driveToPoseChooser.getSelected();
+		if (selectedPose != null) {
+			return selectedPose;
+		}
+
+		return new Pose2d(SmartDashboard.getNumber(DRIVE_TO_POSE_X_KEY, drivetrain.getState().Pose.getX()),
+				SmartDashboard.getNumber(DRIVE_TO_POSE_Y_KEY, drivetrain.getState().Pose.getY()),
+				Rotation2d.fromDegrees(SmartDashboard.getNumber(DRIVE_TO_POSE_HEADING_KEY,
+						drivetrain.getState().Pose.getRotation().getDegrees())));
+	}
+
+	private void configureAutoDriveShuffleboard() {
+		ShuffleboardTab autoDriveTab = Shuffleboard.getTab("Auto Drive");
+		autoDriveTab.add("Field", autoDriveField).withWidget(BuiltInWidgets.kField).withPosition(0, 0).withSize(8, 5);
+		autoDriveTab.add("Target", driveToPoseChooser).withWidget(BuiltInWidgets.kComboBoxChooser).withPosition(8, 0)
+				.withSize(3, 1);
+		autoDriveTab
+				.add("Run Selected",
+						DriveCommands.pathfindAndAlignToPose(drivetrain, this::getDashboardDriveToPose)
+								.withName("Run Selected"))
+				.withWidget(BuiltInWidgets.kCommand).withPosition(8, 1).withSize(3, 1);
+
+		for (int i = 0; i < AUTO_DRIVE_TARGETS.length; i++) {
+			AutoDriveTarget target = AUTO_DRIVE_TARGETS[i];
+			int column = 8 + (i / 7) * 3;
+			int row = 2 + (i % 7);
+			autoDriveTab
+					.add(target.name,
+							DriveCommands.pathfindAndAlignToPose(drivetrain, () -> target.pose).withName(target.name))
+					.withWidget(BuiltInWidgets.kCommand).withPosition(column, row).withSize(3, 1);
+		}
+	}
+
+	private void updateAutoDriveField() {
+		autoDriveField.setRobotPose(drivetrain.getState().Pose);
+		Pose2d targetPose = getDashboardDriveToPose();
+		autoDriveField.getObject("Selected Target").setPose(targetPose);
+		for (AutoDriveTarget target : AUTO_DRIVE_TARGETS) {
+			autoDriveField.getObject(target.name).setPose(target.pose);
+		}
+	}
+
+	private void configureClickedPoseInput() {
+		clickedPosePublisher.set(DEFAULT_CLICKED_POSE);
+		clickedPoseRequestPublisher.set(lastClickedPoseRequestId);
+	}
+
+	private void pollClickedPoseInput() {
+		long requestId = clickedPoseRequestSubscriber.get();
+		if (requestId == lastClickedPoseRequestId) {
+			return;
+		}
+		lastClickedPoseRequestId = requestId;
+
+		double[] clickedPose = clickedPoseSubscriber.get();
+		if (clickedPose.length < 2 || DriverStation.isDisabled()) {
+			return;
+		}
+
+		double headingDegrees = clickedPose.length >= 3
+				? clickedPose[2]
+				: drivetrain.getState().Pose.getRotation().getDegrees();
+		Pose2d targetPose = new Pose2d(clickedPose[0], clickedPose[1], Rotation2d.fromDegrees(headingDegrees));
+		SmartDashboard.putNumber(DRIVE_TO_POSE_X_KEY, targetPose.getX());
+		SmartDashboard.putNumber(DRIVE_TO_POSE_Y_KEY, targetPose.getY());
+		SmartDashboard.putNumber(DRIVE_TO_POSE_HEADING_KEY, targetPose.getRotation().getDegrees());
+		autoDriveField.getObject("Clicked Target").setPose(targetPose);
+		CommandScheduler.getInstance()
+				.schedule(DriveCommands.pathfindAndAlignToPose(drivetrain, () -> targetPose).withName("Clicked Pose"));
 	}
 
 	/**
@@ -220,6 +376,8 @@ public class RobotContainer {
 	}
 
 	public void updateDashboardOutputs() {
+		pollClickedPoseInput();
+		updateAutoDriveField();
 		HubShiftUtil.ShiftInfo shiftInfo = HubShiftUtil.getShiftedShiftInfo();
 
 		// Publish match time
@@ -237,9 +395,24 @@ public class RobotContainer {
 				DriverStation.isAutonomous() ? "Autonomous" : shiftInfo.currentShift().toString());
 		SmartDashboard.putBoolean("Shifts/Active First?",
 				DriverStation.getAlliance().orElse(Alliance.Blue) == HubShiftUtil.getFirstActiveAlliance());
+		SmartDashboard.putBoolean("AutoDrive/Is Red Alliance",
+				DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red);
+		SmartDashboard.putBoolean("AutoDrive/Enabled", DriverStation.isEnabled());
+		SmartDashboard.putString("AutoDrive/Mode",
+				DriverStation.isAutonomous() ? "Autonomous" : DriverStation.isTeleop() ? "Teleop" : "Disabled");
 
 		SmartDashboard.putString("Shifts/Match Time Color", shiftInfo.matchTimeColor());
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
+	}
+
+	private static class AutoDriveTarget {
+		private final String name;
+		private final Pose2d pose;
+
+		private AutoDriveTarget(String name, Pose2d pose) {
+			this.name = name;
+			this.pose = pose;
+		}
 	}
 
 	private void registerNamedCommands() {
