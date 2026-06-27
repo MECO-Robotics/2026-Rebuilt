@@ -70,6 +70,12 @@ public class IntakeCommands {
 				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.IDLE), activateIntakeSimulation());
 	}
 
+	/** Deploys the intake and runs the roller inward for autonomous pickup. */
+	public static Command deployAndSpinIntake(PositionJoint rotationMotor, Flywheel rollerMotor) {
+		return Commands.parallel(PositionJoint.setPosition(rotationMotor, RACK_PRESETS.DEPLOY, true),
+				Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE), activateIntakeSimulation());
+	}
+
 	/** Runs only the intake roller at the configured intake voltage. */
 	public static Command spinIntake(Flywheel rollerMotor) {
 		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE), activateIntakeSimulation());

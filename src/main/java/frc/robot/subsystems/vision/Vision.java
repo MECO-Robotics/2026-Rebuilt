@@ -11,6 +11,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
@@ -27,6 +28,8 @@ public class Vision extends SubsystemBase {
 	private final VisionIO[] io;
 	private final VisionIOInputsAutoLogged[] inputs;
 	private final Alert[] disconnectedAlerts;
+
+	private double lastAcceptedAprilTagTimestamp = Double.NEGATIVE_INFINITY;
 
 	/**
 	 * Creates the vision subsystem.
@@ -139,6 +142,10 @@ public class Vision extends SubsystemBase {
 					continue;
 				}
 
+				if (!isQuestNav) {
+					lastAcceptedAprilTagTimestamp = Timer.getFPGATimestamp();
+				}
+
 				// Calculate standard deviations
 				double linearStdDev;
 				double angularStdDev;
@@ -185,6 +192,11 @@ public class Vision extends SubsystemBase {
 		Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[0]));
 		Logger.recordOutput("Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(new Pose3d[0]));
 		Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(new Pose3d[0]));
+		Logger.recordOutput("Vision/Summary/HasRecentAprilTagPose", hasRecentAprilTagPose(0.5));
+	}
+
+	public boolean hasRecentAprilTagPose(double maxAgeSeconds) {
+		return Timer.getFPGATimestamp() - lastAcceptedAprilTagTimestamp <= maxAgeSeconds;
 	}
 
 	@FunctionalInterface

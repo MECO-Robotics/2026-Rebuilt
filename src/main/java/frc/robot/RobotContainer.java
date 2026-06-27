@@ -11,10 +11,13 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
 import com.pathplanner.lib.util.DriveFeedforwards;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -24,8 +27,10 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.commands.GamePieceAutonomyCommands;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.choreo.ChoreoTraj;
@@ -37,17 +42,30 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
+import frc.robot.constants.vision.PieceDetectionConstants;
 import frc.robot.constants.vision.VisionConstants;
+import frc.robot.dashboard.DashboardAutoDriveController;
+import frc.robot.dashboard.DriverDashboard;
 import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.field_mapping.FieldMap3d;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
+import frc.robot.subsystems.obstacle_detection.RobotObstacleTracker;
+import frc.robot.subsystems.piece_detection.PieceDetection;
+import frc.robot.subsystems.piece_detection.PieceDetectionIO;
+import frc.robot.subsystems.piece_detection.PieceDetectionIOMultiCamera;
+import frc.robot.subsystems.piece_detection.PieceDetectionIOHttp;
+import frc.robot.subsystems.piece_detection.PieceDetectionIOSim;
 import frc.robot.subsystems.position_joint.PositionJoint;
 import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.util.HubShiftUtil;
+import frc.robot.util.pathplanner.LocalADStarAK;
+import java.util.ArrayList;
+import java.util.List;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -78,6 +96,11 @@ public class RobotContainer {
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
 	private final Vision vision;
+	private final PieceDetection pieceDetection;
+	private final RobotObstacleTracker robotObstacleTracker;
+	private final FieldMap3d fieldMap3d;
+	private final DriverDashboard driverDashboard;
+	private final DashboardAutoDriveController dashboardAutoDriveController;
 	private final RobotSimulation simulation;
 
 	// Controller
@@ -88,6 +111,7 @@ public class RobotContainer {
 	private final LoggedDashboardChooser<Command> autoChooser;
 	private final LoggedDashboardChooser<Command> sysIdChooser;
 	private final AutoFactory choreoAutoFactory;
+	private boolean dashboardEmergencyStopLatched = false;
 
 	/**
 	 * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -121,8 +145,14 @@ public class RobotContainer {
 						VisionIO.limelightMegaTag1WithMegaTag2SingleTagWithSim(VisionConstants.limelightName,
 								() -> drivetrain.getState().Pose.getRotation(), VisionConstants.robotToLimelight,
 								drivetrain::getPhysicsPose)));
+		pieceDetection = createPieceDetection();
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
+		Pathfinding.setPathfinder(new LocalADStarAK());
+		robotObstacleTracker = new RobotObstacleTracker(drivetrain::getPhysicsPose);
+		fieldMap3d = new FieldMap3d(drivetrain::getPhysicsPose, pieceDetection, robotObstacleTracker);
+		driverDashboard = new DriverDashboard(pieceDetection);
+		dashboardAutoDriveController = new DashboardAutoDriveController(drivetrain, this::emergencyStopFromDashboard);
 		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,
 				this::followChoreoSample, true, drivetrain);
 
@@ -139,6 +169,51 @@ public class RobotContainer {
 
 		// Configure the button bindings
 		configureButtonBindings();
+	}
+
+	private PieceDetection createPieceDetection() {
+		return switch (Constants.currentMode) {
+			case REAL -> new PieceDetection(createRealPieceDetectionIO(), () -> new Pose3d(drivetrain.getState().Pose));
+			case SIM, REPLAY -> new PieceDetection(
+					new PieceDetectionIOSim("GamePieceCameraSim", this::createSimGamePiecePoses,
+							() -> new Pose3d(drivetrain.getState().Pose)),
+					() -> new Pose3d(drivetrain.getState().Pose));
+		};
+	}
+
+	private Pose3d[] createSimGamePiecePoses() {
+		return new Pose3d[]{new Pose3d(2.2, 1.4, 0.05, new Rotation3d()), new Pose3d(3.2, 2.1, 0.05, new Rotation3d()),
+				new Pose3d(5.4, 4.0, 0.05, new Rotation3d()), new Pose3d(7.8, 2.7, 0.05, new Rotation3d())};
+	}
+
+	private PieceDetectionIO createRealPieceDetectionIO() {
+		List<PieceDetectionIO> cameras = new ArrayList<>();
+
+		if (PieceDetectionConstants.ENABLE_FRONT_GAME_PIECE_CAMERA) {
+			cameras.add(new PieceDetectionIOHttp(PieceDetectionConstants.FRONT_GAME_PIECE_CAMERA_NAME,
+					PieceDetectionConstants.FRONT_GAME_PIECE_CAMERA_CONFIG,
+					PieceDetectionConstants.FRONT_GAME_PIECE_CAMERA_DATA_URI,
+					PieceDetectionConstants.FRONT_GAME_PIECE_CAMERA_DISTANCE_GAIN));
+		}
+
+		if (PieceDetectionConstants.ENABLE_REAR_GAME_PIECE_CAMERA) {
+			cameras.add(new PieceDetectionIOHttp(PieceDetectionConstants.REAR_GAME_PIECE_CAMERA_NAME,
+					PieceDetectionConstants.REAR_GAME_PIECE_CAMERA_CONFIG,
+					PieceDetectionConstants.REAR_GAME_PIECE_CAMERA_DATA_URI,
+					PieceDetectionConstants.REAR_GAME_PIECE_CAMERA_DISTANCE_GAIN));
+		}
+
+		if (cameras.isEmpty()) {
+			return new PieceDetectionIOSim("GamePieceCameraDisabled", () -> new Pose3d[0],
+					() -> new Pose3d(drivetrain.getState().Pose));
+		}
+
+		if (cameras.size() == 1) {
+			return cameras.get(0);
+		}
+
+		return new PieceDetectionIOMultiCamera(PieceDetectionConstants.GAME_PIECE_DETECTION_NAME,
+				cameras.toArray(PieceDetectionIO[]::new));
 	}
 
 	/**
@@ -219,7 +294,39 @@ public class RobotContainer {
 		coPilot.a().onTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood).repeatedly());
 	}
 
+	private void emergencyStopFromDashboard() {
+		dashboardEmergencyStopLatched = true;
+		applyEmergencyStopOutputs();
+	}
+
+	private void applyEmergencyStopOutputs() {
+		CommandScheduler.getInstance().cancelAll();
+		drivetrain.stop();
+
+		shooterFlywheel.setVoltage(0.0);
+		topIndexer.setVoltage(0.0);
+		bottomIndexer.setVoltage(0.0);
+		conveyor.setVoltage(0.0);
+		intakeRoller.setVoltage(0.0);
+
+		intakeRack.setComplianceAfterTarget(true);
+		intakeRack.syncGoalToCurrentPosition();
+		intakeRack.setVoltage(0.0);
+
+		hood.setComplianceAfterTarget(true);
+		hood.syncGoalToCurrentPosition();
+		hood.setVoltage(0.0);
+	}
+
+	public void clearDashboardEmergencyStop() {
+		dashboardEmergencyStopLatched = false;
+	}
+
 	public void updateDashboardOutputs() {
+		if (dashboardEmergencyStopLatched) {
+			applyEmergencyStopOutputs();
+		}
+
 		HubShiftUtil.ShiftInfo shiftInfo = HubShiftUtil.getShiftedShiftInfo();
 
 		// Publish match time
@@ -240,6 +347,7 @@ public class RobotContainer {
 
 		SmartDashboard.putString("Shifts/Match Time Color", shiftInfo.matchTimeColor());
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
+		driverDashboard.update();
 	}
 
 	private void registerNamedCommands() {
@@ -307,6 +415,11 @@ public class RobotContainer {
 						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
 
 		autoChooser.addOption("Choreo LeftBlueBump + Shoot", createLeftBlueBumpShootAuto());
+		autoChooser.addOption("Autonomous Ball Harvest",
+				GamePieceAutonomyCommands
+						.collectAndShootUntilInterrupted(drivetrain, pieceDetection, vision, intakeRack, intakeRoller,
+								conveyor, bottomIndexer, topIndexer, shooterFlywheel, hood)
+						.withTimeout(GamePieceAutonomyCommands.FULL_MATCH_RUNTIME_SECONDS));
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
 	}
 

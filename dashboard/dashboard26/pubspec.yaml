@@ -1,0 +1,18 @@
+name: dashboard26
+description: Team 8324 clickable auto-drive dashboard for the 2026 robot project.
+publish_to: "none"
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  nt4: ^1.3.3
+  window_manager: ^0.3.7
+
+dev_dependencies:
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

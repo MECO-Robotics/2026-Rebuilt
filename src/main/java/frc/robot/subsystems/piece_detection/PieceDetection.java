@@ -49,7 +49,63 @@ public class PieceDetection extends SubsystemBase {
 		return inputs.seesTarget;
 	}
 
+	public boolean isConnected() {
+		return inputs.connected;
+	}
+
 	public Pose3d getPiecePose() {
 		return gamePiecePose;
+	}
+
+	public int getGroupCount() {
+		return inputs.groupCount;
+	}
+
+	public int getBiggestGroupBallCount() {
+		return inputs.biggestGroupBallCount;
+	}
+
+	public int getClosestGroupBallCount() {
+		return inputs.closestGroupBallCount;
+	}
+
+	public int getSelectedGroupBallCount() {
+		return inputs.selectedGroupBallCount;
+	}
+
+	public double getBiggestGroupDistance() {
+		return inputs.biggestGroupDistance;
+	}
+
+	public double getClosestGroupDistance() {
+		return inputs.closestGroupDistance;
+	}
+
+	public double getSelectedGroupDistance() {
+		return inputs.selectedGroupDistance;
+	}
+
+	public double getSelectedGroupYaw() {
+		return inputs.selectedGroupYaw;
+	}
+
+	public double getSelectedGroupKeptBalls() {
+		return inputs.selectedGroupKeptBalls;
+	}
+
+	public double getClosestGroupTripsDuringBigTrip() {
+		return inputs.closestGroupTripsDuringBigTrip;
+	}
+
+	public double getSelectedGroupScore() {
+		return inputs.selectedGroupScore;
+	}
+
+	public String getSelectedGroupReason() {
+		return inputs.selectedGroupReason;
+	}
+
+	public String getSelectedGroupShape() {
+		return inputs.selectedGroupShape;
 	}
 }

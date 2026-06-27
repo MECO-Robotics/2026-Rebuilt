@@ -50,6 +50,22 @@ The hardware abstraction is handled through ``VisionIO`` implementations for Lim
 simulation combinations.
 
 
+Field mapping
+-------------
+
+``FieldMap3d`` publishes the robot's live world model to AdvantageKit/AdvantageScope under ``FieldMap3d/*``. It logs:
+
+- robot pose
+- field boundary corners
+- Hub pose
+- AprilTag poses
+- selected game-piece pose
+- detected robot-obstacle centers and obstacle box corners
+
+Use this view when debugging autonomous decisions, pathfinding, camera detections, and whether dynamic robot obstacles
+line up with the field coordinate system.
+
+
 Digital sensors and piece detection
 -----------------------------------
 
@@ -61,6 +77,30 @@ This repo also includes:
 - ``PieceDetection`` for target or game-piece style perception pipelines
 
 These follow the same IO-driven architecture as the motor subsystems.
+
+Game-piece shape mapping
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The game-piece camera service publishes a ``shape`` label for each tracked ball and a group's primary ``shape`` plus
+``shape_counts`` in ``/data``. The current supported shape set is intentionally circle-only, so the robot treats missing
+or old camera JSON as ``circle`` and logs the selected group's shape for debugging and future expansion.
+
+The camera service also serves a browser dashboard on its root URL and an MJPEG stream at ``/video``. The web dashboard
+shows the live processed image, visible balls, groups, yaw, and calibrated distance when distance data is available.
+
+Game-piece range calibration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``PieceDetectionIOHttp`` can estimate game-piece range from the detected area using the calibration table in
+``PieceDetectionConstants.GAME_PIECE_AREA_RANGE_SAMPLES``. To calibrate it:
+
+1. Place a game piece at a tape-measured distance from the camera.
+2. Run the game-piece camera service and read the detected group ``area`` value from ``/data`` or AdvantageKit logs.
+3. Add a ``new AreaRangeSample(areaPixels, rangeMeters)`` entry for that measurement.
+4. Repeat for several near, middle, and far distances.
+
+When at least two samples exist, the robot interpolates range from area and clamps outside the measured area range.
+Without two samples, it falls back to the camera-reported distance or the rough ``kDistance / sqrt(area)`` estimate.
 
 
 Drive subsystem

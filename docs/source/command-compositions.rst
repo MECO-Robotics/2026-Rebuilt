@@ -129,6 +129,55 @@ Examples of named commands in this repo include:
 
 This keeps autonomous behavior aligned with teleop behavior and avoids duplicate robot logic.
 
+The ``Autonomous Ball Harvest`` chooser option uses the game-piece camera pipeline when running on the real robot. It
+can run with the front camera, rear camera, or both, based on
+``PieceDetectionConstants.ENABLE_FRONT_GAME_PIECE_CAMERA`` and
+``PieceDetectionConstants.ENABLE_REAR_GAME_PIECE_CAMERA``. The enabled Beelink/Arducam services are expected to publish
+JSON at the URIs configured in
+``PieceDetectionConstants.FRONT_GAME_PIECE_CAMERA_DATA_URI`` and
+``PieceDetectionConstants.REAR_GAME_PIECE_CAMERA_DATA_URI``. ``PieceDetectionIOMultiCamera`` polls both cameras and
+uses the highest-scoring selected group. Each ``PieceDetectionIOHttp`` instance reads detected ball groups, estimates
+the biggest group, closest group, and best group, carries the camera's circle-only ``shape`` label for the selected
+group, then applies the ``60/70`` kept-ball ratio before the autonomous command pathfinds to the chosen group, deploys
+the intake, and returns to a hub shot pose. Before feeding, the command
+holds hub auto-aim while waiting briefly for ``Vision`` to report a fresh accepted AprilTag pose, so the final lineup is
+based on AprilTag-corrected odometry instead of dead-reckoning alone. The chooser command is capped by
+``GamePieceAutonomyCommands.FULL_MATCH_RUNTIME_SECONDS`` at 160 seconds, matching the 2:40 runtime from the start
+button to the end of the game.
+
+Known field obstacles should be represented in PathPlanner's navgrid/settings. Dynamic obstacle avoidance still needs a
+separate source of obstacle positions. ``RobotObstacleTracker`` subscribes to the NetworkTables topic
+``Autonomy/RobotObstacles`` and expects a flattened array of field-relative robot centers in meters:
+``x0, y0, x1, y1, ...``. Each center is expanded into a padded obstacle box before being passed to PathPlanner's AD*
+pathfinder, so the ball-harvest auto can route around other robots while chasing the selected group.
+
+In desktop simulation, ``PieceDetectionIOSim`` supplies a small set of fixed game-piece poses so the harvest loop can be
+exercised without a robot or camera services. The full Gradle simulation still requires the normal FRC Java 17 toolchain.
+
+The driver station dashboard gets a dedicated ``8324 Driver`` Shuffleboard tab from ``DriverDashboard``. It embeds the
+front and rear game-piece MJPEG streams configured by
+``PieceDetectionConstants.FRONT_GAME_PIECE_CAMERA_VIDEO_URI`` and
+``PieceDetectionConstants.REAR_GAME_PIECE_CAMERA_VIDEO_URI``, and publishes selected-group telemetry under
+``DriverDashboard/*`` on SmartDashboard. The live values include camera connection, whether balls are visible, detected
+group count, selected ball count, selected distance/yaw, biggest and closest group distance, kept-ball estimate, and the
+reason the robot chose that group.
+
+The standalone Flutter dashboard in ``dashboard/dashboard26`` subscribes to the same ``DriverDashboard/*`` and
+``AutoDrive/*`` NetworkTables keys, so it can be used as the team's custom match dashboard alongside the normal driver
+station and Shuffleboard views.
+
+``DashboardAutoDriveController`` listens for Flutter field clicks on ``/AutoDrive/ClickedPose`` as
+``[xMeters, yMeters, headingDegrees]`` and ``/AutoDrive/RequestId`` as an increasing integer. A new request is accepted
+only while the robot is teleop-enabled and the pose is inside the field bounds, then it schedules a PathPlanner
+``pathfindToPose`` command with the same moderate speed limits used by the ball-harvest behavior. Requests sent while
+disabled, autonomous, malformed, or outside the field are rejected and reported through
+``/SmartDashboard/AutoDrive/LastRejectedReason``.
+
+The Flutter dashboard Enter/Numpad Enter key sends ``/AutoDrive/KillRequestId``. The robot treats that as a latched
+software stop: it cancels running commands, stops drivetrain output, zeros flywheels and rollers, and keeps applying
+those stopped outputs until teleop is enabled again. This does not replace the Driver Station disable button, main
+breaker, or field E-stop.
+
 
 Guidelines
 ----------
