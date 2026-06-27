@@ -15,6 +15,7 @@ Included are both beginner-oriented guides and more in-depth documentation for m
    mechanism-types
    configure-robot
    judging
+   camera-autostart
    command-compositions
    tune-iterate
    troubleshooting
@@ -36,6 +37,7 @@ Quick start
 - Choosing the correct mechanism pattern: :doc:`mechanism-types`
 - Adapting robot to your hardware: :doc:`configure-robot`
 - Basic information for judges: :doc:`judging`
+- Game-piece camera boot setup: :doc:`camera-autostart`
 - Write commands to control the robot: :doc:`command-compositions`
 - Troubleshooting: :doc:`troubleshooting`
 - Ready to improve behavior: :doc:`tune-iterate`

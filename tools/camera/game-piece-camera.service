@@ -1,0 +1,16 @@
+[Unit]
+Description=MECO game-piece camera server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=replace-with-your-user
+Group=replace-with-your-group
+WorkingDirectory=/home/replace-with-your-user/Game-Piece-Detection
+ExecStart=/home/replace-with-your-user/Game-Piece-Detection/.venv/bin/python /home/replace-with-your-user/Game-Piece-Detection/camera.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
