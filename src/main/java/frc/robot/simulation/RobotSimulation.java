@@ -11,6 +11,7 @@ import frc.robot.constants.Constants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
+import frc.robot.util.visualization.NateSimPublisher;
 import frc.robot.util.visualization.RobotRemyVisualizer;
 import java.util.Arrays;
 import java.util.Set;
@@ -80,6 +81,7 @@ public interface RobotSimulation {
 		private final LaunchedFuelSim launchedFuelSim;
 		private final Hopper hopper;
 		private final RobotRemyVisualizer robotRemyVisualizer;
+		private final NateSimPublisher nateSimPublisher = new NateSimPublisher();
 
 		MapleRobotSimulation(CommandSwerveDrivetrain drive, PositionJoint intakeRack, PositionJoint hood,
 				Flywheel shooterFlywheel) {
@@ -127,6 +129,10 @@ public interface RobotSimulation {
 			Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", launchedFuelSim.getSuccessfulScoreCount());
 			Logger.recordOutput("FieldSimulation/FuelProjectilePositions", fuelProjectilePoses);
 			Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
+
+			nateSimPublisher.publish(drive.getPhysicsPose(), RobotRemyVisualizer.COMPONENT_POSE_NAMES,
+					robotRemyVisualizer.getComponentPoses(), fuelPoses, fuelProjectilePoses,
+					launchedFuelSim.getSuccessfulScoreCount(), launchedFuelSim.getLaunchEventId());
 		}
 
 		private void resetMapleAutonomousPose(Command autonomousCommand) {

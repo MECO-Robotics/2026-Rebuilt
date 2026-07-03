@@ -18,6 +18,8 @@ import org.littletonrobotics.junction.Logger;
 public class RobotRemyVisualizer {
 	public static final String ROBOT_POSE_LOG_KEY = "Visualization/RobotRemy/RobotPose";
 	public static final String COMPONENT_POSES_LOG_KEY = "Visualization/RobotRemy/ComponentPoses";
+	public static final String[] COMPONENT_POSE_NAMES = new String[]{"flywheel", "hood", "intakeRack",
+			"intakeKickerBar", "hopper", "climber"};
 
 	private final Supplier<Pose2d> robotPoseSupplier;
 	private final DoubleSupplier hoodRotations;
@@ -46,8 +48,16 @@ public class RobotRemyVisualizer {
 	 * Pushes latest robot + component transforms for custom-asset visualization.
 	 */
 	public void periodic() {
-		Logger.recordOutput(ROBOT_POSE_LOG_KEY, new Pose3d(robotPoseSupplier.get()));
-		Logger.recordOutput(COMPONENT_POSES_LOG_KEY, new Pose3d[]{
+		Logger.recordOutput(ROBOT_POSE_LOG_KEY, getRobotPose());
+		Logger.recordOutput(COMPONENT_POSES_LOG_KEY, getComponentPoses());
+	}
+
+	public Pose3d getRobotPose() {
+		return new Pose3d(robotPoseSupplier.get());
+	}
+
+	public Pose3d[] getComponentPoses() {
+		return new Pose3d[]{
 				// 0: flywheel
 				Pose3d.kZero.rotateAround(SHOOTER_OFFSET,
 						new Rotation3d(0.0, Units.rotationsToRadians(flywheelRotations.getAsDouble()), 0.0)),
@@ -66,6 +76,6 @@ public class RobotRemyVisualizer {
 						0.0, Rotation3d.kZero),
 				// 5: climber
 				Pose3d.kZero.rotateAround(CLIMBER_OFFSET,
-						new Rotation3d(0.0, -Units.rotationsToRadians(climberRotations.getAsDouble()), 0.0))});
+						new Rotation3d(0.0, -Units.rotationsToRadians(climberRotations.getAsDouble()), 0.0))};
 	}
 }

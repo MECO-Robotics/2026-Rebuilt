@@ -36,6 +36,7 @@ public class LaunchedFuelSim {
 	private final PositionJoint hood;
 	private final Flywheel shooterFlywheel;
 	private int successfulScoreCount = 0;
+	private int launchEventId = 0;
 
 	private double lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
 	private double nextBurstShotTimestampSeconds = Double.NEGATIVE_INFINITY;
@@ -109,6 +110,10 @@ public class LaunchedFuelSim {
 		return successfulScoreCount;
 	}
 
+	public int getLaunchEventId() {
+		return launchEventId;
+	}
+
 	private boolean hasLaunchVelocity() {
 		return Math.abs(shooterFlywheel.getVelocity()) >= MapleSimConstants.MIN_FLYWHEEL_RPS_FOR_SHOT;
 	}
@@ -132,6 +137,7 @@ public class LaunchedFuelSim {
 	}
 
 	private void launchSingleFuel(int burstIndex, double projectileSpeedMps) {
+		launchEventId++;
 		double randomizedAngleRadians = getRandomizedLaunchAngleRadians();
 		double randomizedSpeedMps = getRandomizedProjectileSpeedMps(projectileSpeedMps);
 
