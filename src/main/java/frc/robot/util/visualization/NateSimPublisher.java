@@ -15,11 +15,15 @@ import java.util.Locale;
 public class NateSimPublisher {
 	private static final String DEFAULT_HOST = "127.0.0.1";
 	private static final int DEFAULT_PORT = 5808;
+	private static final double MIN_PUBLISH_PERIOD_SECONDS = 1.0 / 30.0;
+	private static final int MAX_FUEL_POSES = 80;
+	private static final int MAX_PROJECTILE_POSES = 40;
 
 	private final DatagramSocket socket;
 	private final InetAddress host;
 	private final int port;
 	private boolean hasReportedFailure = false;
+	private double lastPublishTimestampSeconds = Double.NEGATIVE_INFINITY;
 
 	public NateSimPublisher() {
 		this(DEFAULT_HOST, DEFAULT_PORT);
@@ -48,7 +52,13 @@ public class NateSimPublisher {
 			return;
 		}
 
-		String json = buildJson(robotPose, componentNames, componentPoses, fuelPoses, projectilePoses,
+		double nowSeconds = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+		if (nowSeconds - lastPublishTimestampSeconds < MIN_PUBLISH_PERIOD_SECONDS) {
+			return;
+		}
+		lastPublishTimestampSeconds = nowSeconds;
+
+		String json = buildJson(nowSeconds, robotPose, componentNames, componentPoses, fuelPoses, projectilePoses,
 				successfulScoreCount, launchEventId);
 		byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
 		DatagramPacket packet = new DatagramPacket(bytes, bytes.length, host, port);
@@ -63,11 +73,12 @@ public class NateSimPublisher {
 		}
 	}
 
-	private String buildJson(Pose2d robotPose, String[] componentNames, Pose3d[] componentPoses, Pose3d[] fuelPoses,
-			Pose3d[] projectilePoses, int successfulScoreCount, int launchEventId) {
+	private String buildJson(double timestampSeconds, Pose2d robotPose, String[] componentNames,
+			Pose3d[] componentPoses, Pose3d[] fuelPoses, Pose3d[] projectilePoses, int successfulScoreCount,
+			int launchEventId) {
 		StringBuilder builder = new StringBuilder(2048);
 		builder.append("{");
-		appendNumberField(builder, "timestamp", edu.wpi.first.wpilibj.Timer.getFPGATimestamp());
+		appendNumberField(builder, "timestamp", timestampSeconds);
 		builder.append("\"robotPose\":");
 		appendPose2d(builder, robotPose);
 		builder.append(",");
@@ -75,10 +86,10 @@ public class NateSimPublisher {
 		appendNamedPose3dArray(builder, componentNames, componentPoses);
 		builder.append(",");
 		builder.append("\"fuelPoses\":");
-		appendPose3dArray(builder, fuelPoses);
+		appendPose3dArray(builder, fuelPoses, MAX_FUEL_POSES);
 		builder.append(",");
 		builder.append("\"projectilePoses\":");
-		appendPose3dArray(builder, projectilePoses);
+		appendPose3dArray(builder, projectilePoses, MAX_PROJECTILE_POSES);
 		builder.append(",");
 		appendIntField(builder, "successfulScoreCount", successfulScoreCount);
 		appendIntField(builder, "launchEventId", launchEventId, false);
@@ -111,18 +122,20 @@ public class NateSimPublisher {
 		builder.append("]");
 	}
 
-	private void appendPose3dArray(StringBuilder builder, Pose3d[] poses) {
+	private void appendPose3dArray(StringBuilder builder, Pose3d[] poses, int maxPoses) {
 		if (poses == null) {
 			builder.append("[]");
 			return;
 		}
 
+		int count = Math.min(poses.length, maxPoses);
+		int start = Math.max(0, poses.length - count);
 		builder.append("[");
-		for (int i = 0; i < poses.length; i++) {
+		for (int i = 0; i < count; i++) {
 			if (i > 0) {
 				builder.append(",");
 			}
-			appendPose3d(builder, null, poses[i]);
+			appendPose3d(builder, null, poses[start + i]);
 		}
 		builder.append("]");
 	}
