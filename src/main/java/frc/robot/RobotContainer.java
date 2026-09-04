@@ -26,8 +26,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import org.mecorobotics.gamepiecevision.GamePieceDriveCommands;
-import org.mecorobotics.gamepiecevision.GamePieceVisionClient;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.choreo.ChoreoTraj;
@@ -39,7 +37,6 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
-import frc.robot.constants.vision.VisionPursuitConstants;
 import frc.robot.constants.vision.VisionConstants;
 import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -50,8 +47,6 @@ import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
-import frc.robot.vision.VisionDriveAdapter;
-import frc.robot.vision.VisionDriveFactory;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -72,7 +67,6 @@ public class RobotContainer {
 			.withRotationalDeadband(DrivetrainConstants.MAX_ANGULAR_RATE * 0.05) // Add a 5% deadband
 			.withDriveRequestType(DriveRequestType.Velocity); // Use closed-loop control for drive motors
 	private final SwerveRequest.ApplyRobotSpeeds choreoDrive = new SwerveRequest.ApplyRobotSpeeds();
-	private final SwerveRequest.ApplyRobotSpeeds visionDrive = new SwerveRequest.ApplyRobotSpeeds();
 	private final PPHolonomicDriveController choreoController = new PPHolonomicDriveController(
 			new PIDConstants(10, 0, 0), new PIDConstants(7, 0, 0), AUTO_LOOP_PERIOD_SECONDS);
 
@@ -84,8 +78,6 @@ public class RobotContainer {
 	private final PositionJoint intakeRack;
 	private final PositionJoint hood;
 	private final Vision vision;
-	private final GamePieceVisionClient gamePieceVision;
-	private final VisionDriveAdapter visionDriveAdapter;
 	private final RobotSimulation simulation;
 
 	// Controller
@@ -124,15 +116,6 @@ public class RobotContainer {
 				IntakeConstants.INTAKE_RACK_GAINS);
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
-		gamePieceVision = new GamePieceVisionClient(VisionPursuitConstants.CAMERA_NAME);
-		visionDriveAdapter = VisionDriveFactory.create(
-				VisionPursuitConstants.DRIVE_MODE,
-				null,
-				VisionPursuitConstants.MAX_FORWARD_OUTPUT,
-				VisionPursuitConstants.MAX_TURN_OUTPUT,
-				this::driveVisionRobotRelative,
-				VisionPursuitConstants.MAX_LINEAR_METERS_PER_SECOND,
-				VisionPursuitConstants.MAX_ANGULAR_RADIANS_PER_SECOND);
 		vision = new Vision(drivetrain::addVisionMeasurement,
 				new VisionIOQuestNav(VisionConstants.robotToQuest,
 						VisionIO.limelightMegaTag1WithMegaTag2SingleTagWithSim(VisionConstants.limelightName,
@@ -234,28 +217,6 @@ public class RobotContainer {
 		coPilot.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
 
 		coPilot.a().onTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood).repeatedly());
-		controller.rightTrigger().whileTrue(
-				GamePieceDriveCommands.driverHeldPursuit(
-						drivetrain,
-						gamePieceVision,
-						this::isVisionAssistHeld,
-						this::isVisionManualOverride,
-						visionDriveAdapter::apply,
-						visionDriveAdapter::stop));
-	}
-
-	private boolean isVisionAssistHeld() {
-		return controller.rightTrigger().getAsBoolean();
-	}
-
-	private boolean isVisionManualOverride() {
-		return Math.abs(controller.getLeftY()) > VisionPursuitConstants.MANUAL_OVERRIDE_DEADBAND
-				|| Math.abs(controller.getLeftX()) > VisionPursuitConstants.MANUAL_OVERRIDE_DEADBAND
-				|| Math.abs(controller.getRightX()) > VisionPursuitConstants.MANUAL_OVERRIDE_DEADBAND;
-	}
-
-	private void driveVisionRobotRelative(double forward, double strafe, double turn) {
-		drivetrain.setControl(visionDrive.withSpeeds(new ChassisSpeeds(forward, strafe, turn)));
 	}
 
 	public void updateDashboardOutputs() {
