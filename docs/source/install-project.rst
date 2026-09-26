@@ -37,6 +37,11 @@ Once the project builds, choose the fastest way to confirm it runs:
 - **Deploy to robot**
   Deploy only after you have updated hardware config and mechanism gains and limits to match your robot.
 
+Deployment synchronizes ``src/main/deploy`` to ``/home/lvuser/deploy`` and removes
+remote files absent from the local directory. Keep required deployment assets in
+``src/main/deploy``. This removes obsolete PathPlanner autos that could otherwise
+break AutoBuilder chooser construction with incompatible command compositions.
+
 
 Expected result
 ---------------
