@@ -71,8 +71,10 @@ public class IntakeCommands {
 	}
 
 	/** Runs only the intake roller at the configured intake voltage. */
-	public static Command spinIntake(Flywheel rollerMotor) {
-		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE), activateIntakeSimulation());
+	public static Command spinIntake(Flywheel rollerMotor, Flywheel conveyer) {
+		return Commands.parallel(Flywheel.setVoltage(rollerMotor, ROLLER_PRESETS.INTAKE),
+				Flywheel.setVoltage(conveyer, () -> -ROLLER_PRESETS.INTAKE.getAsDouble() / 2),
+				activateIntakeSimulation());
 	}
 
 	/** Runs only the intake roller at the configured intake voltage. */

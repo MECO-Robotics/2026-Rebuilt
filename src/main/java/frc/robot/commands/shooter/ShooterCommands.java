@@ -51,6 +51,14 @@ public class ShooterCommands {
 				launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() : Commands.none());
 	}
 
+	/** Pulses the two indexers without running the conveyor. */
+	public static Command unagitateIntake(Flywheel bottomIntakingRoller, Flywheel topIntakingRoller) {
+		return Commands.deadline(
+				Flywheel.setVoltage(bottomIntakingRoller, () -> -INDEXER_PRESET.FEED_BOTTOM.getAsDouble() / 2),
+				Flywheel.setVoltage(topIntakingRoller, () -> -INDEXER_PRESET.FEED_TOP.getAsDouble() / 2),
+				launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() : Commands.none());
+	}
+
 	/** Stows the hood and stops the shooter flywheel. */
 	public static Command shooterIdle(Flywheel shooterRoller, PositionJoint hood) {
 		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.STOW),

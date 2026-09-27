@@ -24,7 +24,7 @@ public final class IntakeConstants {
 	private IntakeConstants() {
 	}
 
-	public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{53, 22},
+	public static final FlywheelHardwareConfig INTAKE_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{22, 53},
 			new boolean[]{true, true}, 1.5, 0.025, 40, "");
 
 	public static final FlywheelGains INTAKE_ROLLER_GAINS = new FlywheelGains(0, 0.0, 0.0, 0, 0, 0.0, 1, 0.1);
@@ -39,15 +39,16 @@ public final class IntakeConstants {
 	/** Intake rotation preset positions. */
 	public static final class RACK_PRESETS {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/IntakePosition/Stow", 0);
-		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("Presets/IntakePosition/Deploy", .35);
+		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("Presets/IntakePosition/Deploy", .3);
 		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("Presets/IntakePosition/Safe", 0.13);
 	}
 
 	/** Intake roller preset voltages. */
 	public final class ROLLER_PRESETS {
-		public static final LoggedTunableNumber INTAKE = new LoggedTunableNumber("Presets/IntakeVolts/IntakeSpeed", 11);
+		public static final LoggedTunableNumber INTAKE = new LoggedTunableNumber("Presets/IntakeVolts/IntakeSpeed",
+				-10);
 		public static final LoggedTunableNumber SLOW = new LoggedTunableNumber("Presets/IntakeVolts/Slow", 7);
-		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("Presets/IntakeVolts/Eject", -10);
+		public static final LoggedTunableNumber EJECT = new LoggedTunableNumber("Presets/IntakeVolts/Eject", 10);
 		public static final LoggedTunableNumber IDLE = new LoggedTunableNumber("Presets/IntakeVolts/Stop", 0);
 		public static final LoggedTunableNumber TIMEOUT = new LoggedTunableNumber("Presets/IntakeVolts/Timeout", 0);
 	}

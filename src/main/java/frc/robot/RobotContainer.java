@@ -175,8 +175,11 @@ public class RobotContainer {
 		intakeRack.setDefaultCommand(PositionJoint.setVelocity(intakeRack, () -> 0.0));
 		intakeRoller.setDefaultCommand(Flywheel.setVelocity(intakeRoller, () -> 0.0));
 		// Run intake
-		controller.leftBumper().whileTrue(IntakeCommands.spinIntake(intakeRoller))
-				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
+		controller.leftBumper()
+				.whileTrue(IntakeCommands.spinIntake(intakeRoller, conveyor)
+						.alongWith(ShooterCommands.unagitateIntake(bottomIndexer, topIndexer)))
+				.whileFalse(IntakeCommands.idleIntake(intakeRoller)
+						.alongWith(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor)));
 		controller.leftTrigger().whileTrue(IntakeCommands.reverseIntake(intakeRoller))
 				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
 
@@ -249,7 +252,7 @@ public class RobotContainer {
 				ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly());
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("Agitate", ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
-		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller));
+		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller, conveyor));
 		NamedCommands.registerCommand("AutoSpinUp", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
 		// NamedCommands.registerCommand("AutoAim",
