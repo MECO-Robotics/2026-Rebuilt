@@ -47,9 +47,9 @@ Use ``Commands.parallel(...)`` when several mechanisms should run at the same ti
 
 This is used heavily in this codebase:
 
-- ``IntakeCommands.deployIntake(...)`` moves the rack while keeping the roller idle
+- ``IntakeCommands.acquire(...)`` deploys the rack while running the complete acquisition path
 - ``IntakeCommands.stowIntake(...)`` moves the rack while driving the conveyor and roller
-- ``ShooterCommands.hubPreset(...)`` moves the hood while spinning the shooter flywheel
+- ``ShooterCommands.hubPreset(...)`` continuously holds the hood and shooter flywheel preset
 
 This pattern keeps the subsystem commands small and makes the higher-level behavior easy to read.
 
@@ -86,12 +86,14 @@ Driver-assist compositions
 
 Not every command composition is a simple preset. Some combine closed-loop drivetrain control with another mechanism.
 
-The clearest example in this repo is the ``A`` button binding in ``RobotContainer``:
+The clearest example in this repo is the coordinated ``A`` button shot in ``RobotContainer``:
 
-- ``DriveCommands.joystickAimToHub(...)`` keeps translation under driver control while locking heading toward the hub
-- ``ShooterCalculator.calculateAndShoot(...)`` computes the shot and commands hood/flywheel targets
+- driver translation remains available while heading locks to the hub from the shooter exit position
+- hood and flywheel targets update continuously from ``ShooterCalculator``
+- indexers and conveyor feed only after pose, range, speed, heading, hood, and flywheel readiness are stable
 
-That composition gives assisted aiming without taking away all driver control.
+Right bumper forces the feed path only while ``A`` is held. The dashboard reports the readiness blocker, and driver
+rumble indicates that feeding is allowed.
 
 
 Teleop examples from RobotContainer
@@ -101,9 +103,12 @@ This repo uses controller bindings to compose commands directly where operator i
 
 Examples:
 
-- left bumper runs ``IntakeCommands.spinIntake(...)`` while held and idles on release
-- right bumper agitates the indexers while stowing the intake
-- copilot preset buttons run ``hubPreset``, ``ferryPreset``, and ``trenchPreset``
+- left bumper deploys the intake and runs its roller, conveyor, and storage indexers while held
+- releasing left bumper stops the fuel path and leaves the rack at its deployed target
+- left trigger reverses the complete acquisition path for ejection
+- copilot POV controls provide manual rack deploy/stow and velocity backups
+- ``A`` runs the readiness-gated hub shot; ``A`` plus right bumper is the emergency force-feed override
+- copilot preset buttons hold ``hubPreset``, ``ferryPreset``, and ``trenchPreset`` while pressed
 - start resets drivetrain heading
 
 These bindings are small because the actual behavior has already been packaged into reusable command factories.
@@ -126,8 +131,11 @@ Examples of named commands in this repo include:
 - ``FeedRollers``
 - ``AutoSpinUp``
 - ``AutoAim``
+- ``CoordinatedHubShot``
 
-This keeps autonomous behavior aligned with teleop behavior and avoids duplicate robot logic.
+``FeedRollers`` is retained for compatibility with existing PathPlanner autos, but now invokes the same coordinated
+hub-shot command used by teleop. Its PathPlanner groups use a three-second race window, so the command can wait up to
+two seconds for readiness and accumulate one second of valid feed time without extending the routine unnecessarily.
 
 
 Guidelines

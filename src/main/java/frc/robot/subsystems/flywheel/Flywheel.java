@@ -1,6 +1,7 @@
 package frc.robot.subsystems.flywheel;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.flywheel.FlywheelVelocityCommand;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
@@ -132,10 +133,22 @@ public class Flywheel extends SubsystemBase {
 	}
 
 	/**
+	 * Returns true when measured velocity is within a caller-provided tolerance.
+	 */
+	public boolean atVelocity(double velocity, double tolerance) {
+		return Math.abs(inputs.velocity - velocity) <= tolerance;
+	}
+
+	/**
 	 * Builds a command that continuously sets flywheel velocity from a supplier.
 	 */
 	public static Command setVelocity(Flywheel flywheel, DoubleSupplier velocity) {
 		return new FlywheelVelocityCommand(flywheel, velocity);
+	}
+
+	/** Holds a supplied velocity until the command is interrupted. */
+	public static Command holdVelocity(Flywheel flywheel, DoubleSupplier velocity) {
+		return Commands.run(() -> flywheel.setVelocity(velocity.getAsDouble()), flywheel);
 	}
 
 	/** Builds a command that continuously sets flywheel voltage from a supplier. */

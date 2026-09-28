@@ -1,0 +1,115 @@
+{
+  "hubs": [
+    {
+      "x": 80,
+      "y": 60,
+      "width": 1280,
+      "height": 900,
+      "state": {
+        "sidebar": {
+          "width": 320,
+          "expanded": [
+            "/AdvantageKit",
+            "/AdvantageKit/RealOutputs",
+            "/AdvantageKit/RealOutputs/Visualization",
+            "/AdvantageKit/RealOutputs/Visualization/RobotRemy",
+            "/AdvantageKit/RealOutputs/FieldSimulation",
+            "/AdvantageKit/RealOutputs/Shooter",
+            "/AdvantageKit/RealOutputs/Vision"
+          ]
+        },
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "remyshootingintakehome01",
+              "renderer": "",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "Remy Simulation",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Visualization/RobotRemy/RobotPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "model": "Remy"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Visualization/RobotRemy/ComponentPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/FieldSimulation/FuelPositions",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/FieldSimulation/FuelProjectilePositions",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
+                  }
+                ],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "remyshootingintakefield01",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  8.77,
+                  8.5,
+                  16.0
+                ],
+                "cameraTarget": [
+                  8.77,
+                  0.75,
+                  4.0
+                ]
+              },
+              "controlsHeight": 285
+            },
+            {
+              "type": 4,
+              "title": "Shot & Intake Status",
+              "controller": [
+                "NT:/AdvantageKit/RealOutputs/Shooter/Readiness",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ReadyToFeed",
+                "NT:/AdvantageKit/RealOutputs/Shooter/Feeding",
+                "NT:/AdvantageKit/RealOutputs/Shooter/SolutionCalibrated",
+                "NT:/AdvantageKit/RealOutputs/Shooter/DistanceToHubMeters",
+                "NT:/AdvantageKit/RealOutputs/Vision/PoseReady",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/HopperFuelCount",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/FuelProjectileCount",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/SuccessfulScoreCount"
+              ],
+              "controllerUUID": "remyshootingintakestatustable01",
+              "renderer": null,
+              "controlsHeight": 0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": []
+}

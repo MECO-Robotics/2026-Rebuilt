@@ -36,11 +36,13 @@ public class VisionConstants {
 
 	// Basic filtering thresholds
 	public static int minTagCountForOdometry = 2;
-	public static int minWhitelistedTagCountForOdometry = 2;
+	public static int minWhitelistedTagCountForOdometry = 0;
 	public static double maxAmbiguity = 0.3;
 	public static double maxZError = 0.75;
-	// Configure this for red alliance; blue is mirrored automatically.
-	public static int[] odometryTagWhitelistRed = new int[]{2, 3, 4, 5, 8, 9, 10, 11};
+	public static double maxSingleTagDistanceMeters = 3.5;
+	public static double maxSingleTagPoseDeltaMeters = 1.0;
+	// Empty means all official field tags are eligible for odometry.
+	public static int[] odometryTagWhitelistRed = new int[]{};
 
 	// Standard deviation baselines, for 1 meter distance and 1 tag
 	// (Adjusted automatically based on distance and # of tags)

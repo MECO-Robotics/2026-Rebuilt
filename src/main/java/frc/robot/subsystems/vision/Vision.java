@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -27,6 +27,8 @@ public class Vision extends SubsystemBase {
 	private final VisionIO[] io;
 	private final VisionIOInputsAutoLogged[] inputs;
 	private final Alert[] disconnectedAlerts;
+	private final Supplier<Pose2d> referencePoseSupplier;
+	private boolean poseReady;
 
 	/**
 	 * Creates the vision subsystem.
@@ -37,7 +39,15 @@ public class Vision extends SubsystemBase {
 	 *            one or more camera IO implementations
 	 */
 	public Vision(VisionConsumer consumer, VisionIO... io) {
+		this(consumer, Pose2d::new, io);
+	}
+
+	/**
+	 * Creates vision filtering with a current-pose reference for single-tag gates.
+	 */
+	public Vision(VisionConsumer consumer, Supplier<Pose2d> referencePoseSupplier, VisionIO... io) {
 		this.consumer = consumer;
+		this.referencePoseSupplier = referencePoseSupplier;
 		this.io = io;
 
 		// Initialize inputs
@@ -54,6 +64,11 @@ public class Vision extends SubsystemBase {
 		}
 	}
 
+	/** Returns true once at least one configured pose source is field aligned. */
+	public boolean isPoseReady() {
+		return poseReady;
+	}
+
 	/**
 	 * Returns the X angle to the best target, which can be used for simple servoing
 	 * with vision.
@@ -67,8 +82,6 @@ public class Vision extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		Set<Integer> whitelistedTagIds = getOdometryTagWhitelistForCurrentAlliance();
-
 		for (int i = 0; i < io.length; i++) {
 			io[i].updateInputs(inputs[i]);
 			Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
@@ -79,6 +92,7 @@ public class Vision extends SubsystemBase {
 		List<Pose3d> allRobotPoses = new LinkedList<>();
 		List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
 		List<Pose3d> allRobotPosesRejected = new LinkedList<>();
+		poseReady = false;
 
 		// Loop over cameras
 		for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
@@ -90,41 +104,23 @@ public class Vision extends SubsystemBase {
 			List<Pose3d> robotPoses = new LinkedList<>();
 			List<Pose3d> robotPosesAccepted = new LinkedList<>();
 			List<Pose3d> robotPosesRejected = new LinkedList<>();
-			int observedWhitelistedTagCount = 0;
-
 			// Add tag poses
 			for (int tagId : inputs[cameraIndex].tagIds) {
-				if (whitelistedTagIds.isEmpty() || whitelistedTagIds.contains(tagId)) {
-					var tagPose = aprilTagLayout.getTagPose(tagId);
-					if (tagPose.isPresent()) {
-						tagPoses.add(tagPose.get());
-					}
-					observedWhitelistedTagCount++;
+				var tagPose = aprilTagLayout.getTagPose(tagId);
+				if (tagPose.isPresent()) {
+					tagPoses.add(tagPose.get());
 				}
 			}
-			boolean hasEnoughWhitelistedTags = observedWhitelistedTagCount >= minWhitelistedTagCountForOdometry;
-			Logger.recordOutput("Vision/Camera" + Integer.toString(cameraIndex) + "/ObservedWhitelistedTagCount",
-					observedWhitelistedTagCount);
+			poseReady |= inputs[cameraIndex].poseInitialized;
 
 			// Loop over pose observations
 			for (var observation : inputs[cameraIndex].poseObservations) {
 				boolean isQuestNav = observation.type() == PoseObservationType.QUESTNAV;
-				boolean enforceWhitelistedTagMinimum = !isQuestNav && !whitelistedTagIds.isEmpty()
-						&& minWhitelistedTagCountForOdometry > 0;
-				// Check whether to reject pose
-				boolean rejectPose = (!isQuestNav && observation.tagCount() < minTagCountForOdometry) // Must have
-																										// enough tags
-						|| (!isQuestNav && observation.tagCount() == 1) // && observation.ambiguity() > maxAmbiguity)
-						// Single-tag solve must not be too ambiguous
-						|| (enforceWhitelistedTagMinimum && !hasEnoughWhitelistedTags) // Must include enough
-																						// currently-whitelisted tags
-						|| Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
-
-						// Must be within the field boundaries
-						|| observation.pose().getX() < 0.0
-						|| observation.pose().getX() > aprilTagLayout.getFieldLength()
-						|| observation.pose().getY() < 0.0
-						|| observation.pose().getY() > aprilTagLayout.getFieldWidth();
+				boolean rejectPose = isQuestNav
+						? !inputs[cameraIndex].poseInitialized
+								|| !VisionObservationFilter.isPoseInsideField(observation)
+						: !VisionObservationFilter.isValid(observation, inputs[cameraIndex].tagIds,
+								referencePoseSupplier.get());
 
 				// Add pose to log
 				robotPoses.add(observation.pose());
@@ -185,6 +181,7 @@ public class Vision extends SubsystemBase {
 		Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[0]));
 		Logger.recordOutput("Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(new Pose3d[0]));
 		Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(new Pose3d[0]));
+		Logger.recordOutput("Vision/PoseReady", poseReady);
 	}
 
 	@FunctionalInterface
