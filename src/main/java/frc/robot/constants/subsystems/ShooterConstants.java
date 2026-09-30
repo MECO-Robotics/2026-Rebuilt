@@ -21,6 +21,20 @@ public final class ShooterConstants {
 	private ShooterConstants() {
 	}
 
+	/** The shooter faces robot-forward, in the same direction as the intake. */
+	public static final Rotation2d SHOOTER_YAW_OFFSET = Rotation2d.kZero;
+	public static final double MIN_CALIBRATED_DISTANCE_METERS = Units.Inches.of(58.0).in(Units.Meters);
+	public static final double MAX_CALIBRATED_DISTANCE_METERS = Units.Inches.of(236.0).in(Units.Meters);
+	public static final double READY_DEBOUNCE_SECONDS = 0.15;
+	public static final double FLYWHEEL_READY_TOLERANCE_RPS = 0.75;
+	public static final double HOOD_READY_TOLERANCE_ROTATIONS = 0.002;
+	public static final double HEADING_READY_TOLERANCE_DEGREES = 2.0;
+	public static final double MAX_SHOOTING_TRANSLATION_METERS_PER_SECOND = 0.25;
+	public static final double MAX_SHOOTING_ROTATION_RADIANS_PER_SECOND = Units.Degrees.of(10.0).in(Units.Radians);
+	public static final double AUTO_READY_TIMEOUT_SECONDS = 2.0;
+	public static final double AUTO_FEED_SECONDS = 1.0;
+	public static final double AUTO_TOTAL_TIMEOUT_SECONDS = 3.0;
+
 	public static final FlywheelHardwareConfig TOP_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{32},
 			new boolean[]{false}, 1, 0.025, 30, "");
 	public static final FlywheelHardwareConfig BOTTOM_INDEXER_ROLLER_CONFIG = new FlywheelHardwareConfig(new int[]{31},
@@ -41,12 +55,6 @@ public final class ShooterConstants {
 	public static final PositionJointHardwareConfig HOOD_CONFIG = new PositionJointHardwareConfig(new int[]{33},
 			new boolean[]{false}, (21 / 1) * 5, 0.01, 40, EncoderType.INTERNAL, 0, MechanismType.ROTATIONAL, 0.0,
 			Rotation2d.fromRotations(0), "");
-
-	// Regression constants for hood and shooter velocity. These are used to
-	// calculate the feedforward for the hood and shooter based on distance to
-	// target.
-	public static final double[] kHOOODREGCALC = {0.018, 0.00042, -0.00000676}; // -0.018 + 4.42E-04x + -6.76E-07x^2
-	public static final double[] kSHOOTERVELREGCALC = {22, 0.134, -1.19E-04}; // 22.5 + 0.134x + -1.19E-04x^2
 
 	public static final UnitInterpolatingMap<DistanceUnit, AngleUnit> hoodMap = new UnitInterpolatingMap<>(Units.Meters,
 			Units.Radians);

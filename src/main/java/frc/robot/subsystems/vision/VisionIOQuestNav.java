@@ -2,6 +2,7 @@ package frc.robot.subsystems.vision;
 
 import static frc.robot.constants.vision.VisionConstants.*;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -10,11 +11,11 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.Timer;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class VisionIOQuestNav implements VisionIO {
@@ -28,21 +29,30 @@ public class VisionIOQuestNav implements VisionIO {
 
 	private final VisionIO absoluteVisionIO;
 	private final VisionIOInputsAutoLogged absoluteInputs = new VisionIOInputsAutoLogged();
+	private final Supplier<Pose2d> referencePoseSupplier;
 
 	private Translation3d[] questNavRawToFieldCoordinateSystemQueue = new Translation3d[15];
 	private Translation3d questNavRawToFieldCoordinateSystem = new Translation3d();
 
 	protected Rotation3d gyroResetAngle = new Rotation3d();
 	protected Pose3d lastPose3d = new Pose3d();
+	private boolean fieldAligned = false;
+	private double lastAbsoluteObservationTimestamp = -1.0;
 
 	int count = 0;
 	int idx = 0;
 
 	public VisionIOQuestNav(Transform3d robotToCamera, VisionIO absoluteVisionIO) {
+		this(robotToCamera, absoluteVisionIO, Pose2d::new);
+	}
+
+	public VisionIOQuestNav(Transform3d robotToCamera, VisionIO absoluteVisionIO,
+			Supplier<Pose2d> referencePoseSupplier) {
 		// Initialize the camera to robot transform
 		questNav = new QuestNav();
 		this.robotToCamera = robotToCamera;
 		this.absoluteVisionIO = absoluteVisionIO;
+		this.referencePoseSupplier = referencePoseSupplier;
 
 		// gyroResetAngle = Constants.isAllianceRed() ? Rotation3d.kZero : new
 		// Rotation3d(0, 0,
@@ -56,15 +66,21 @@ public class VisionIOQuestNav implements VisionIO {
 		absoluteVisionIO.updateInputs(absoluteInputs);
 		Logger.processInputs("QuestNav/absolute", absoluteInputs);
 		PoseObservation[] filteredAbsoluteObservations = filterAbsoluteObservations(absoluteInputs);
+		Arrays.stream(filteredAbsoluteObservations).mapToDouble(PoseObservation::timestamp).max()
+				.ifPresent(timestamp -> lastAbsoluteObservationTimestamp = timestamp);
 		QuestNavData[] questNavData = getQuestNavData();
 
-		inputs.connected = connected();
+		boolean questConnected = connected();
+		inputs.connected = questConnected || absoluteInputs.connected;
 		inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d(), 0);
 		inputs.tagIds = absoluteInputs.tagIds.clone();
+		inputs.lastAbsoluteObservationTimestamp = lastAbsoluteObservationTimestamp;
 
-		if (!inputs.connected) {
+		if (!questConnected) {
 			inputs.poseObservations = filteredAbsoluteObservations;
+			inputs.poseInitialized = lastAbsoluteObservationTimestamp >= 0.0;
 			Logger.recordOutput("QuestNav/BypassingToAbsolute", true);
+			logAlignmentState();
 			Logger.recordOutput("QuestNav/battery", getBatteryPercent());
 			return;
 		}
@@ -95,7 +111,20 @@ public class VisionIOQuestNav implements VisionIO {
 			questNavRawToFieldCoordinateSystem = questNavRawToFieldCoordinateSystem
 					.div(Math.min(count, questNavRawToFieldCoordinateSystemQueue.length));
 			Logger.recordOutput("QuestNav/RawToField", questNavRawToFieldCoordinateSystem);
+			fieldAligned = true;
 		}
+
+		if (!fieldAligned) {
+			inputs.poseObservations = filteredAbsoluteObservations;
+			inputs.poseInitialized = false;
+			Logger.recordOutput("QuestNav/SuppressedUntilAligned", true);
+			Logger.recordOutput("QuestNav/battery", getBatteryPercent());
+			logAlignmentState();
+			return;
+		}
+
+		Logger.recordOutput("QuestNav/SuppressedUntilAligned", false);
+		inputs.poseInitialized = true;
 
 		for (int i = 0; i < questNavData.length; i++) {
 			inputs.poseObservations[i] = new PoseObservation(questNavData[i].timestamp(),
@@ -109,40 +138,23 @@ public class VisionIOQuestNav implements VisionIO {
 		}
 
 		Logger.recordOutput("QuestNav/battery", getBatteryPercent());
+		logAlignmentState();
 	}
 
 	private PoseObservation[] filterAbsoluteObservations(VisionIOInputs absoluteInputs) {
-		Set<Integer> whitelistedTagIds = getOdometryTagWhitelistForCurrentAlliance();
-		int observedWhitelistedTagCount = 0;
-		for (int tagId : absoluteInputs.tagIds) {
-			if (whitelistedTagIds.isEmpty() || whitelistedTagIds.contains(tagId)) {
-				observedWhitelistedTagCount++;
-			}
-		}
-		boolean hasEnoughWhitelistedTags = observedWhitelistedTagCount >= minWhitelistedTagCountForOdometry;
-
-		List<PoseObservation> filteredObservations = new ArrayList<>();
-		for (PoseObservation observation : absoluteInputs.poseObservations) {
-			if (isValidAbsoluteObservation(observation, whitelistedTagIds, hasEnoughWhitelistedTags)) {
-				filteredObservations.add(observation);
-			}
-		}
-		return filteredObservations.toArray(new PoseObservation[0]);
+		return Arrays
+				.stream(absoluteInputs.poseObservations).filter(observation -> VisionObservationFilter
+						.isValid(observation, absoluteInputs.tagIds, referencePoseSupplier.get()))
+				.toArray(PoseObservation[]::new);
 	}
 
-	private boolean isValidAbsoluteObservation(PoseObservation observation, Set<Integer> whitelistedTagIds,
-			boolean hasEnoughWhitelistedTags) {
-		if (observation.type() == PoseObservationType.QUESTNAV) {
-			return false;
-		}
-
-		boolean enforceWhitelistedTagMinimum = !whitelistedTagIds.isEmpty() && minWhitelistedTagCountForOdometry > 0;
-		return observation.tagCount() >= minTagCountForOdometry
-				&& (observation.tagCount() != 1 || observation.ambiguity() <= maxAmbiguity)
-				&& (!enforceWhitelistedTagMinimum || hasEnoughWhitelistedTags)
-				&& Math.abs(observation.pose().getZ()) <= maxZError && observation.pose().getX() >= 0.0
-				&& observation.pose().getX() <= aprilTagLayout.getFieldLength() && observation.pose().getY() >= 0.0
-				&& observation.pose().getY() <= aprilTagLayout.getFieldWidth();
+	private void logAlignmentState() {
+		Logger.recordOutput("QuestNav/FieldAligned", fieldAligned);
+		Logger.recordOutput("QuestNav/LastAbsoluteObservationTimestamp", lastAbsoluteObservationTimestamp);
+		Logger.recordOutput("QuestNav/AbsoluteObservationAgeSeconds",
+				lastAbsoluteObservationTimestamp < 0.0
+						? Double.POSITIVE_INFINITY
+						: Math.max(0.0, Timer.getFPGATimestamp() - lastAbsoluteObservationTimestamp));
 	}
 
 	private boolean connected() {
@@ -195,6 +207,7 @@ public class VisionIOQuestNav implements VisionIO {
 
 		count = 0;
 		idx = 0;
+		fieldAligned = true;
 	}
 
 	public void resetHeading(Rotation2d heading) {

@@ -7,9 +7,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.Arrays;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -24,6 +22,8 @@ public class VisionIOQuestNavSim implements VisionIO {
 	private Pose2d inertialPose = null;
 	private Pose2d lastGroundTruthPose = null;
 	private double lastTimestampSeconds = Timer.getFPGATimestamp();
+	private boolean fieldAligned = false;
+	private double lastAbsoluteObservationTimestamp = -1.0;
 
 	public VisionIOQuestNavSim(Supplier<Pose2d> groundTruthPoseSupplier, VisionIO absoluteVisionIO) {
 		this.groundTruthPoseSupplier = groundTruthPoseSupplier;
@@ -35,6 +35,8 @@ public class VisionIOQuestNavSim implements VisionIO {
 		absoluteVisionIO.updateInputs(absoluteInputs);
 		Logger.processInputs("QuestNav/absolute", absoluteInputs);
 		PoseObservation[] filteredAbsoluteObservations = filterAbsoluteObservations(absoluteInputs);
+		Arrays.stream(filteredAbsoluteObservations).mapToDouble(PoseObservation::timestamp).max()
+				.ifPresent(timestamp -> lastAbsoluteObservationTimestamp = timestamp);
 
 		double nowSeconds = Timer.getFPGATimestamp();
 		double dtSeconds = Math.max(0.0, nowSeconds - lastTimestampSeconds);
@@ -73,48 +75,27 @@ public class VisionIOQuestNavSim implements VisionIO {
 			Rotation2d correctedYaw = inertialPose.getRotation().interpolate(absolutePose.getRotation(),
 					questNavSimYawCorrectionAlpha);
 			inertialPose = new Pose2d(correctedTranslation, correctedYaw);
+			fieldAligned = true;
 		}
 
 		inputs.connected = true;
 		inputs.latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
-		inputs.poseObservations = new PoseObservation[]{
-				new PoseObservation(nowSeconds, new Pose3d(inertialPose), 0.0, -1, 0.0, PoseObservationType.QUESTNAV)};
-		inputs.tagIds = new int[0];
+		inputs.poseInitialized = fieldAligned;
+		inputs.lastAbsoluteObservationTimestamp = lastAbsoluteObservationTimestamp;
+		inputs.poseObservations = fieldAligned
+				? new PoseObservation[]{new PoseObservation(nowSeconds, new Pose3d(inertialPose), 0.0, -1, 0.0,
+						PoseObservationType.QUESTNAV)}
+				: filteredAbsoluteObservations;
+		inputs.tagIds = absoluteInputs.tagIds.clone();
 
 		Logger.recordOutput("QuestNav/Sim/InertialPose", new Pose3d(inertialPose));
+		Logger.recordOutput("QuestNav/Sim/FieldAligned", fieldAligned);
 	}
 
 	private PoseObservation[] filterAbsoluteObservations(VisionIOInputs absoluteInputs) {
-		Set<Integer> whitelistedTagIds = getOdometryTagWhitelistForCurrentAlliance();
-		int observedWhitelistedTagCount = 0;
-		for (int tagId : absoluteInputs.tagIds) {
-			if (whitelistedTagIds.isEmpty() || whitelistedTagIds.contains(tagId)) {
-				observedWhitelistedTagCount++;
-			}
-		}
-		boolean hasEnoughWhitelistedTags = observedWhitelistedTagCount >= minWhitelistedTagCountForOdometry;
-
-		List<PoseObservation> filteredObservations = new ArrayList<>();
-		for (PoseObservation observation : absoluteInputs.poseObservations) {
-			if (isValidAbsoluteObservation(observation, whitelistedTagIds, hasEnoughWhitelistedTags)) {
-				filteredObservations.add(observation);
-			}
-		}
-		return filteredObservations.toArray(new PoseObservation[0]);
-	}
-
-	private boolean isValidAbsoluteObservation(PoseObservation observation, Set<Integer> whitelistedTagIds,
-			boolean hasEnoughWhitelistedTags) {
-		if (observation.type() == PoseObservationType.QUESTNAV) {
-			return false;
-		}
-
-		boolean enforceWhitelistedTagMinimum = !whitelistedTagIds.isEmpty() && minWhitelistedTagCountForOdometry > 0;
-		return observation.tagCount() >= minTagCountForOdometry
-				&& (observation.tagCount() != 1 || observation.ambiguity() <= maxAmbiguity)
-				&& (!enforceWhitelistedTagMinimum || hasEnoughWhitelistedTags)
-				&& Math.abs(observation.pose().getZ()) <= maxZError && observation.pose().getX() >= 0.0
-				&& observation.pose().getX() <= aprilTagLayout.getFieldLength() && observation.pose().getY() >= 0.0
-				&& observation.pose().getY() <= aprilTagLayout.getFieldWidth();
+		Pose2d referencePose = inertialPose != null ? inertialPose : groundTruthPoseSupplier.get();
+		return Arrays.stream(absoluteInputs.poseObservations).filter(
+				observation -> VisionObservationFilter.isValid(observation, absoluteInputs.tagIds, referencePose))
+				.toArray(PoseObservation[]::new);
 	}
 }

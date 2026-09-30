@@ -146,6 +146,7 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 
 	@Override
 	public void setVoltage(double voltage) {
+		velocitySetpoint = 0.0;
 		motors[0].setVoltage(voltage);
 	}
 

@@ -22,6 +22,10 @@ public interface VisionIO {
 		public PoseObservation[] poseObservations = new PoseObservation[0];
 		/** Tag IDs observed this cycle. */
 		public int[] tagIds = new int[0];
+		/** True once this source has a field-aligned pose. */
+		public boolean poseInitialized = false;
+		/** Timestamp of the most recent accepted absolute observation. */
+		public double lastAbsoluteObservationTimestamp = -1.0;
 	}
 
 	/** Represents the angle to a simple target, not used for pose estimation. */

@@ -3,6 +3,7 @@ package frc.robot.constants.simulation;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import frc.robot.constants.subsystems.ShooterConstants;
 
 /** Constants used by Maple projectile simulation integration. */
 public final class MapleSimConstants {
@@ -12,8 +13,8 @@ public final class MapleSimConstants {
 	/** Shooter location relative to robot center in robot coordinates. */
 	public static final Translation2d SHOOTER_TRANSLATION_ON_ROBOT = new Translation2d(-0.19, 0.0);
 
-	/** Shooter yaw offset relative to robot heading. */
-	public static final Rotation2d SHOOTER_YAW_OFFSET = Rotation2d.kZero;
+	/** Shooter yaw offset relative to robot heading; shared with real aiming. */
+	public static final Rotation2d SHOOTER_YAW_OFFSET = ShooterConstants.SHOOTER_YAW_OFFSET;
 
 	/** Shooter release height from floor. */
 	public static final double SHOOTER_HEIGHT_METERS = 0.45;

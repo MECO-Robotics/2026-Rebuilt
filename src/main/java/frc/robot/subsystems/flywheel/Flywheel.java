@@ -1,6 +1,7 @@
 package frc.robot.subsystems.flywheel;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.flywheel.FlywheelVelocityCommand;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
@@ -37,7 +38,9 @@ public class Flywheel extends SubsystemBase {
 
 	private double velocitySetpoint;
 
-	private boolean voltageMode = false;
+	// Start neutral. Closed-loop zero velocity can actively drive/brake a real
+	// mechanism, so an uncommanded flywheel must remain in explicit 0 V mode.
+	private boolean voltageMode = true;
 
 	/**
 	 * Creates a flywheel subsystem.
@@ -70,6 +73,7 @@ public class Flywheel extends SubsystemBase {
 		// Load the configured gains immediately so sim IO PID/FF are initialized at
 		// startup.
 		flywheel.setGains(gains);
+		flywheel.setVoltage(0.0);
 	}
 
 	@Override
@@ -105,7 +109,13 @@ public class Flywheel extends SubsystemBase {
 	/** Enables open-loop control and applies a direct voltage command. */
 	public void setVoltage(double voltage) {
 		voltageMode = true;
+		velocitySetpoint = 0.0;
 		flywheel.setVoltage(voltage);
+	}
+
+	/** Leaves the motor controller in open-loop neutral output. */
+	public void stop() {
+		setVoltage(0.0);
 	}
 
 	/** Returns current measured velocity. */
@@ -132,14 +142,32 @@ public class Flywheel extends SubsystemBase {
 	}
 
 	/**
+	 * Returns true when measured velocity is within a caller-provided tolerance.
+	 */
+	public boolean atVelocity(double velocity, double tolerance) {
+		return Math.abs(inputs.velocity - velocity) <= tolerance;
+	}
+
+	/**
 	 * Builds a command that continuously sets flywheel velocity from a supplier.
 	 */
 	public static Command setVelocity(Flywheel flywheel, DoubleSupplier velocity) {
 		return new FlywheelVelocityCommand(flywheel, velocity);
 	}
 
+	/** Holds a supplied velocity until the command is interrupted. */
+	public static Command holdVelocity(Flywheel flywheel, DoubleSupplier velocity) {
+		return Commands.run(() -> flywheel.setVelocity(velocity.getAsDouble()), flywheel)
+				.finallyDo(interrupted -> flywheel.stop());
+	}
+
 	/** Builds a command that continuously sets flywheel voltage from a supplier. */
 	public static Command setVoltage(Flywheel flywheel, DoubleSupplier voltage) {
 		return new FlywheelVoltageCommand(flywheel, voltage);
+	}
+
+	/** Continuously holds an explicit 0 V neutral output. */
+	public static Command idle(Flywheel flywheel) {
+		return Commands.run(flywheel::stop, flywheel).finallyDo(interrupted -> flywheel.stop());
 	}
 }

@@ -104,7 +104,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		positions.add(motors[0].getPosition());
 		velocities.add(motors[0].getVelocity());
 
-		voltages.add(motors[0].getSupplyVoltage());
+		voltages.add(motors[0].getMotorVoltage());
 		currents.add(motors[0].getStatorCurrent());
 
 		motorAlerts[0] = new Alert(name, name + " Leader Motor Disconnected! CAN ID: " + config.canIds()[0],
@@ -121,7 +121,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 			positions.add(motors[i].getPosition());
 			velocities.add(motors[i].getVelocity());
 
-			voltages.add(motors[i].getSupplyVoltage());
+			voltages.add(motors[i].getMotorVoltage());
 			currents.add(motors[i].getStatorCurrent());
 		}
 	}
@@ -145,7 +145,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 			motorVoltages[i] = voltages.get(i).getValueAsDouble();
 			motorCurrents[i] = motors[i].getStatorCurrent().getValueAsDouble();
 
-			motorAlerts[i].set(motorsConnected[i]);
+			motorAlerts[i].set(!motorsConnected[i]);
 		}
 
 		inputs.motorsConnected = motorsConnected;
@@ -166,6 +166,7 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 
 	@Override
 	public void setVoltage(double voltage) {
+		velocitySetpoint = 0.0;
 		motors[0].setControl(voltageRequest.withOutput(voltage));
 	}
 

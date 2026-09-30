@@ -116,11 +116,12 @@ public class RobotContainer {
 				IntakeConstants.INTAKE_RACK_GAINS);
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
-		vision = new Vision(drivetrain::addVisionMeasurement,
+		vision = new Vision(drivetrain::addVisionMeasurement, () -> drivetrain.getState().Pose,
 				new VisionIOQuestNav(VisionConstants.robotToQuest,
 						VisionIO.limelightMegaTag1WithMegaTag2SingleTagWithSim(VisionConstants.limelightName,
 								() -> drivetrain.getState().Pose.getRotation(), VisionConstants.robotToLimelight,
-								drivetrain::getPhysicsPose)));
+								drivetrain::getPhysicsPose),
+						() -> drivetrain.getState().Pose));
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
 		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,
@@ -172,54 +173,45 @@ public class RobotContainer {
 		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
 
 		// ************************** INTAKE KEYBINDS **************************
-		intakeRack.setDefaultCommand(PositionJoint.setVelocity(intakeRack, () -> 0.0));
-		intakeRoller.setDefaultCommand(Flywheel.setVelocity(intakeRoller, () -> 0.0));
-		// Run intake
-		controller.leftBumper()
-				.whileTrue(IntakeCommands.spinIntake(intakeRoller, conveyor)
-						.alongWith(ShooterCommands.unagitateIntake(bottomIndexer, topIndexer)))
-				.whileFalse(IntakeCommands.idleIntake(intakeRoller)
-						.alongWith(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor)));
-		controller.leftTrigger().whileTrue(IntakeCommands.reverseIntake(intakeRoller))
-				.whileFalse(IntakeCommands.idleIntake(intakeRoller));
+		intakeRoller.setDefaultCommand(Flywheel.idle(intakeRoller));
+		conveyor.setDefaultCommand(Flywheel.idle(conveyor));
+		topIndexer.setDefaultCommand(Flywheel.idle(topIndexer));
+		bottomIndexer.setDefaultCommand(Flywheel.idle(bottomIndexer));
+		shooterFlywheel.setDefaultCommand(Flywheel.idle(shooterFlywheel));
+		hood.setDefaultCommand(PositionJoint.holdPosition(hood, ShooterConstants.HOOD_PRESET.STOW));
 
-		// Deploy intake setpoint
-		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		// Stow intake setpoint
-		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
-				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+		// Deploy and run the complete acquisition path while held. On release, the
+		// motors idle and the rack finishes at its deployed setpoint.
+		controller.leftBumper()
+				.whileTrue(IntakeCommands.acquire(intakeRack, intakeRoller, conveyor, bottomIndexer, topIndexer))
+				.onFalse(IntakeCommands.deployRack(intakeRack));
+		controller.leftTrigger().whileTrue(IntakeCommands.eject(intakeRoller, conveyor, bottomIndexer, topIndexer));
 
 		// Deploy intake backup for intake skipping
 		coPilot.povUp().whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
 		// Stow intake backup for intake skipping
 		coPilot.povDown().whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor))
 				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+		coPilot.povLeft().onTrue(IntakeCommands.deployRack(intakeRack));
+		coPilot.povRight().onTrue(IntakeCommands.stowRack(intakeRack));
 
 		// ************************** SHOOTER KEYBINDS **************************
-		// Feed shooter
-		controller.rightBumper()
-				.whileTrue(ShooterCommands.agitateIntake(bottomIndexer, topIndexer)
-						.alongWith(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor)))
-				.whileFalse(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor)
-						.alongWith(IntakeCommands.deployIntake(intakeRack, intakeRoller)));
-
 		controller.a()
-				.whileTrue(Commands.parallel(
-						DriveCommands.joystickAimToHub(drivetrain, () -> -controller.getLeftY(),
-								() -> -controller.getLeftX(), DrivetrainConstants.MAX_SPEED),
-						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)))
-				.whileFalse(ShooterCommands.shooterIdle(shooterFlywheel, hood));
+				.whileTrue(ShooterCommands.coordinatedHubShot(drivetrain, hood, shooterFlywheel, bottomIndexer,
+						topIndexer, conveyor, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
+						this::isShotPoseReady, controller.rightBumper()::getAsBoolean,
+						ready -> controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, ready ? 0.35 : 0.0)));
 
-		controller.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
+		controller.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
 
 		// Shooter presets
 		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		controller.x().or(coPilot.x()).onTrue(ShooterCommands.hubPreset(shooterFlywheel, hood).repeatedly());
+		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		coPilot.y().onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood).repeatedly());
+		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
 
-		coPilot.a().onTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood).repeatedly());
+		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
 	}
 
 	public void updateDashboardOutputs() {
@@ -246,24 +238,19 @@ public class RobotContainer {
 	}
 
 	private void registerNamedCommands() {
-		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployIntake(intakeRack, intakeRoller));
-		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor));
-		NamedCommands.registerCommand("FeedRollers",
-				ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly());
+		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployRack(intakeRack));
+		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowRack(intakeRack));
+		NamedCommands.registerCommand("FeedRollers", createAutonomousHubShot());
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("Agitate", ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller, conveyor));
-		NamedCommands.registerCommand("AutoSpinUp", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
+		NamedCommands.registerCommand("AutoSpinUp",
+				ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
-		// NamedCommands.registerCommand("AutoAim",
-		// DriveCommands.autoAimToHub(drivetrain,
-		// DrivetrainConstants.MAX_SPEED).withTimeout(2));
-		NamedCommands
-				.registerCommand(
-						"AutoAim", Commands
-								.parallel(DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED),
-										ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel))
-								.withTimeout(2));
+		NamedCommands.registerCommand("AutoAim",
+				Commands.parallel(DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED),
+						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
+		NamedCommands.registerCommand("CoordinatedHubShot", createAutonomousHubShot());
 
 	}
 
@@ -277,12 +264,18 @@ public class RobotContainer {
 	}
 
 	private Command createTimedHubShot() {
-		return Commands.sequence(
-				Commands.deadline(Commands.waitSeconds(1.0), ShooterCommands.hubPreset(shooterFlywheel, hood)),
-				Commands.deadline(Commands.waitSeconds(1.0), ShooterCommands.hubPreset(shooterFlywheel, hood),
-						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor)),
-				Commands.parallel(ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor).withTimeout(0.02),
-						ShooterCommands.shooterIdle(shooterFlywheel, hood).withTimeout(0.02)));
+		return createAutonomousHubShot();
+	}
+
+	private Command createAutonomousHubShot() {
+		return ShooterCommands.autonomousHubShot(drivetrain, hood, shooterFlywheel, bottomIndexer, topIndexer, conveyor,
+				this::isShotPoseReady);
+	}
+
+	private boolean isShotPoseReady() {
+		// PathPlanner/Choreo explicitly seed autonomous odometry. Teleop requires a
+		// field-aligned vision source, with A+right-bumper available as an override.
+		return DriverStation.isAutonomousEnabled() || vision.isPoseReady();
 	}
 
 	private void followChoreoSample(SwerveSample sample) {
@@ -303,11 +296,7 @@ public class RobotContainer {
 	}
 
 	public void configureAuto() {
-		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", Commands
-				.sequence(ShooterCommands.hubPreset(shooterFlywheel, hood), Commands.waitSeconds(15),
-						ShooterCommands.feedRollers(bottomIndexer, topIndexer, conveyor).repeatedly())
-				.alongWith(
-						drivetrain.applyRequest(() -> drive.withVelocityX(0).withVelocityY(0).withRotationalRate(0))));
+		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", createAutonomousHubShot());
 
 		autoChooser.addOption("Choreo LeftBlueBump + Shoot", createLeftBlueBumpShootAuto());
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());

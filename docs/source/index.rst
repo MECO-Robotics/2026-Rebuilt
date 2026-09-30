@@ -16,6 +16,7 @@ Included are both beginner-oriented guides and more in-depth documentation for m
    configure-robot
    judging
    command-compositions
+   shooting-intake-checklist
    tune-iterate
    troubleshooting
    
@@ -37,6 +38,7 @@ Quick start
 - Adapting robot to your hardware: :doc:`configure-robot`
 - Basic information for judges: :doc:`judging`
 - Write commands to control the robot: :doc:`command-compositions`
+- Verify and calibrate intake/shooter behavior: :doc:`shooting-intake-checklist`
 - Troubleshooting: :doc:`troubleshooting`
 - Ready to improve behavior: :doc:`tune-iterate`
 
