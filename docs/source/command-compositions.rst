@@ -136,6 +136,8 @@ Examples of named commands in this repo include:
 ``FeedRollers`` is retained for compatibility with existing PathPlanner autos, but now invokes the same coordinated
 hub-shot command used by teleop. Its PathPlanner groups use a three-second race window, so the command can wait up to
 two seconds for readiness and accumulate one second of valid feed time without extending the routine unnecessarily.
+The dashboard chooser defaults to the coordinated fender shot; the explicit ``none`` option remains available when no
+autonomous action is desired.
 
 
 Guidelines

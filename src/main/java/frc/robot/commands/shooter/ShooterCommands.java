@@ -251,7 +251,7 @@ public class ShooterCommands {
 		}
 
 		private ShotReadiness determineReadiness() {
-			return evaluateReadiness(poseReady.getAsBoolean(), solution, drive.getState().Speeds,
+			return evaluateReadiness(poseReady.getAsBoolean(), solution, drive.getPhysicsSpeeds(),
 					drive.getState().Pose.getRotation(), hood.getPosition(), shooter.getVelocity());
 		}
 

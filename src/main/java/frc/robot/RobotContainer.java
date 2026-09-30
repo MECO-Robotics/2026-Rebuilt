@@ -300,6 +300,9 @@ public class RobotContainer {
 
 		autoChooser.addOption("Choreo LeftBlueBump + Shoot", createLeftBlueBumpShootAuto());
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());
+		// Refresh the logged selection after replacing PathPlanner's initial "None"
+		// default so an immediate autonomous start receives the coordinated shot.
+		autoChooser.periodic();
 	}
 
 	private void configureSysIdChooser() {

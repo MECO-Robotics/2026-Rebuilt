@@ -37,6 +37,7 @@ public class Flywheel extends SubsystemBase {
 	private final LoggedTunableNumber kSetpoint;
 
 	private double velocitySetpoint;
+	private double voltageSetpoint;
 
 	// Start neutral. Closed-loop zero velocity can actively drive/brake a real
 	// mechanism, so an uncommanded flywheel must remain in explicit 0 V mode.
@@ -80,6 +81,8 @@ public class Flywheel extends SubsystemBase {
 	public void periodic() {
 		flywheel.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
+		Logger.recordOutput(name + "/CommandedVoltage", voltageSetpoint);
+		Logger.recordOutput(name + "/VelocityControlActive", !voltageMode);
 
 		Command currentCommand = getCurrentCommand();
 		if (currentCommand == null || currentCommand == getDefaultCommand()) {
@@ -103,12 +106,14 @@ public class Flywheel extends SubsystemBase {
 	/** Sets a new velocity goal for closed-loop control. */
 	public void setVelocity(double velocity) {
 		voltageMode = false;
+		voltageSetpoint = 0.0;
 		velocitySetpoint = velocity;
 	}
 
 	/** Enables open-loop control and applies a direct voltage command. */
 	public void setVoltage(double voltage) {
 		voltageMode = true;
+		voltageSetpoint = voltage;
 		velocitySetpoint = 0.0;
 		flywheel.setVoltage(voltage);
 	}
@@ -131,6 +136,16 @@ public class Flywheel extends SubsystemBase {
 	/** Returns the last requested velocity setpoint from the IO layer. */
 	public double getVelocitySetpoint() {
 		return inputs.desiredVelocity;
+	}
+
+	/** Returns the direct voltage most recently requested by the subsystem. */
+	public double getCommandedVoltage() {
+		return voltageSetpoint;
+	}
+
+	/** Returns whether the subsystem is currently using velocity control. */
+	public boolean isVelocityControlActive() {
+		return !voltageMode;
 	}
 
 	/**

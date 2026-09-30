@@ -31,10 +31,12 @@ the intended mechanism changes; do not assume code tested on another branch is p
 same identity in the AdvantageKit ``RealMetadata/GitBranch`` and ``RealMetadata/GitSHA`` fields before enabling.
 
 Raise the robot securely and remove all fuel for the first enabled test. Hold driver ``X`` and confirm the flywheel
-receives its velocity request. Release ``X`` and confirm ``ShooterFlywheel/DesiredVelocity`` and every value in
-``ShooterFlywheel/MotorVoltages`` return to zero. The wheel may coast mechanically, but the controller must be in
-open-loop 0 V mode immediately. Repeat the release check for the intake roller, conveyor, and both indexers. Disable
-the robot immediately if a released mechanism reports nonzero motor voltage or makes an unexpected powered sound.
+receives its velocity request. Release ``X`` and confirm ``ShooterFlywheel/DesiredVelocity`` and
+``ShooterFlywheel/CommandedVoltage`` are zero and ``ShooterFlywheel/VelocityControlActive`` is false. On real hardware,
+also confirm every value in ``ShooterFlywheel/MotorVoltages`` settles to zero. The wheel may coast mechanically, but
+the controller must enter open-loop 0 V mode immediately. Repeat the release check for the intake roller, conveyor,
+and both indexers. Disable the robot immediately if a released mechanism reports a nonzero commanded voltage, remains
+in velocity control, or makes an unexpected powered sound.
 
 
 Desktop simulation and AdvantageScope
@@ -51,8 +53,9 @@ AdvantageScope's custom-assets folder must be the repository's ``sim`` directory
 child ``Component`` of the Remy robot, not as a separate ``Ghost`` robot.
 
 Use desktop simulation to validate command scheduling, readiness transitions, intake collection, aiming direction,
-and autonomous timing. It does not replace the real-robot motor-direction, roller-contact, current-limit, or shot-table
-checks below.
+and autonomous timing. Use each flywheel subsystem's ``CommandedVoltage`` and ``VelocityControlActive`` fields to
+verify command output in simulation; vendor-reported ``MotorVoltages`` can be stale on simulated custom CAN buses. It
+does not replace the real-robot motor-direction, roller-contact, current-limit, or shot-table checks below.
 
 
 Low-voltage mechanism verification
