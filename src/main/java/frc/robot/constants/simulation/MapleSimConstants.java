@@ -11,16 +11,16 @@ public final class MapleSimConstants {
 	}
 
 	/** Shooter location relative to robot center in robot coordinates. */
-	public static final Translation2d SHOOTER_TRANSLATION_ON_ROBOT = new Translation2d(-0.19, 0.0);
+	public static final Translation2d SHOOTER_TRANSLATION_ON_ROBOT = ShooterConstants.SHOOTER_EXIT_TRANSLATION;
 
 	/** Shooter yaw offset relative to robot heading; shared with real aiming. */
 	public static final Rotation2d SHOOTER_YAW_OFFSET = ShooterConstants.SHOOTER_YAW_OFFSET;
 
 	/** Shooter release height from floor. */
-	public static final double SHOOTER_HEIGHT_METERS = 0.45;
+	public static final double SHOOTER_HEIGHT_METERS = ShooterConstants.SHOOTER_RELEASE_HEIGHT_METERS;
 
 	/** Conversion from flywheel RPS to projectile speed in m/s. */
-	public static final double MPS_PER_FLYWHEEL_RPS = 4.0 * Math.PI * 0.0254; // 4" diameter wheel
+	public static final double MPS_PER_FLYWHEEL_RPS = ShooterConstants.MAIN_WHEEL_METERS_PER_SECOND_PER_RPS;
 
 	/** Shooter wheel radius used for flywheel-to-ball speed transfer math. */
 	public static final double SHOOTER_WHEEL_RADIUS_METERS = Units.inchesToMeters(2.0);
@@ -31,7 +31,7 @@ public final class MapleSimConstants {
 	 * A value below 1.0 models backspin by reducing net energy transfer to the
 	 * ball.
 	 */
-	public static final double COUNTER_TO_MAIN_SHOOTER_WHEEL_SPEED_RATIO = (48.0 / 54.0) * (1.5 / 4.0);
+	public static final double COUNTER_TO_MAIN_SHOOTER_WHEEL_SPEED_RATIO = ShooterConstants.COUNTER_TO_MAIN_SHOOTER_WHEEL_SPEED_RATIO;
 
 	/** Simulated fuel mass for flywheel slowdown calculations. */
 	public static final double FUEL_MASS_KG = 0.5 * 0.45359237;
@@ -55,10 +55,10 @@ public final class MapleSimConstants {
 	/** Maximum number of fuel gamepieces the simulated hopper can hold. */
 	public static final int HOPPER_MAX_BALLS = 54;
 
-	/** Back-to-front hopper limits in robot X coordinates. */
-	public static final double HOPPER_BACK_LIMIT_X_METERS = 0;
+	/** Hopper bounds in robot X coordinates; the intake/shooter direction is +X. */
+	public static final double HOPPER_MIN_X_METERS = 0.0;
 
-	public static final double HOPPER_FRONT_LIMIT_X_METERS = 0.33;
+	public static final double HOPPER_MAX_X_METERS = 0.33;
 
 	/** Right-to-left hopper limits in robot Y coordinates. */
 	public static final double HOPPER_RIGHT_LIMIT_Y_METERS = -0.34;
@@ -109,13 +109,15 @@ public final class MapleSimConstants {
 	public static final double HUB_BACK_SPAWN_DIRECTION_RNG_DEG = 45.0;
 
 	/**
-	 * Offset applied to hood angle (radians) to align mechanism zero with shot
-	 * pitch.
+	 * Fixed hood deflection down from vertical at mechanism position zero. The
+	 * five-degree correction approximates the effect of shooter backspin.
 	 */
-	public static final double HOOD_ANGLE_OFFSET_RADIANS = Math.toRadians(21.0 - 5.0); // 5 deg for backspin
+	public static final double HOOD_ZERO_DEFLECTION_FROM_VERTICAL_RADIANS = ShooterConstants.HOOD_ZERO_DEFLECTION_FROM_VERTICAL_RADIANS;
 
-	/** Physical clamp range for launched pitch angle. */
-	public static final double MIN_LAUNCH_ANGLE_RADIANS = HOOD_ANGLE_OFFSET_RADIANS - Math.toRadians(1.0);
+	/** Physical clamp range for hood deflection measured down from vertical. */
+	public static final double MIN_HOOD_DEFLECTION_FROM_VERTICAL_RADIANS = HOOD_ZERO_DEFLECTION_FROM_VERTICAL_RADIANS
+			- Math.toRadians(1.0);
 
-	public static final double MAX_LAUNCH_ANGLE_RADIANS = HOOD_ANGLE_OFFSET_RADIANS + Math.toRadians(28.0 + 1);
+	public static final double MAX_HOOD_DEFLECTION_FROM_VERTICAL_RADIANS = HOOD_ZERO_DEFLECTION_FROM_VERTICAL_RADIANS
+			+ Math.toRadians(28.0 + 1);
 }

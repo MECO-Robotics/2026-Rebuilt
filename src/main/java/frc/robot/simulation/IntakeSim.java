@@ -21,9 +21,9 @@ public class IntakeSim {
 				Meters.of(0.7),
 				// The extension length of the intake beyond the robot's frame (when activated)
 				Meters.of(0.2),
-				// The intake is mounted on the back side of the chassis
+				// Remy's intake is on robot-forward (+X).
 				IntakeSimulation.IntakeSide.FRONT,
-				// The intake can hold up to 1 note
+				// Simulated hopper capacity
 				54);
 	}
 

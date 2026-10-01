@@ -12,8 +12,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
+import edu.wpi.first.wpilibj.simulation.SimHooks;
 import edu.wpi.first.wpilibj.simulation.XboxControllerSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -34,6 +34,7 @@ import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.ironmaple.simulation.SimulatedArena;
 
 /**
  * End-to-end desktop simulation checks for the real driver controller bindings.
@@ -56,6 +57,7 @@ class RobotContainerSimulationTest {
 	@BeforeEach
 	void setUpFullRobotSimulation() throws ReflectiveOperationException {
 		HAL.initialize(500, 0);
+		SimHooks.pauseTiming();
 		RobotSimulation.configureArenaOverride(frc.robot.constants.Constants.Mode.SIM);
 
 		DriverStationSim.resetData();
@@ -70,6 +72,7 @@ class RobotContainerSimulationTest {
 		controller.setPOVCount(1);
 		controller.notifyNewData();
 		DriverStation.refreshData();
+		setCalibrationInputs(false, 0.000, 30.0);
 
 		container = new RobotContainer();
 		shooter = getField(container, "shooterFlywheel", Flywheel.class);
@@ -89,16 +92,20 @@ class RobotContainerSimulationTest {
 		DriverStationSim.setEnabled(false);
 		DriverStationSim.notifyNewData();
 		DriverStation.refreshData();
+		SimHooks.resumeTiming();
 	}
 
 	@Test
 	void driverBindingsOperateAndReturnEveryRollerToNeutral() {
+		assertTrue(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel").length > 0,
+				"Simulation should populate field fuel before autonomous is started");
 		verifyDriveBindingMovesRobot();
 		verifyShooterPresetStopsOnRelease();
 		verifyAcquireDeploysAndStopsOnRelease();
-		verifyForceFeedRequiresCoordinatedShot();
 		verifyEjectStopsOnRelease();
 		verifyAutonomousShotTimesOutSafely();
+		verifyForceFeedRequiresCoordinatedShot();
+		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
 	}
 
 	private void verifyDriveBindingMovesRobot() {
@@ -198,11 +205,68 @@ class RobotContainerSimulationTest {
 		assertNeutral(topIndexer, "Top indexer after eject release");
 	}
 
+	private void verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed() {
+		DriverStationSim.setAutonomous(false);
+		DriverStationSim.notifyNewData();
+		DriverStation.refreshData();
+
+		double calibrationHoodRotations = 0.031;
+		double calibrationFlywheelRps = 37.0;
+		setCalibrationInputs(true, calibrationHoodRotations, calibrationFlywheelRps);
+
+		controller.setAButton(true);
+		runCycles(SETTLE_CYCLES);
+		assertEquals(calibrationHoodRotations, hood.getDesiredPosition(), 1e-6);
+		assertEquals(calibrationFlywheelRps, shooter.getVelocitySetpoint(), 1e-6);
+		assertNeutral(bottomIndexer, "Bottom indexer during calibration without force feed");
+		assertNeutral(topIndexer, "Top indexer during calibration without force feed");
+		assertNeutral(conveyor, "Conveyor during calibration without force feed");
+		assertEquals("CALIBRATION_MODE", SmartDashboard.getString("Shooter/Readiness", "missing"));
+
+		controller.setRightBumperButton(true);
+		runCycles(SETTLE_CYCLES);
+		assertOutputActive(bottomIndexer, "Bottom indexer during calibration force feed");
+		assertOutputActive(topIndexer, "Top indexer during calibration force feed");
+		assertOutputActive(conveyor, "Conveyor during calibration force feed");
+
+		controller.setRightBumperButton(false);
+		controller.setAButton(false);
+		runCycles(SETTLE_CYCLES);
+		assertNeutral(shooter, "Shooter after calibration release");
+		assertNeutral(bottomIndexer, "Bottom indexer after calibration release");
+		assertNeutral(topIndexer, "Top indexer after calibration release");
+		assertNeutral(conveyor, "Conveyor after calibration release");
+		assertFalse(SmartDashboard.getBoolean("Shooter/CalibrationMode", true),
+				"Calibration-active telemetry must clear when A is released");
+		setCalibrationInputs(false, calibrationHoodRotations, calibrationFlywheelRps);
+	}
+
+	private static void setCalibrationInputs(boolean enabled, double hoodRotations, double flywheelRps) {
+		ShooterConstants.CALIBRATION.ENABLED.set(enabled);
+		ShooterConstants.CALIBRATION.HOOD_ROTATIONS.set(hoodRotations);
+		ShooterConstants.CALIBRATION.FLYWHEEL_RPS.set(flywheelRps);
+		ShooterConstants.CALIBRATION.ENABLED.periodic();
+		ShooterConstants.CALIBRATION.HOOD_ROTATIONS.periodic();
+		ShooterConstants.CALIBRATION.FLYWHEEL_RPS.periodic();
+	}
+
 	private void verifyAutonomousShotTimesOutSafely() {
 		Translation2d hub = FieldConstants.Hub.hubPosition();
-		container.drivetrain.resetPose(new Pose2d(hub.plus(new Translation2d(1.3, 0.0)), Rotation2d.kPi));
+		double shooterDistanceMeters = ShooterConstants.MIN_CALIBRATED_DISTANCE_METERS + 0.30;
+		double robotCenterDistanceMeters = shooterDistanceMeters - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX();
+		container.drivetrain
+				.resetPose(new Pose2d(hub.plus(new Translation2d(robotCenterDistanceMeters, 0.0)), Rotation2d.kZero));
 		container.drivetrain.stop();
 		runCycles(50);
+
+		Command prepareShot = PositionJoint
+				.holdPosition(hood,
+						() -> ShooterCalculator.calculate(container.drivetrain.getState().Pose).hoodRotations())
+				.alongWith(Flywheel.holdVelocity(shooter, () -> ShooterCalculator
+						.calculate(container.drivetrain.getState().Pose).flywheelRotationsPerSecond()));
+		scheduler.schedule(prepareShot);
+		runCycles(150);
+		scheduler.cancel(prepareShot);
 
 		DriverStationSim.setAutonomous(true);
 		DriverStationSim.notifyNewData();
@@ -277,18 +341,19 @@ class RobotContainerSimulationTest {
 		assertNeutral(bottomIndexer, "Bottom indexer after autonomous shot completes");
 		assertNeutral(topIndexer, "Top indexer after autonomous shot completes");
 		assertNeutral(conveyor, "Conveyor after autonomous shot completes");
+		DriverStationSim.setAutonomous(false);
+		DriverStationSim.notifyNewData();
+		DriverStation.refreshData();
 	}
 
 	private void runCycles(int cycles) {
 		controller.notifyNewData();
 		for (int i = 0; i < cycles; i++) {
-			long cycleStartNanos = System.nanoTime();
+			SimHooks.stepTiming(0.02);
 			DriverStationSim.notifyNewData();
 			DriverStation.refreshData();
 			scheduler.run();
 			container.simulationPeriodic();
-			double elapsedSeconds = (System.nanoTime() - cycleStartNanos) / 1_000_000_000.0;
-			Timer.delay(Math.max(0.0, 0.02 - elapsedSeconds));
 		}
 	}
 

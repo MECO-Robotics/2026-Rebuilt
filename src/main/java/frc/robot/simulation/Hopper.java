@@ -74,20 +74,20 @@ public class Hopper {
 		double verticalPitch = Math.sqrt(3.0) / 2.0 * diameter;
 		double intakeFrontProjection = Math.max(0.0, intakeExtensionSupplier.getAsDouble())
 				* Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS);
-		double backLimit = MapleSimConstants.HOPPER_BACK_LIMIT_X_METERS;
-		double frontLimit = MapleSimConstants.HOPPER_FRONT_LIMIT_X_METERS + intakeFrontProjection;
+		double minX = MapleSimConstants.HOPPER_MIN_X_METERS;
+		double maxX = MapleSimConstants.HOPPER_MAX_X_METERS + intakeFrontProjection;
 		double rightLimit = MapleSimConstants.HOPPER_RIGHT_LIMIT_Y_METERS;
 		double leftLimit = MapleSimConstants.HOPPER_LEFT_LIMIT_Y_METERS;
 		double bottomLimit = MapleSimConstants.HOPPER_BOTTOM_LIMIT_Z_METERS;
 		double topLimit = MapleSimConstants.HOPPER_TOP_LIMIT_Z_METERS;
 
 		List<Translation3d> centers = new ArrayList<>();
-		// Fill order requirement: bottom -> top, then back -> front.
+		// Fill from bottom to top, then along the rear-to-intake X volume.
 		int zIndex = 0;
 		for (double z = bottomLimit + radius; z <= topLimit - radius + 1e-9; z += verticalPitch) {
 			double xOffset = (zIndex % 2 == 0) ? 0.0 : radius;
 			int xIndex = 0;
-			for (double x = backLimit + radius + xOffset; x <= frontLimit - radius + 1e-9; x += diameter) {
+			for (double x = minX + radius + xOffset; x <= maxX - radius + 1e-9; x += diameter) {
 				// Alternate lateral offset for neighboring stacks to mimic sphere nesting in
 				// 3D.
 				double yOffset = ((zIndex + xIndex) % 2 == 0) ? 0.0 : radius;

@@ -1,4 +1,5 @@
 {
+  "version": "26.0.0",
   "hubs": [
     {
       "x": 80,
@@ -93,10 +94,22 @@
               "title": "Shot & Intake Status",
               "controller": [
                 "NT:/AdvantageKit/RealOutputs/Shooter/Readiness",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ShotTargetMode",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ShotTargetX",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ShotTargetY",
                 "NT:/AdvantageKit/RealOutputs/Shooter/ReadyToFeed",
                 "NT:/AdvantageKit/RealOutputs/Shooter/Feeding",
                 "NT:/AdvantageKit/RealOutputs/Shooter/SolutionCalibrated",
-                "NT:/AdvantageKit/RealOutputs/Shooter/DistanceToHubMeters",
+                "NT:/AdvantageKit/RealOutputs/Shooter/DistanceToTargetMeters",
+                "NT:/TunableNumbers/ShooterCalibration/Enabled",
+                "NT:/TunableNumbers/ShooterCalibration/HoodRotations",
+                "NT:/TunableNumbers/ShooterCalibration/FlywheelRPS",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationMode",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationDistanceInches",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationAppliedHoodRotations",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationMeasuredHoodRotations",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationAppliedFlywheelRPS",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationMeasuredFlywheelRPS",
                 "NT:/AdvantageKit/RealOutputs/ShooterFlywheel/CommandedVoltage",
                 "NT:/AdvantageKit/RealOutputs/ShooterFlywheel/VelocityControlActive",
                 "NT:/AdvantageKit/RealOutputs/IntakeRoller/CommandedVoltage",
@@ -106,6 +119,8 @@
                 "NT:/AdvantageKit/RealOutputs/Vision/PoseReady",
                 "NT:/AdvantageKit/RealOutputs/FieldSimulation/HopperFuelCount",
                 "NT:/AdvantageKit/RealOutputs/FieldSimulation/FuelProjectileCount",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/LaunchDebug/NominalLaunchPitchDegrees",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/LaunchDebug/LastLaunchPitchDegrees",
                 "NT:/AdvantageKit/RealOutputs/FieldSimulation/SuccessfulScoreCount"
               ],
               "controllerUUID": "remyshootingintakestatustable01",

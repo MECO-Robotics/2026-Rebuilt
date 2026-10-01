@@ -88,12 +88,35 @@ Not every command composition is a simple preset. Some combine closed-loop drive
 
 The clearest example in this repo is the coordinated ``A`` button shot in ``RobotContainer``:
 
-- driver translation remains available while heading locks to the hub from the shooter exit position
-- hood and flywheel targets update continuously from ``ShooterCalculator``
+- when ``A`` is pressed inside the robot's own alliance zone, the alliance hub is selected even if no tag is visible
+- outside the alliance zone, a visible same-alliance-side AprilTag selects the alliance hub; otherwise the command
+  selects a safe ferry landing point inside the alliance zone
+- red uses tags 1--16 for the hub-side visibility check and tags 6/7 only as trench-lane references; blue uses tags
+  17--32 and tags 22/23 respectively
+- each alliance has two ferry landing points, one on each side of the field; both are 0.90 m inside the alliance-zone
+  boundary and shifted 0.40 m inward from the nearby guardrail-side tag reference, and neither is located at an
+  AprilTag or at the hub
+- the robot's current field half selects the matching ferry point; crossing the field centerline while holding ``A``
+  switches sides, resets the readiness delay, and stops automatic feeding until the new aim is ready
+- the hub-versus-ferry mode is latched until ``A`` is released, so seeing a trench tag after the robot starts turning
+  cannot make the command switch modes
+- driver translation remains available while heading locks to the selected target from the shooter exit position
+- hub shots use continuously calculated hood/flywheel values; ferry shots use the ferry hood position and calculate
+  the flywheel speed needed to land on the carpet at the selected target
 - indexers and conveyor feed only after pose, range, speed, heading, hood, and flywheel readiness are stable
+
+Before feeding, a ferry solution also checks the complete 47-inch trench depth using a conservative trajectory that
+accounts for FUEL radius, launch-angle/speed variation, and extra vertical clearance. It rejects a robot that is too
+close to clear the trench, a horizontal path through the hub structure, or a shot requiring more than the configured
+ferry maximum RPS. Rejected ferry shots report ``UNSAFE_FERRY_PATH`` and do not feed automatically.
 
 Right bumper forces the feed path only while ``A`` is held. The dashboard reports the readiness blocker, and driver
 rumble indicates that feeding is allowed.
+
+For live shot calibration, the AdvantageScope/NetworkTables calibration switch replaces the interpolated hood and
+flywheel setpoints with editable values while preserving pose-based aiming. Automatic feeding is intentionally
+disabled in this mode; ``A`` plus right bumper fires the trial. Autonomous commands always use the saved shot table
+and ignore the calibration switch.
 
 
 Teleop examples from RobotContainer
@@ -107,7 +130,7 @@ Examples:
 - releasing left bumper stops the fuel path and leaves the rack at its deployed target
 - left trigger reverses the complete acquisition path for ejection
 - copilot POV controls provide manual rack deploy/stow and velocity backups
-- ``A`` runs the readiness-gated hub shot; ``A`` plus right bumper is the emergency force-feed override
+- ``A`` runs the readiness-gated hub-or-ferry shot; ``A`` plus right bumper is the emergency force-feed override
 - copilot preset buttons hold ``hubPreset``, ``ferryPreset``, and ``trenchPreset`` while pressed
 - start resets drivetrain heading
 

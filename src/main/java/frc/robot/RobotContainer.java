@@ -33,6 +33,8 @@ import frc.robot.commands.flywheel.FlywheelSysIdCommands;
 import frc.robot.commands.position_joint.PositionJointSysIdCommands;
 import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.commands.shooter.ShooterCommands;
+import frc.robot.commands.shooter.ShotTarget;
+import frc.robot.commands.shooter.ShotTargetSelector;
 import frc.robot.constants.Constants;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
@@ -197,9 +199,11 @@ public class RobotContainer {
 
 		// ************************** SHOOTER KEYBINDS **************************
 		controller.a()
-				.whileTrue(ShooterCommands.coordinatedHubShot(drivetrain, hood, shooterFlywheel, bottomIndexer,
+				.whileTrue(ShooterCommands.coordinatedSelectedShot(drivetrain, hood, shooterFlywheel, bottomIndexer,
 						topIndexer, conveyor, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
-						this::isShotPoseReady, controller.rightBumper()::getAsBoolean,
+						this::selectDriverShotTarget, this::isShotPoseReady, controller.rightBumper()::getAsBoolean,
+						ShooterConstants.CALIBRATION.ENABLED::get, ShooterConstants.CALIBRATION.HOOD_ROTATIONS::get,
+						ShooterConstants.CALIBRATION.FLYWHEEL_RPS::get,
 						ready -> controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, ready ? 0.35 : 0.0)));
 
 		controller.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
@@ -276,6 +280,16 @@ public class RobotContainer {
 		// PathPlanner/Choreo explicitly seed autonomous odometry. Teleop requires a
 		// field-aligned vision source, with A+right-bumper available as an override.
 		return DriverStation.isAutonomousEnabled() || vision.isPoseReady();
+	}
+
+	private ShotTarget selectDriverShotTarget() {
+		Alliance alliance = DriverStation.getAlliance().orElse(Alliance.Red);
+		// Calibration trials always target the hub so a missing tag cannot silently
+		// turn a hub calibration point into a ferry shot.
+		if (ShooterConstants.CALIBRATION.ENABLED.get()) {
+			return ShotTargetSelector.hub(alliance);
+		}
+		return ShotTargetSelector.select(alliance, drivetrain.getState().Pose, vision.getVisibleTagIds());
 	}
 
 	private void followChoreoSample(SwerveSample sample) {

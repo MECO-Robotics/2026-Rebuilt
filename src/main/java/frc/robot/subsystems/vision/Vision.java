@@ -16,6 +16,7 @@ import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -67,6 +68,15 @@ public class Vision extends SubsystemBase {
 	/** Returns true once at least one configured pose source is field aligned. */
 	public boolean isPoseReady() {
 		return poseReady;
+	}
+
+	/**
+	 * Returns a defensive snapshot of every AprilTag ID currently reported by the
+	 * configured cameras.
+	 */
+	public int[] getVisibleTagIds() {
+		return IntStream.range(0, inputs.length).flatMap(index -> IntStream.of(inputs[index].tagIds)).distinct()
+				.toArray();
 	}
 
 	/**

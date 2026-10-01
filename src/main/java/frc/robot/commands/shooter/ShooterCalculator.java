@@ -17,21 +17,42 @@ import org.littletonrobotics.junction.Logger;
 
 /** Shot calculators that derive hood and flywheel setpoints from robot pose. */
 public class ShooterCalculator {
-	/** Translation from robot origin to the shooter exit point used for range. */
-	public static final Translation2d robotToShooter = new Translation2d(-.19, 0);
-
 	/** Calculates a stationary shot solution for an explicit target. */
 	public static ShotSolution calculate(Pose2d robotPose, Translation2d targetPosition) {
-		Pose2d shooterPose = robotPose.transformBy(new Transform2d(robotToShooter, Rotation2d.kZero));
+		Pose2d shooterPose = robotPose
+				.transformBy(new Transform2d(ShooterConstants.SHOOTER_EXIT_TRANSLATION, Rotation2d.kZero));
 		Translation2d shooterToTarget = targetPosition.minus(shooterPose.getTranslation());
 		double distanceMeters = shooterToTarget.getNorm();
 		boolean calibrated = distanceMeters >= ShooterConstants.MIN_CALIBRATED_DISTANCE_METERS
 				&& distanceMeters <= ShooterConstants.MAX_CALIBRATED_DISTANCE_METERS;
 		var distance = Meters.of(distanceMeters);
 
-		return new ShotSolution(distanceMeters, shooterToTarget.getAngle().plus(ShooterConstants.SHOOTER_YAW_OFFSET),
+		return new ShotSolution(distanceMeters,
+				shooterToTarget.getAngle().minus(ShooterConstants.AUTO_AIM_HEADING_OFFSET),
 				ShooterConstants.hoodMap.get(distance).in(Units.Rotations),
 				ShooterConstants.shooterVelocityMap.get(distance).in(Units.RevolutionsPerSecond), calibrated);
+	}
+
+	/**
+	 * Calculates either a calibrated range-based hub shot or a carpet-landing ferry
+	 * shot while preserving pose-based aiming to the selected field target.
+	 */
+	public static ShotSolution calculate(Pose2d robotPose, ShotTarget target) {
+		ShotSolution aimedSolution = calculate(robotPose, target.position());
+		if (target.mode() == ShotTarget.Mode.FERRY) {
+			FerryShotCalculator.FerryShotPlan plan = FerryShotCalculator.calculate(robotPose, target);
+			return new ShotSolution(aimedSolution.distanceMeters(), aimedSolution.targetHeading(), plan.hoodRotations(),
+					plan.flywheelRps(), plan.safe());
+		}
+		return aimedSolution;
+	}
+
+	/**
+	 * Calculates the ideal flywheel speed required for a ferry shot to land on the
+	 * carpet at the selected horizontal distance.
+	 */
+	static double calculateFerryFlywheelRps(double distanceMeters, double hoodRotations) {
+		return FerryShotCalculator.calculateFlywheelRps(distanceMeters, hoodRotations);
 	}
 
 	/** Calculates a shot solution for the current alliance hub. */

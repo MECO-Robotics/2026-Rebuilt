@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.constants.subsystems.ShooterConstants;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,8 @@ public class VisionConstants {
 	// Units.inchesToMeters(22), new Rotation3d(0.0, Units.degreesToRadians(-20),
 	// 0.0));
 	public static Transform3d robotToLimelight = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(0),
-			Units.inchesToMeters(21.25), new Rotation3d(0.0, Units.degreesToRadians(30), 0.0));
+			Units.inchesToMeters(21.25),
+			new Rotation3d(0.0, Units.degreesToRadians(30), ShooterConstants.SHOOTER_YAW_OFFSET.getRadians()));
 
 	// Basic filtering thresholds
 	public static int minTagCountForOdometry = 2;
