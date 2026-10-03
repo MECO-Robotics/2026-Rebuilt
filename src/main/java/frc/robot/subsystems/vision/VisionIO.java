@@ -38,7 +38,15 @@ public interface VisionIO {
 
 	/** Represents a robot pose sample used for pose estimation. */
 	public static record PoseObservation(double timestamp, Pose3d pose, double ambiguity, int tagCount,
-			double averageTagDistance, PoseObservationType type) {
+			double averageTagDistance, PoseObservationType type, int[] tagIds) {
+		public PoseObservation {
+			tagIds = tagIds == null ? new int[0] : tagIds.clone();
+		}
+
+		@Override
+		public int[] tagIds() {
+			return tagIds.clone();
+		}
 	}
 
 	public static enum PoseObservationType {

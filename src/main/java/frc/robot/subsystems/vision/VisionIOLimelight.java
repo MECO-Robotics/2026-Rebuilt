@@ -169,7 +169,7 @@ public class VisionIOLimelight implements VisionIO {
 	}
 
 	private static PoseObservation parseObservation(double[] rawLLArray, long timestampMicros, PoseObservationType type,
-			Set<Integer> tagIds) {
+			Set<Integer> visibleTagIds) {
 		if (rawLLArray.length < 11) {
 			return null;
 		}
@@ -179,13 +179,17 @@ public class VisionIOLimelight implements VisionIO {
 			return null;
 		}
 
-		for (int i = 11; i + 6 < rawLLArray.length; i += 7) {
-			tagIds.add((int) rawLLArray[i]);
+		int availableTagCount = Math.max(0, (rawLLArray.length - 11) / 7);
+		int[] observationTagIds = new int[availableTagCount];
+		for (int tagIndex = 0; tagIndex < availableTagCount; tagIndex++) {
+			int tagId = (int) rawLLArray[11 + tagIndex * 7];
+			observationTagIds[tagIndex] = tagId;
+			visibleTagIds.add(tagId);
 		}
 
 		double ambiguity = type == PoseObservationType.MEGATAG_1 && rawLLArray.length >= 18 ? rawLLArray[17] : 0.0;
 		return new PoseObservation(timestampMicros * 1.0e-6 - rawLLArray[6] * 1.0e-3, parsePose(rawLLArray), ambiguity,
-				tagCount, rawLLArray[9], type);
+				tagCount, rawLLArray[9], type, observationTagIds);
 	}
 
 	private static int getTagCount(double[] rawLLArray) {

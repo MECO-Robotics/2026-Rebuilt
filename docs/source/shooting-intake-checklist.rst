@@ -15,7 +15,8 @@ Driver controls
   alliance side is visible, ferry mode uses one of two safe landing points inside the robot's alliance zone, one on
   each side of the field. The robot's current field half selects the matching landing point, and crossing the field
   centerline while holding ``A`` switches the point and resets shot readiness. Tags 6/7 and 22/23 are lane references
-  only; neither pair is a landing target. The hub-versus-ferry mode remains fixed until ``A`` is released.
+  only; neither pair is a landing target. The hub-versus-ferry mode remains fixed until ``A`` is released. A tag remains
+  recently visible for 0.25 seconds so a normal gap between camera frames cannot select ferry mode accidentally.
 - Hold driver ``A`` and right bumper to force the feed path for recovery only. This bypasses range, pose, motion, and
   mechanism-readiness protection.
 - When ``/TunableNumbers/ShooterCalibration/Enabled`` is true, holding ``A`` uses the live calibration hood and
@@ -32,7 +33,8 @@ degrees/s, heading error at or below 2 degrees, hood error at or below 0.002 rot
 position and calculate enough flywheel speed to land at the safe field point. If that would exceed the configured
 ferry maximum, pass through the hub structure, or fail to clear the complete trench depth with the configured safety
 margin, readiness reports ``UNSAFE_FERRY_PATH`` and automatic feeding remains blocked. All conditions must remain
-valid for 0.15 seconds.
+valid for 0.15 seconds. Without a valid pose, the command holds the current heading, stops the flywheel, and stows the
+hood instead of preparing from an uninitialized field position; ``A`` plus right bumper remains the explicit override.
 
 
 Deployment identity and neutral-output check
@@ -191,6 +193,8 @@ At each location:
 
 Automatic feed must remain blocked outside 46.003--236 inches. Validate every PathPlanner shooting auto three consecutive
 times and confirm it either completes one second of ready feed or logs the readiness reason and exits within three
-seconds.
+seconds. PathPlanner and Choreo routines seed their field pose from the selected trajectory. The chooser's standalone
+fender shot does not reset odometry, so it requires an accepted absolute vision alignment and exits without aiming or
+shooting if that pose never becomes ready.
 
 .. |square| unicode:: U+2610

@@ -12,10 +12,11 @@ public final class VisionObservationFilter {
 	}
 
 	/** Returns whether an absolute observation is safe to apply to odometry. */
-	public static boolean isValid(PoseObservation observation, int[] tagIds, Pose2d referencePose) {
+	public static boolean isValid(PoseObservation observation, Pose2d referencePose) {
 		if (observation.type() == PoseObservationType.QUESTNAV || !isPoseInsideField(observation)) {
 			return false;
 		}
+		int[] tagIds = observation.tagIds();
 		for (int tagId : tagIds) {
 			if (aprilTagLayout.getTagPose(tagId).isEmpty()) {
 				return false;

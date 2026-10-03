@@ -311,6 +311,11 @@ public class RobotContainer {
 				this::isShotPoseReady);
 	}
 
+	private Command createVisionInitializedAutonomousHubShot() {
+		return ShooterCommands.autonomousHubShot(drivetrain, hood, shooterFlywheel, bottomIndexer, topIndexer, conveyor,
+				vision::isPoseReady);
+	}
+
 	private boolean isShotPoseReady() {
 		// PathPlanner/Choreo explicitly seed autonomous odometry. Teleop requires a
 		// field-aligned vision source, with A+right-bumper available as an override.
@@ -345,7 +350,9 @@ public class RobotContainer {
 	}
 
 	public void configureAuto() {
-		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", createAutonomousHubShot());
+		// Unlike PathPlanner/Choreo routines, this stationary option does not reset
+		// odometry, so it must wait for an absolute vision-aligned field pose.
+		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", createVisionInitializedAutonomousHubShot());
 
 		autoChooser.addOption("Choreo LeftBlueBump + Shoot", createLeftBlueBumpShootAuto());
 		autoChooser.addOption("You better hit the A stop before this -Manny (none)", Commands.none());

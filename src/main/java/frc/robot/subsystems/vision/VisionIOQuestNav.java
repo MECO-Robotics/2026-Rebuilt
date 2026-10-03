@@ -134,7 +134,7 @@ public class VisionIOQuestNav implements VisionIO {
 							questNavData[i].pose().getTranslation().rotateBy(gyroResetAngle)
 									.plus(questNavRawToFieldCoordinateSystem),
 							questNavData[i].pose().getRotation().plus(gyroResetAngle)),
-					0.0, -1, 0.0, PoseObservationType.QUESTNAV);
+					0.0, -1, 0.0, PoseObservationType.QUESTNAV, new int[0]);
 
 			lastPose3d = inputs.poseObservations[i].pose();
 		}
@@ -144,9 +144,8 @@ public class VisionIOQuestNav implements VisionIO {
 	}
 
 	private PoseObservation[] filterAbsoluteObservations(VisionIOInputs absoluteInputs) {
-		return Arrays
-				.stream(absoluteInputs.poseObservations).filter(observation -> VisionObservationFilter
-						.isValid(observation, absoluteInputs.tagIds, referencePoseSupplier.get()))
+		return Arrays.stream(absoluteInputs.poseObservations)
+				.filter(observation -> VisionObservationFilter.isValid(observation, referencePoseSupplier.get()))
 				.toArray(PoseObservation[]::new);
 	}
 

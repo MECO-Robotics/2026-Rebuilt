@@ -16,10 +16,11 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import frc.robot.systemcheck.DeviceHealth;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -35,6 +36,7 @@ public class Vision extends SubsystemBase {
 	private boolean poseReady;
 	private boolean acceptedTagLocalization;
 	private double lastAbsoluteCorrectionSeconds = Double.NEGATIVE_INFINITY;
+	private final Map<Integer, Double> recentTagTimestamps = new HashMap<>();
 
 	/**
 	 * Creates the vision subsystem.
@@ -124,12 +126,14 @@ public class Vision extends SubsystemBase {
 	}
 
 	/**
-	 * Returns a defensive snapshot of every AprilTag ID currently reported by the
-	 * configured cameras.
+	 * Returns tags seen recently enough to bridge normal gaps between camera
+	 * frames.
 	 */
 	public int[] getVisibleTagIds() {
-		return IntStream.range(0, inputs.length).flatMap(index -> IntStream.of(inputs[index].tagIds)).distinct()
-				.toArray();
+		double nowSeconds = Timer.getFPGATimestamp();
+		return recentTagTimestamps.entrySet().stream()
+				.filter(entry -> nowSeconds - entry.getValue() <= visibleTagRetentionSeconds)
+				.mapToInt(Map.Entry::getKey).sorted().toArray();
 	}
 
 	/**
@@ -149,6 +153,13 @@ public class Vision extends SubsystemBase {
 			io[i].updateInputs(inputs[i]);
 			Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
 		}
+		double nowSeconds = Timer.getFPGATimestamp();
+		for (VisionIOInputsAutoLogged input : inputs) {
+			for (int tagId : input.tagIds) {
+				recentTagTimestamps.put(tagId, nowSeconds);
+			}
+		}
+		recentTagTimestamps.entrySet().removeIf(entry -> nowSeconds - entry.getValue() > visibleTagRetentionSeconds);
 
 		// Initialize logging values
 		List<Pose3d> allTagPoses = new LinkedList<>();
@@ -188,8 +199,7 @@ public class Vision extends SubsystemBase {
 				boolean rejectPose = isQuestNav
 						? !inputs[cameraIndex].poseInitialized
 								|| !VisionObservationFilter.isPoseInsideField(observation)
-						: !VisionObservationFilter.isValid(observation, inputs[cameraIndex].tagIds,
-								referencePoseSupplier.get());
+						: !VisionObservationFilter.isValid(observation, referencePoseSupplier.get());
 
 				// Add pose to log
 				robotPoses.add(observation.pose());

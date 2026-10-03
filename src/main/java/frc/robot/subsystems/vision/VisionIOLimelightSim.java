@@ -29,7 +29,7 @@ public class VisionIOLimelightSim extends VisionIOPhotonVisionSim {
 			PoseObservation observation = inputs.poseObservations[i];
 			limelightObservations[i] = new PoseObservation(observation.timestamp(), observation.pose(),
 					observation.ambiguity(), observation.tagCount(), observation.averageTagDistance(),
-					PoseObservationType.MEGATAG_1);
+					PoseObservationType.MEGATAG_1, observation.tagIds());
 		}
 		inputs.poseObservations = limelightObservations;
 	}

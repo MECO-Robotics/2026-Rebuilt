@@ -29,6 +29,7 @@ import frc.robot.commands.shooter.ShotSolution;
 import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
+import frc.robot.subsystems.vision.Vision;
 import frc.robot.systemcheck.SystemCheckManager;
 import frc.robot.systemcheck.SystemCheckRunState;
 import frc.robot.systemcheck.CheckStatus;
@@ -109,6 +110,7 @@ class RobotContainerSimulationTest {
 		verifyShooterPresetStopsOnRelease();
 		verifyAcquireDeploysAndStopsOnRelease();
 		verifyEjectStopsOnRelease();
+		verifyDefaultAutonomousRefusesUninitializedPose();
 		verifyAutonomousShotTimesOutSafely();
 		verifyForceFeedRequiresCoordinatedShot();
 		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
@@ -393,6 +395,34 @@ class RobotContainerSimulationTest {
 		DriverStationSim.setAutonomous(false);
 		DriverStationSim.notifyNewData();
 		DriverStation.refreshData();
+	}
+
+	private void verifyDefaultAutonomousRefusesUninitializedPose() {
+		try {
+			Vision vision = getField(container, "vision", Vision.class);
+			Field poseReady = Vision.class.getDeclaredField("poseReady");
+			poseReady.setAccessible(true);
+			poseReady.setBoolean(vision, false);
+
+			DriverStationSim.setAutonomous(true);
+			DriverStationSim.notifyNewData();
+			DriverStation.refreshData();
+			Command auto = container.getAutonomousCommand();
+			assertEquals("AutonomousHubShot", auto.getName(),
+					"The chooser default must be the coordinated standalone hub-shot command");
+			auto.initialize();
+			auto.execute();
+
+			assertNeutral(shooter, "Shooter during default auto without a field-aligned pose");
+			assertEquals(ShooterConstants.HOOD_PRESET.STOW.get(), hood.getDesiredPosition(), 1e-6,
+					"The default autonomous must keep the hood stowed until vision initializes the field pose");
+			auto.end(true);
+			DriverStationSim.setAutonomous(false);
+			DriverStationSim.notifyNewData();
+			DriverStation.refreshData();
+		} catch (ReflectiveOperationException exception) {
+			throw new AssertionError("Unable to set the simulated vision initialization state", exception);
+		}
 	}
 
 	private void verifySystemCheckInterlocksAndAbort() {

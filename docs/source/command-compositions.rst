@@ -90,7 +90,8 @@ The clearest example in this repo is the coordinated ``A`` button shot in ``Robo
 
 - when ``A`` is pressed inside the robot's own alliance zone, the alliance hub is selected even if no tag is visible
 - outside the alliance zone, a visible same-alliance-side AprilTag selects the alliance hub; otherwise the command
-  selects a safe ferry landing point inside the alliance zone
+  selects a safe ferry landing point inside the alliance zone; tag visibility is retained for 0.25 seconds to bridge
+  normal gaps between camera frames
 - red uses tags 1--16 for the hub-side visibility check and tags 6/7 only as trench-lane references; blue uses tags
   17--32 and tags 22/23 respectively
 - each alliance has two ferry landing points, one on each side of the field; both are 0.90 m inside the alliance-zone
@@ -104,6 +105,7 @@ The clearest example in this repo is the coordinated ``A`` button shot in ``Robo
 - hub shots use continuously calculated hood/flywheel values; ferry shots use the ferry hood position and calculate
   the flywheel speed needed to land on the carpet at the selected target
 - indexers and conveyor feed only after pose, range, speed, heading, hood, and flywheel readiness are stable
+- until a field pose is ready, the command holds its current heading, stops the flywheel, and keeps the hood stowed
 
 Before feeding, a ferry solution also checks the complete 47-inch trench depth using a conservative trajectory that
 accounts for FUEL radius, launch-angle/speed variation, and extra vertical clearance. It rejects a robot that is too
@@ -160,7 +162,9 @@ Examples of named commands in this repo include:
 hub-shot command used by teleop. Its PathPlanner groups use a three-second race window, so the command can wait up to
 two seconds for readiness and accumulate one second of valid feed time without extending the routine unnecessarily.
 The dashboard chooser defaults to the coordinated fender shot; the explicit ``none`` option remains available when no
-autonomous action is desired.
+autonomous action is desired. PathPlanner and Choreo routines explicitly seed odometry, while the standalone fender
+option has no trajectory from which to obtain a starting pose and therefore requires an accepted absolute vision
+alignment before it can aim or prepare the shooter.
 
 
 Guidelines

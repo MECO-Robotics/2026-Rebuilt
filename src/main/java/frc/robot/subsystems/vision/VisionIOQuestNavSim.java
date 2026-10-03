@@ -86,7 +86,7 @@ public class VisionIOQuestNavSim implements VisionIO {
 		inputs.lastAbsoluteObservationTimestamp = lastAbsoluteObservationTimestamp;
 		inputs.poseObservations = fieldAligned
 				? new PoseObservation[]{new PoseObservation(nowSeconds, new Pose3d(inertialPose), 0.0, -1, 0.0,
-						PoseObservationType.QUESTNAV)}
+						PoseObservationType.QUESTNAV, new int[0])}
 				: filteredAbsoluteObservations;
 		inputs.tagIds = absoluteInputs.tagIds.clone();
 
@@ -96,8 +96,8 @@ public class VisionIOQuestNavSim implements VisionIO {
 
 	private PoseObservation[] filterAbsoluteObservations(VisionIOInputs absoluteInputs) {
 		Pose2d referencePose = inertialPose != null ? inertialPose : groundTruthPoseSupplier.get();
-		return Arrays.stream(absoluteInputs.poseObservations).filter(
-				observation -> VisionObservationFilter.isValid(observation, absoluteInputs.tagIds, referencePose))
+		return Arrays.stream(absoluteInputs.poseObservations)
+				.filter(observation -> VisionObservationFilter.isValid(observation, referencePose))
 				.toArray(PoseObservation[]::new);
 	}
 }

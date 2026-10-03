@@ -276,6 +276,7 @@ public class ShooterCommands {
 		private boolean feeding;
 		private boolean feedStarted;
 		private boolean calibrationActive;
+		private boolean currentPoseReady;
 
 		ShotCoordinator(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter, Flywheel bottomIndexer,
 				Flywheel topIndexer, Flywheel conveyor, Supplier<ShotTarget> targetSupplier, BooleanSupplier poseReady,
@@ -310,6 +311,7 @@ public class ShooterCommands {
 			feeding = false;
 			feedStarted = false;
 			calibrationActive = false;
+			currentPoseReady = false;
 			readinessDebouncer.calculate(false);
 			totalTimer.restart();
 			feedTimer.stop();
@@ -327,17 +329,23 @@ public class ShooterCommands {
 			}
 			solution = ShooterCalculator.calculate(drive.getState().Pose, target);
 			calibrationActive = calibrationMode.getAsBoolean();
+			currentPoseReady = poseReady.getAsBoolean();
+			boolean forced = forceFeed.getAsBoolean();
 			if (calibrationActive) {
 				double hoodRotations = clampCalibrationHoodRotations(calibrationHoodRotations.getAsDouble());
 				double flywheelRps = clampCalibrationFlywheelRps(calibrationFlywheelRps.getAsDouble());
 				solution = new ShotSolution(solution.distanceMeters(), solution.targetHeading(), hoodRotations,
 						flywheelRps, solution.calibrated());
 			}
-			hood.setPosition(solution.hoodRotations());
-			shooter.setVelocity(solution.flywheelRotationsPerSecond());
+			if (currentPoseReady || forced) {
+				hood.setPosition(solution.hoodRotations());
+				shooter.setVelocity(solution.flywheelRotationsPerSecond());
+			} else {
+				hood.setPosition(HOOD_PRESET.STOW.get());
+				shooter.stop();
+			}
 
 			ShotReadiness rawReadiness = determineReadiness();
-			boolean forced = forceFeed.getAsBoolean();
 			boolean ready = forced || readinessDebouncer
 					.calculate(!ferrySideChanged && !calibrationActive && rawReadiness == ShotReadiness.READY);
 			readiness = forced
@@ -372,7 +380,7 @@ public class ShooterCommands {
 		}
 
 		private ShotReadiness determineReadiness() {
-			ShotReadiness evaluated = evaluateReadiness(poseReady.getAsBoolean(), solution, drive.getPhysicsSpeeds(),
+			ShotReadiness evaluated = evaluateReadiness(currentPoseReady, solution, drive.getPhysicsSpeeds(),
 					drive.getState().Pose.getRotation(), hood.getPosition(), shooter.getVelocity());
 			return target.mode() == ShotTarget.Mode.FERRY && evaluated == ShotReadiness.OUT_OF_RANGE
 					? ShotReadiness.UNSAFE_FERRY_PATH
@@ -403,6 +411,9 @@ public class ShooterCommands {
 		}
 
 		Rotation2d targetHeading() {
+			if (!currentPoseReady && !forceFeed.getAsBoolean()) {
+				return drive.getState().Pose.getRotation();
+			}
 			return solution != null
 					? solution.targetHeading()
 					: ShooterCalculator.calculate(drive.getState().Pose, currentAllianceHubTarget()).targetHeading();

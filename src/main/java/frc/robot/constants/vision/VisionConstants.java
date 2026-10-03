@@ -43,6 +43,8 @@ public class VisionConstants {
 	public static double maxZError = 0.75;
 	public static double maxSingleTagDistanceMeters = 3.5;
 	public static double maxSingleTagPoseDeltaMeters = 1.0;
+	/** Bridges normal camera-frame gaps without treating old tags as visible. */
+	public static double visibleTagRetentionSeconds = 0.25;
 	// Empty means all official field tags are eligible for odometry.
 	public static int[] odometryTagWhitelistRed = new int[]{};
 
