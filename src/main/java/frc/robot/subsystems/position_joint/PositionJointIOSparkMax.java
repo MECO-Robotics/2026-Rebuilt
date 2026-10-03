@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.RobotController;
 import frc.robot.constants.types.PositionJointConstants.GravityType;
+import frc.robot.constants.types.PositionJointConstants.EncoderType;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
 import frc.robot.util.encoder.AbsoluteCancoder;
@@ -32,6 +33,7 @@ import frc.robot.util.encoder.IAbsoluteEncoder;
 import frc.robot.util.feedforwards.PositionJointFeedforward;
 import frc.robot.util.feedforwards.TunableArmFeedforward;
 import frc.robot.util.feedforwards.TunableElevatorFeedforward;
+import frc.robot.systemcheck.MotorHealthData;
 import java.util.function.DoubleSupplier;
 
 /** SparkMax-backed implementation of {@link PositionJointIO}. */
@@ -58,6 +60,8 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 
 	private final Alert[] motorAlerts;
 	private final Alert encoderAlert;
+	private final double currentLimitAmps;
+	private final boolean externalEncoderExpected;
 
 	private final PositionJointFeedforward feedforward;
 	private final double feedforward_position_addition;
@@ -87,6 +91,8 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 			boolean isBrushless) {
 		this.name = name;
 		hardwareConfig = config;
+		currentLimitAmps = config.currentLimit();
+		externalEncoderExpected = config.encoderType() != EncoderType.INTERNAL;
 		this.externalFeedforward = externalFeedforward;
 
 		int numMotors = config.canIds().length;
@@ -201,6 +207,43 @@ public class PositionJointIOSparkMax implements PositionJointIO {
 				feedforward_position_addition = 0.0;
 			}
 		}
+	}
+
+	@Override
+	public void updateHealth(MotorHealthData health) {
+		double[] temperatures = new double[motors.length];
+		String[] faults = new String[motors.length];
+		for (int i = 0; i < motors.length; i++) {
+			temperatures[i] = motors[i].getMotorTemperature();
+			StringBuilder description = new StringBuilder();
+			if (motors[i].hasActiveFault()) {
+				description.append("Faults: ").append(motors[i].getFaults());
+			}
+			if (motors[i].hasActiveWarning()) {
+				if (!description.isEmpty()) {
+					description.append("; ");
+				}
+				description.append("Warnings: ").append(motors[i].getWarnings());
+			}
+			faults[i] = description.toString();
+		}
+		health.temperaturesCelsius = temperatures;
+		health.activeFaults = faults;
+	}
+
+	@Override
+	public double getCurrentLimitAmps() {
+		return currentLimitAmps;
+	}
+
+	@Override
+	public int[] getDeviceIds() {
+		return PositionJointIO.deviceIds(hardwareConfig);
+	}
+
+	@Override
+	public boolean isExternalEncoderExpected() {
+		return externalEncoderExpected;
 	}
 
 	public PositionJointIOSparkMax(String name, PositionJointHardwareConfig config) {

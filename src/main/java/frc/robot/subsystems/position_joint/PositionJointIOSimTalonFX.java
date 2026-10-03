@@ -231,6 +231,21 @@ public class PositionJointIOSimTalonFX implements PositionJointIO {
 		return name;
 	}
 
+	@Override
+	public double getCurrentLimitAmps() {
+		return config.currentLimit();
+	}
+
+	@Override
+	public int[] getDeviceIds() {
+		return PositionJointIO.deviceIds(config);
+	}
+
+	@Override
+	public boolean isExternalEncoderExpected() {
+		return config.encoderType() != frc.robot.constants.types.PositionJointConstants.EncoderType.INTERNAL;
+	}
+
 	private TalonFXConfiguration createLeaderConfig(PositionJointHardwareConfig config) {
 		TalonFXConfiguration leader = new TalonFXConfiguration()
 				.withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake)

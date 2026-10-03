@@ -65,7 +65,8 @@ public final class DrivetrainConstants {
 	public static final double DRIVE_KS = 0.1;
 	public static final double DRIVE_KV = 0.124;
 
-	public static final CANBus CAN_BUS = new CANBus("MECO CANIvore", "./logs/example.hoot");
+	public static final String CAN_BUS_NAME = "MECO CANIvore";
+	public static final CANBus CAN_BUS = new CANBus(CAN_BUS_NAME, "./logs/example.hoot");
 	public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(5.5);
 
 	public static final double kSimRobotMassKg = 53.0;
@@ -100,7 +101,7 @@ public final class DrivetrainConstants {
 	private static final Distance WHEEL_RADIUS = Inches.of(2);
 	private static final boolean INVERT_LEFT_SIDE = false;
 	private static final boolean INVERT_RIGHT_SIDE = true;
-	private static final int PIGEON_ID = 13;
+	public static final int PIGEON_ID = 13;
 
 	private static final MomentOfInertia STEER_INERTIA = KilogramSquareMeters.of(0.01);
 	private static final MomentOfInertia DRIVE_INERTIA = KilogramSquareMeters.of(0.01);

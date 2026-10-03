@@ -9,6 +9,9 @@ import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.commands.position_joint.PositionJointVelocityCommand;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
+import frc.robot.systemcheck.DeviceHealth;
+import frc.robot.systemcheck.MotorHealthData;
+import frc.robot.systemcheck.SystemCheckConstants;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -22,6 +25,7 @@ import org.littletonrobotics.junction.Logger;
 public class PositionJoint extends SubsystemBase {
 	private final PositionJointIO positionJoint;
 	private final PositionJointIOInputsAutoLogged inputs = new PositionJointIOInputsAutoLogged();
+	private final MotorHealthData motorHealth = new MotorHealthData();
 
 	private final String name;
 
@@ -48,6 +52,9 @@ public class PositionJoint extends SubsystemBase {
 	private boolean complianceActive = false;
 	private double complianceEnterTolerance;
 	private double complianceExitTolerance;
+	private boolean openLoopMode = false;
+	private double commandedVoltage = 0.0;
+	private double lastHealthPollSeconds = Double.NEGATIVE_INFINITY;
 
 	/**
 	 * Creates a position-joint subsystem.
@@ -95,13 +102,20 @@ public class PositionJoint extends SubsystemBase {
 	public void periodic() {
 		positionJoint.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
+		double nowSeconds = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+		if (nowSeconds - lastHealthPollSeconds >= SystemCheckConstants.HEALTH_POLL_PERIOD_SECONDS) {
+			positionJoint.updateHealth(motorHealth);
+			lastHealthPollSeconds = nowSeconds;
+		}
 
 		double positionError = Math.abs(inputs.outputPosition - goalPosition);
 		boolean atTarget = positionError < kTolerance.get();
 		boolean withinComplianceBand = complianceActive
 				? positionError <= complianceExitTolerance
 				: positionError <= complianceEnterTolerance;
-		if (complianceAfterTarget && withinComplianceBand) {
+		if (openLoopMode) {
+			positionJoint.setVoltage(commandedVoltage);
+		} else if (complianceAfterTarget && withinComplianceBand) {
 			if (!complianceActive) {
 				positionJoint.setBrakeMode(false);
 				positionJoint.setVoltage(0.0);
@@ -131,10 +145,16 @@ public class PositionJoint extends SubsystemBase {
 		Logger.recordOutput(name + "/isFinished", atTarget);
 		Logger.recordOutput(name + "/ComplianceAfterTarget", complianceAfterTarget);
 		Logger.recordOutput(name + "/ComplianceActive", complianceActive);
+		Logger.recordOutput(name + "/OpenLoopMode", openLoopMode);
+		Logger.recordOutput(name + "/CommandedVoltage", commandedVoltage);
+		Logger.recordOutput(name + "/Health/TemperaturesCelsius", motorHealth.temperaturesCelsius);
+		Logger.recordOutput(name + "/Health/ActiveFaults", motorHealth.activeFaults);
 	}
 
 	/** Sets a new goal position, clamped to configured mechanism limits. */
 	public void setPosition(double position) {
+		openLoopMode = false;
+		commandedVoltage = 0.0;
 		double clampedPosition = MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get());
 		if (Math.abs(clampedPosition - goalPosition) > 1e-9) {
 			disableComplianceHold();
@@ -186,7 +206,38 @@ public class PositionJoint extends SubsystemBase {
 
 	/** Applies open-loop voltage to the joint leader motor. */
 	public void setVoltage(double voltage) {
+		openLoopMode = true;
+		commandedVoltage = voltage;
+		disableComplianceHold();
 		positionJoint.setVoltage(voltage);
+	}
+
+	/** Leaves the joint in persistent open-loop neutral until a new goal is set. */
+	public void stop() {
+		setVoltage(0.0);
+	}
+
+	/** Returns true while direct-voltage control is active. */
+	public boolean isOpenLoopMode() {
+		return openLoopMode;
+	}
+
+	/** Returns the direct voltage most recently requested for the joint. */
+	public double getCommandedVoltage() {
+		return commandedVoltage;
+	}
+
+	/** Returns a defensive snapshot of fast telemetry and low-rate diagnostics. */
+	public DeviceHealth getHealthSnapshot() {
+		double[] normalizedVelocities = new double[inputs.motorVelocities.length];
+		for (int i = 0; i < normalizedVelocities.length; i++) {
+			normalizedVelocities[i] = Math.abs(inputs.motorVelocities[i]);
+		}
+		double[] currentLimits = new double[inputs.motorCurrents.length];
+		java.util.Arrays.fill(currentLimits, positionJoint.getCurrentLimitAmps());
+		return new DeviceHealth(name, inputs.motorsConnected, normalizedVelocities, inputs.motorCurrents, currentLimits,
+				motorHealth.temperaturesCelsius, positionJoint.isExternalEncoderExpected(), inputs.encoderConnected,
+				motorHealth.activeFaults, positionJoint.getDeviceIds());
 	}
 
 	/** Returns current measured mechanism position. */

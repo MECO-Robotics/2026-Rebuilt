@@ -4,6 +4,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.constants.Constants;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.constants.types.PositionJointConstants.PositionJointHardwareConfig;
+import frc.robot.systemcheck.MotorHealthData;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -51,6 +52,43 @@ public interface PositionJointIO {
 
 	/** Refreshes all sensor and diagnostic inputs. */
 	public default void updateInputs(PositionJointIOInputs inputs) {
+	}
+
+	/** Polls low-rate temperature and vendor fault telemetry. */
+	public default void updateHealth(MotorHealthData health) {
+		health.temperaturesCelsius = new double[0];
+		health.activeFaults = new String[0];
+	}
+
+	/** Returns the configured per-motor current limit. */
+	public default double getCurrentLimitAmps() {
+		return Double.POSITIVE_INFINITY;
+	}
+
+	/**
+	 * Returns configured motor CAN IDs followed by an external encoder ID, if any.
+	 */
+	public default int[] getDeviceIds() {
+		return new int[0];
+	}
+
+	/**
+	 * Builds the diagnostic ID list for a position-joint hardware configuration.
+	 */
+	public static int[] deviceIds(PositionJointHardwareConfig config) {
+		int encoderCount = config.encoderType() == frc.robot.constants.types.PositionJointConstants.EncoderType.INTERNAL
+				? 0
+				: 1;
+		int[] ids = java.util.Arrays.copyOf(config.canIds(), config.canIds().length + encoderCount);
+		if (encoderCount > 0) {
+			ids[ids.length - 1] = config.encoderID();
+		}
+		return ids;
+	}
+
+	/** Returns whether this joint is configured with an external encoder. */
+	public default boolean isExternalEncoderExpected() {
+		return false;
 	}
 
 	/** Commands joint position/velocity setpoints for closed-loop control. */

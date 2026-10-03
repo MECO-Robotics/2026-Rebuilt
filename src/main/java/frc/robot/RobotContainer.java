@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.drive.DriveCommands;
@@ -49,6 +50,8 @@ import frc.robot.subsystems.position_joint.PositionJointIO;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOQuestNav;
+import frc.robot.subsystems.vision.VisionIOQuestNavSim;
+import frc.robot.systemcheck.SystemCheckManager;
 import frc.robot.util.HubShiftUtil;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -81,6 +84,7 @@ public class RobotContainer {
 	private final PositionJoint hood;
 	private final Vision vision;
 	private final RobotSimulation simulation;
+	private final SystemCheckManager systemCheckManager;
 
 	// Controller
 	private final CommandXboxController controller = new CommandXboxController(0);
@@ -118,14 +122,18 @@ public class RobotContainer {
 				IntakeConstants.INTAKE_RACK_GAINS);
 		hood = new PositionJoint(PositionJointIO.fromSparkMax("Hood", ShooterConstants.HOOD_CONFIG),
 				ShooterConstants.HOOD_GAINS);
+		VisionIO absoluteVision = VisionIO.limelightMegaTag1WithMegaTag2SingleTagWithSim(VisionConstants.limelightName,
+				() -> drivetrain.getState().Pose.getRotation(), VisionConstants.robotToLimelight,
+				drivetrain::getPhysicsPose);
 		vision = new Vision(drivetrain::addVisionMeasurement, () -> drivetrain.getState().Pose,
-				new VisionIOQuestNav(VisionConstants.robotToQuest,
-						VisionIO.limelightMegaTag1WithMegaTag2SingleTagWithSim(VisionConstants.limelightName,
-								() -> drivetrain.getState().Pose.getRotation(), VisionConstants.robotToLimelight,
-								drivetrain::getPhysicsPose),
-						() -> drivetrain.getState().Pose));
+				VisionIO.fromMode(
+						() -> new VisionIOQuestNav(VisionConstants.robotToQuest, absoluteVision,
+								() -> drivetrain.getState().Pose),
+						() -> new VisionIOQuestNavSim(drivetrain::getPhysicsPose, absoluteVision)));
 		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
 		simulation.bindCommandHooks();
+		systemCheckManager = new SystemCheckManager(drivetrain, intakeRack, intakeRoller, conveyor, bottomIndexer,
+				topIndexer, hood, shooterFlywheel, vision, this::isShotPoseReady);
 		choreoAutoFactory = new AutoFactory(() -> drivetrain.getState().Pose, drivetrain::resetPose,
 				this::followChoreoSample, true, drivetrain);
 
@@ -151,28 +159,33 @@ public class RobotContainer {
 	 * passing it to a {@link edu.wpi.first.wpilibj2.command.button.JoystickButton}.
 	 */
 	private void configureButtonBindings() {
+		Trigger teleopEnabled = new Trigger(DriverStation::isTeleopEnabled);
 		// ************************** DRIVETRAIN KEYBINDS **************************
 		// Default command, normal field-relative drive
 		drivetrain.setDefaultCommand(
 				// Drivetrain will execute this command periodically
-				drivetrain
-						.applyRequest(() -> drive.withVelocityX(-controller.getLeftY() * DrivetrainConstants.MAX_SPEED) // Drive
+				drivetrain.applyRequest(() -> drive.withVelocityX(
+						DriverStation.isTeleopEnabled() ? -controller.getLeftY() * DrivetrainConstants.MAX_SPEED : 0.0) // Drive
 																														// forward
-								// with negative
-								// Y (forward)
-								.withVelocityY(-controller.getLeftX() * DrivetrainConstants.MAX_SPEED) // Drive left
-																										// with
-																										// negative X
-																										// (left)
-								.withRotationalRate(-controller.getRightX() * DrivetrainConstants.MAX_ANGULAR_RATE) // Drive
-																													// counterclockwise
-																													// with
-																													// negative
-																													// X
-																													// (left)
-						));
+						// with negative
+						// Y (forward)
+						.withVelocityY(DriverStation.isTeleopEnabled()
+								? -controller.getLeftX() * DrivetrainConstants.MAX_SPEED
+								: 0.0) // Drive left
+										// with
+										// negative X
+										// (left)
+						.withRotationalRate(DriverStation.isTeleopEnabled()
+								? -controller.getRightX() * DrivetrainConstants.MAX_ANGULAR_RATE
+								: 0.0) // Drive
+										// counterclockwise
+										// with
+										// negative
+										// X
+										// (left)
+				));
 		// Reset heading
-		controller.start().onTrue(DriveCommands.resetHeading(drivetrain));
+		controller.start().and(teleopEnabled).onTrue(DriveCommands.resetHeading(drivetrain));
 
 		// ************************** INTAKE KEYBINDS **************************
 		intakeRoller.setDefaultCommand(Flywheel.idle(intakeRoller));
@@ -180,25 +193,31 @@ public class RobotContainer {
 		topIndexer.setDefaultCommand(Flywheel.idle(topIndexer));
 		bottomIndexer.setDefaultCommand(Flywheel.idle(bottomIndexer));
 		shooterFlywheel.setDefaultCommand(Flywheel.idle(shooterFlywheel));
-		hood.setDefaultCommand(PositionJoint.holdPosition(hood, ShooterConstants.HOOD_PRESET.STOW));
+		hood.setDefaultCommand(Commands.run(() -> {
+			if (DriverStation.isTest()) {
+				hood.stop();
+			} else {
+				hood.setPosition(ShooterConstants.HOOD_PRESET.STOW.get());
+			}
+		}, hood));
 
 		// Deploy and run the complete acquisition path while held. On release, the
 		// motors idle and the rack finishes at its deployed setpoint.
-		controller.leftBumper()
-				.whileTrue(IntakeCommands.acquire(intakeRack, intakeRoller, conveyor, bottomIndexer, topIndexer))
-				.onFalse(IntakeCommands.deployRack(intakeRack));
-		controller.leftTrigger().whileTrue(IntakeCommands.eject(intakeRoller, conveyor, bottomIndexer, topIndexer));
+		controller.leftBumper().and(teleopEnabled)
+				.whileTrue(IntakeCommands.acquire(intakeRack, intakeRoller, conveyor, bottomIndexer, topIndexer));
+		controller.leftTrigger().and(teleopEnabled)
+				.whileTrue(IntakeCommands.eject(intakeRoller, conveyor, bottomIndexer, topIndexer));
 
 		// Deploy intake backup for intake skipping
-		coPilot.povUp().whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
+		coPilot.povUp().and(teleopEnabled).whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
 		// Stow intake backup for intake skipping
-		coPilot.povDown().whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor))
-				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
-		coPilot.povLeft().onTrue(IntakeCommands.deployRack(intakeRack));
-		coPilot.povRight().onTrue(IntakeCommands.stowRack(intakeRack));
+		coPilot.povDown().and(teleopEnabled)
+				.whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor));
+		coPilot.povLeft().and(teleopEnabled).onTrue(IntakeCommands.deployRack(intakeRack));
+		coPilot.povRight().and(teleopEnabled).onTrue(IntakeCommands.stowRack(intakeRack));
 
 		// ************************** SHOOTER KEYBINDS **************************
-		controller.a()
+		controller.a().and(teleopEnabled)
 				.whileTrue(ShooterCommands.coordinatedSelectedShot(drivetrain, hood, shooterFlywheel, bottomIndexer,
 						topIndexer, conveyor, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
 						this::selectDriverShotTarget, this::isShotPoseReady, controller.rightBumper()::getAsBoolean,
@@ -206,19 +225,20 @@ public class RobotContainer {
 						ShooterConstants.CALIBRATION.FLYWHEEL_RPS::get,
 						ready -> controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, ready ? 0.35 : 0.0)));
 
-		controller.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		controller.y().and(teleopEnabled).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
 
 		// Shooter presets
-		controller.b().or(coPilot.b()).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
+		controller.b().or(coPilot.b()).and(teleopEnabled).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		controller.x().or(coPilot.x()).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
+		controller.x().or(coPilot.x()).and(teleopEnabled).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
 
-		coPilot.y().whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		coPilot.y().and(teleopEnabled).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
 
-		coPilot.a().whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
+		coPilot.a().and(teleopEnabled).whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
 	}
 
 	public void updateDashboardOutputs() {
+		systemCheckManager.periodic();
 		HubShiftUtil.ShiftInfo shiftInfo = HubShiftUtil.getShiftedShiftInfo();
 
 		// Publish match time
@@ -239,6 +259,21 @@ public class RobotContainer {
 
 		SmartDashboard.putString("Shifts/Match Time Color", shiftInfo.matchTimeColor());
 		SmartDashboard.putString("Shifts/Shift Time Color", shiftInfo.shiftTimeColor());
+	}
+
+	/** Initializes the isolated Test-mode system-check controls. */
+	public void systemCheckTestInit() {
+		systemCheckManager.enterTestMode();
+	}
+
+	/** Immediately exits and neutralizes the Test-mode system check. */
+	public void systemCheckTestExit() {
+		systemCheckManager.exitTestMode();
+	}
+
+	/** Notifies diagnostics that the Driver Station disabled the robot. */
+	public void systemCheckDisabled() {
+		systemCheckManager.disabled();
 	}
 
 	private void registerNamedCommands() {

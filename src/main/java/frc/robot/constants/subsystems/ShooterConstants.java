@@ -145,18 +145,22 @@ public final class ShooterConstants {
 	static {
 		hoodMap.put(Units.Inches.of(46.003), Units.Rotations.of(0.000)); // Right in front of the hub
 		hoodMap.put(Units.Inches.of(123.24), Units.Rotations.of(0.019));
+		hoodMap.put(Units.Inches.of(144.60), Units.Rotations.of(0.020));
 		hoodMap.put(Units.Inches.of(153.64), Units.Rotations.of(0.020)); // Trench edge
 		hoodMap.put(Units.Inches.of(191.86), Units.Rotations.of(0.020));
 		hoodMap.put(Units.Inches.of(202.78), Units.Rotations.of(0.020));
+		hoodMap.put(Units.Inches.of(210.47), Units.Rotations.of(0.020));
 		hoodMap.put(Units.Inches.of(236), Units.Rotations.of(0.049));
 
-		// Values other than the measured 46.003, 153.64, 191.86, and 202.78 inch
-		// shots are provisional values scaled by 30/28.5 for the worn shooter tape.
+		// Values other than the measured shots are provisional values scaled by
+		// 30/28.5 for the worn shooter tape.
 		shooterVelocityMap.put(Units.Inches.of(46.003), Units.RevolutionsPerSecond.of(30));
 		shooterVelocityMap.put(Units.Inches.of(123.24), Units.RevolutionsPerSecond.of(37.9));
+		shooterVelocityMap.put(Units.Inches.of(144.60), Units.RevolutionsPerSecond.of(40.0));
 		shooterVelocityMap.put(Units.Inches.of(153.64), Units.RevolutionsPerSecond.of(41.0)); // Trench edge
 		shooterVelocityMap.put(Units.Inches.of(191.86), Units.RevolutionsPerSecond.of(46.0));
 		shooterVelocityMap.put(Units.Inches.of(202.78), Units.RevolutionsPerSecond.of(47.0));
+		shooterVelocityMap.put(Units.Inches.of(210.47), Units.RevolutionsPerSecond.of(47.0));
 		shooterVelocityMap.put(Units.Inches.of(236), Units.RevolutionsPerSecond.of(53.7));
 	}
 }

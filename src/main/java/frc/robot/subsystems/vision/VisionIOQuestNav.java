@@ -72,6 +72,8 @@ public class VisionIOQuestNav implements VisionIO {
 
 		boolean questConnected = connected();
 		inputs.connected = questConnected || absoluteInputs.connected;
+		inputs.inertialConnected = questConnected;
+		inputs.absoluteConnected = absoluteInputs.connected;
 		inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d(), 0);
 		inputs.tagIds = absoluteInputs.tagIds.clone();
 		inputs.lastAbsoluteObservationTimestamp = lastAbsoluteObservationTimestamp;

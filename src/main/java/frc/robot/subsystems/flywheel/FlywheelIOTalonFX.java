@@ -27,6 +27,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.systemcheck.MotorHealthData;
 import java.util.ArrayList;
 
 /** TalonFX-backed implementation of {@link FlywheelIO}. */
@@ -57,6 +58,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 	private final double[] motorCurrents;
 
 	private final Alert[] motorAlerts;
+	private final double currentLimitAmps;
+	private final int[] deviceIds;
 
 	private double velocitySetpoint = 0.0;
 
@@ -74,6 +77,8 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 		this.name = name;
 		CANBus canBus = new CANBus(config.canBus());
 		int numMotors = config.canIds().length;
+		currentLimitAmps = config.currentLimit();
+		deviceIds = config.canIds().clone();
 
 		assert numMotors > 0 && (numMotors == config.reversed().length);
 
@@ -124,6 +129,32 @@ public class FlywheelIOTalonFX implements FlywheelIO {
 			voltages.add(motors[i].getMotorVoltage());
 			currents.add(motors[i].getStatorCurrent());
 		}
+	}
+
+	@Override
+	public void updateHealth(MotorHealthData health) {
+		double[] temperatures = new double[motors.length];
+		String[] faults = new String[motors.length];
+		for (int i = 0; i < motors.length; i++) {
+			var temperature = motors[i].getDeviceTemp();
+			var faultField = motors[i].getFaultField();
+			BaseStatusSignal.refreshAll(temperature, faultField);
+			temperatures[i] = temperature.getValueAsDouble();
+			int faultMask = faultField.getValue();
+			faults[i] = faultMask == 0 ? "" : String.format("FaultField=0x%08X", faultMask);
+		}
+		health.temperaturesCelsius = temperatures;
+		health.activeFaults = faults;
+	}
+
+	@Override
+	public double getCurrentLimitAmps() {
+		return currentLimitAmps;
+	}
+
+	@Override
+	public int[] getDeviceIds() {
+		return deviceIds.clone();
 	}
 
 	@Override

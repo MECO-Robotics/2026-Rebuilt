@@ -17,6 +17,7 @@ Included are both beginner-oriented guides and more in-depth documentation for m
    judging
    command-compositions
    shooting-intake-checklist
+   system-check
    tune-iterate
    troubleshooting
    
@@ -39,6 +40,7 @@ Quick start
 - Basic information for judges: :doc:`judging`
 - Write commands to control the robot: :doc:`command-compositions`
 - Verify and calibrate intake/shooter behavior: :doc:`shooting-intake-checklist`
+- Run the safe on-blocks pit diagnostic: :doc:`system-check`
 - Troubleshooting: :doc:`troubleshooting`
 - Ready to improve behavior: :doc:`tune-iterate`
 

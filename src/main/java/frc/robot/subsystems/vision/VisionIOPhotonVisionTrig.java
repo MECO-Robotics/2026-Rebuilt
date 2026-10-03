@@ -40,6 +40,7 @@ public class VisionIOPhotonVisionTrig implements VisionIO {
 	@Override
 	public void updateInputs(VisionIOInputs inputs) {
 		inputs.connected = camera.isConnected();
+		inputs.absoluteConnected = inputs.connected;
 
 		// Read new camera observations
 		Set<Integer> tagIds = new HashSet<>();

@@ -32,6 +32,7 @@ public class VisionIOPhotonVision implements VisionIO {
 	@Override
 	public void updateInputs(VisionIOInputs inputs) {
 		inputs.connected = camera.isConnected();
+		inputs.absoluteConnected = inputs.connected;
 
 		// Read new camera observations
 		Set<Short> tagIds = new HashSet<>();

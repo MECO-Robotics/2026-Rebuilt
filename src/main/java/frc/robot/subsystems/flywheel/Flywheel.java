@@ -6,6 +6,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.flywheel.FlywheelVelocityCommand;
 import frc.robot.commands.flywheel.FlywheelVoltageCommand;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
+import frc.robot.systemcheck.DeviceHealth;
+import frc.robot.systemcheck.MotorHealthData;
+import frc.robot.systemcheck.SystemCheckConstants;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
@@ -20,6 +23,7 @@ import org.littletonrobotics.junction.Logger;
 public class Flywheel extends SubsystemBase {
 	private final FlywheelIO flywheel;
 	private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
+	private final MotorHealthData motorHealth = new MotorHealthData();
 
 	private final String name;
 
@@ -42,6 +46,7 @@ public class Flywheel extends SubsystemBase {
 	// Start neutral. Closed-loop zero velocity can actively drive/brake a real
 	// mechanism, so an uncommanded flywheel must remain in explicit 0 V mode.
 	private boolean voltageMode = true;
+	private double lastHealthPollSeconds = Double.NEGATIVE_INFINITY;
 
 	/**
 	 * Creates a flywheel subsystem.
@@ -81,8 +86,15 @@ public class Flywheel extends SubsystemBase {
 	public void periodic() {
 		flywheel.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
+		double nowSeconds = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+		if (nowSeconds - lastHealthPollSeconds >= SystemCheckConstants.HEALTH_POLL_PERIOD_SECONDS) {
+			flywheel.updateHealth(motorHealth);
+			lastHealthPollSeconds = nowSeconds;
+		}
 		Logger.recordOutput(name + "/CommandedVoltage", voltageSetpoint);
 		Logger.recordOutput(name + "/VelocityControlActive", !voltageMode);
+		Logger.recordOutput(name + "/Health/TemperaturesCelsius", motorHealth.temperaturesCelsius);
+		Logger.recordOutput(name + "/Health/ActiveFaults", motorHealth.activeFaults);
 
 		Command currentCommand = getCurrentCommand();
 		if (currentCommand == null || currentCommand == getDefaultCommand()) {
@@ -146,6 +158,18 @@ public class Flywheel extends SubsystemBase {
 	/** Returns whether the subsystem is currently using velocity control. */
 	public boolean isVelocityControlActive() {
 		return !voltageMode;
+	}
+
+	/** Returns a defensive snapshot of fast telemetry and low-rate diagnostics. */
+	public DeviceHealth getHealthSnapshot() {
+		double[] normalizedVelocities = new double[inputs.motorVelocities.length];
+		for (int i = 0; i < normalizedVelocities.length; i++) {
+			normalizedVelocities[i] = Math.abs(inputs.motorVelocities[i]);
+		}
+		double[] currentLimits = new double[inputs.motorCurrents.length];
+		java.util.Arrays.fill(currentLimits, flywheel.getCurrentLimitAmps());
+		return new DeviceHealth(name, inputs.motorsConnected, normalizedVelocities, inputs.motorCurrents, currentLimits,
+				motorHealth.temperaturesCelsius, false, true, motorHealth.activeFaults, flywheel.getDeviceIds());
 	}
 
 	/**

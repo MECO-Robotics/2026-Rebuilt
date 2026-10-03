@@ -16,6 +16,10 @@ public interface VisionIO {
 	public static class VisionIOInputs {
 		/** True when the camera/pipeline is connected and publishing data. */
 		public boolean connected = false;
+		/** Absolute AprilTag camera connection, when this is a composite source. */
+		public boolean absoluteConnected = false;
+		/** Inertial pose-source connection, when this is a composite source. */
+		public boolean inertialConnected = false;
 		/** Latest simple target observation (tx/ty) for servo use cases. */
 		public TargetObservation latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
 		/** Pose observations produced this cycle. */

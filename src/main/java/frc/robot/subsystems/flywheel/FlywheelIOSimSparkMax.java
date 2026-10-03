@@ -75,10 +75,11 @@ public class FlywheelIOSimSparkMax implements FlywheelIO {
 	@Override
 	public void updateInputs(FlywheelIOInputs inputs) {
 		double availableVoltage = RobotController.getBatteryVoltage();
+		double simulationBusVoltage = Math.max(0.1, availableVoltage);
 		double measuredPosition = plant.getAngularPositionRotations();
 		measuredVelocity = plant.getAngularVelocity().in(RotationsPerSecond);
 
-		leaderSim.iterate(measuredVelocity, availableVoltage, 0.02);
+		leaderSim.iterate(measuredVelocity, simulationBusVoltage, 0.02);
 		double appliedVoltage = leaderSim.getAppliedOutput() * availableVoltage;
 		plant.setInputVoltage(appliedVoltage);
 		plant.update(0.02);
@@ -137,5 +138,15 @@ public class FlywheelIOSimSparkMax implements FlywheelIO {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public double getCurrentLimitAmps() {
+		return config.currentLimit();
+	}
+
+	@Override
+	public int[] getDeviceIds() {
+		return config.canIds().clone();
 	}
 }

@@ -228,6 +228,21 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		return name;
 	}
 
+	@Override
+	public double getCurrentLimitAmps() {
+		return config.currentLimit();
+	}
+
+	@Override
+	public int[] getDeviceIds() {
+		return PositionJointIO.deviceIds(config);
+	}
+
+	@Override
+	public boolean isExternalEncoderExpected() {
+		return config.encoderType() != frc.robot.constants.types.PositionJointConstants.EncoderType.INTERNAL;
+	}
+
 	/** Builds the shared base configuration for the leader Spark Max. */
 	private SparkMaxConfig createLeaderConfig(PositionJointHardwareConfig config) {
 		SparkMaxConfig leader = new SparkMaxConfig();

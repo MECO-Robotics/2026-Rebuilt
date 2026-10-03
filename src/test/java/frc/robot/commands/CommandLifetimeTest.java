@@ -138,6 +138,29 @@ class CommandLifetimeTest {
 		scheduler.unregisterSubsystem(rack, intake, conveyor, bottom, top);
 	}
 
+	@Test
+	void positionJointEmergencyStopPersistsUntilAClosedLoopGoalIsRequested() {
+		FakePositionJointIO io = new FakePositionJointIO();
+		PositionJoint joint = new PositionJoint(io, ShooterConstants.HOOD_GAINS);
+
+		joint.setPosition(0.020);
+		joint.periodic();
+		assertTrue(io.positionControlActive);
+
+		joint.stop();
+		joint.periodic();
+		joint.periodic();
+		assertFalse(io.positionControlActive);
+		assertEquals(0.0, io.voltage, 1e-9);
+		assertTrue(joint.isOpenLoopMode());
+
+		joint.setPosition(0.010);
+		joint.periodic();
+		assertTrue(io.positionControlActive);
+		assertFalse(joint.isOpenLoopMode());
+		scheduler.unregisterSubsystem(joint);
+	}
+
 	private static final class FakeFlywheelIO implements FlywheelIO {
 		private final String name = "TestFlywheel" + NEXT_ID.incrementAndGet();
 		double velocity;
@@ -177,10 +200,23 @@ class CommandLifetimeTest {
 	private static final class FakePositionJointIO implements PositionJointIO {
 		private final String name = "TestJoint" + NEXT_ID.incrementAndGet();
 		double position;
+		double voltage;
+		boolean positionControlActive;
 
 		@Override
 		public void updateInputs(PositionJointIOInputs inputs) {
 			inputs.outputPosition = position;
+		}
+
+		@Override
+		public void setPosition(double position, double velocity) {
+			positionControlActive = true;
+		}
+
+		@Override
+		public void setVoltage(double voltage) {
+			this.voltage = voltage;
+			positionControlActive = false;
 		}
 
 		@Override

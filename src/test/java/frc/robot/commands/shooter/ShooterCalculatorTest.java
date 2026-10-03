@@ -82,6 +82,32 @@ class ShooterCalculatorTest {
 	}
 
 	@Test
+	void calculatesExact144InchCalibrationPoint() {
+		double distance = Units.inchesToMeters(144.60);
+		ShotSolution solution = ShooterCalculator.calculate(
+				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
+				Translation2d.kZero);
+
+		assertEquals(distance, solution.distanceMeters(), EPSILON);
+		assertEquals(0.020, solution.hoodRotations(), EPSILON);
+		assertEquals(40.0, solution.flywheelRotationsPerSecond(), EPSILON);
+		assertTrue(solution.calibrated());
+	}
+
+	@Test
+	void calculatesExact210InchCalibrationPoint() {
+		double distance = Units.inchesToMeters(210.47);
+		ShotSolution solution = ShooterCalculator.calculate(
+				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
+				Translation2d.kZero);
+
+		assertEquals(distance, solution.distanceMeters(), EPSILON);
+		assertEquals(0.020, solution.hoodRotations(), EPSILON);
+		assertEquals(47.0, solution.flywheelRotationsPerSecond(), EPSILON);
+		assertTrue(solution.calibrated());
+	}
+
+	@Test
 	void interpolatesBetweenCalibrationPoints() {
 		double distance = Units.inchesToMeters((46.003 + 123.24) / 2.0);
 		ShotSolution solution = ShooterCalculator.calculate(

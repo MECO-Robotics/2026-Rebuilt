@@ -108,6 +108,7 @@ public class VisionIOLimelight implements VisionIO {
 	public void updateInputs(VisionIOInputs inputs) {
 		long nowMicros = RobotController.getFPGATime();
 		inputs.connected = ((nowMicros - heartbeatSubscriber.getLastChange()) / 1000) < 250;
+		inputs.absoluteConnected = inputs.connected;
 
 		inputs.latestTargetObservation = new TargetObservation(Rotation2d.fromDegrees(txSubscriber.get()),
 				Rotation2d.fromDegrees(tySubscriber.get()), (int) tidSubscriber.get());

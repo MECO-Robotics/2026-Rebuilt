@@ -21,6 +21,7 @@ import frc.robot.simulation.LaunchedFuelSim;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
+import frc.robot.systemcheck.SystemCheckConstants;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
@@ -122,7 +123,7 @@ public class ShooterCommands {
 			Consumer<Boolean> readyFeedback) {
 		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, xSupplier, ySupplier,
 				ShooterCommands::currentAllianceHubTarget, poseReady, forceFeed, () -> false, () -> 0.0, () -> 0.0,
-				readyFeedback, false);
+				readyFeedback, false, 0.0, 0.0, 0.0, "CoordinatedShot");
 	}
 
 	/**
@@ -137,7 +138,8 @@ public class ShooterCommands {
 			DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback) {
 		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, xSupplier, ySupplier,
 				ShooterCommands::currentAllianceHubTarget, poseReady, forceFeed, calibrationMode,
-				calibrationHoodRotations, calibrationFlywheelRps, readyFeedback, false);
+				calibrationHoodRotations, calibrationFlywheelRps, readyFeedback, false, 0.0, 0.0, 0.0,
+				"CoordinatedShot");
 	}
 
 	/**
@@ -151,7 +153,7 @@ public class ShooterCommands {
 			DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback) {
 		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, xSupplier, ySupplier,
 				targetSupplier, poseReady, forceFeed, calibrationMode, calibrationHoodRotations, calibrationFlywheelRps,
-				readyFeedback, false);
+				readyFeedback, false, 0.0, 0.0, 0.0, "CoordinatedShot");
 	}
 
 	/**
@@ -163,28 +165,43 @@ public class ShooterCommands {
 		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, () -> 0.0, () -> 0.0,
 				ShooterCommands::currentAllianceHubTarget, poseReady, () -> false, () -> false, () -> 0.0, () -> 0.0,
 				ready -> {
-				}, true);
+				}, true, ShooterConstants.AUTO_READY_TIMEOUT_SECONDS, ShooterConstants.AUTO_FEED_SECONDS,
+				ShooterConstants.AUTO_TOTAL_TIMEOUT_SECONDS, "AutonomousHubShot");
+	}
+
+	/**
+	 * Controlled-area Test-mode shot. It prepares for at most five seconds and,
+	 * once normally ready, feeds for exactly three accumulated ready seconds.
+	 */
+	public static Command practiceHubShot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter,
+			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, BooleanSupplier poseReady,
+			Consumer<Boolean> feedingFeedback) {
+		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, () -> 0.0, () -> 0.0,
+				ShooterCommands::currentAllianceHubTarget, poseReady, () -> false, () -> false, () -> 0.0, () -> 0.0,
+				feedingFeedback, true, SystemCheckConstants.PRACTICE_READY_SECONDS,
+				SystemCheckConstants.PRACTICE_FEED_SECONDS, SystemCheckConstants.PRACTICE_TOTAL_SECONDS,
+				"SystemCheckPracticeHubShot");
 	}
 
 	private static Command coordinatedShot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter,
 			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, DoubleSupplier xSupplier,
 			DoubleSupplier ySupplier, Supplier<ShotTarget> targetSupplier, BooleanSupplier poseReady,
 			BooleanSupplier forceFeed, BooleanSupplier calibrationMode, DoubleSupplier calibrationHoodRotations,
-			DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback, boolean finishAfterFeed) {
+			DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback, boolean finishAfterFeed,
+			double readyTimeoutSeconds, double feedSeconds, double totalTimeoutSeconds, String commandName) {
 		ShotCoordinator coordinator = new ShotCoordinator(drive, hood, shooter, bottomIndexer, topIndexer, conveyor,
 				targetSupplier, poseReady, forceFeed, calibrationMode, calibrationHoodRotations, calibrationFlywheelRps,
-				readyFeedback, finishAfterFeed);
+				readyFeedback, finishAfterFeed, readyTimeoutSeconds, feedSeconds);
 
 		Command mechanisms = Commands.run(coordinator::execute, hood, shooter, bottomIndexer, topIndexer, conveyor)
 				.beforeStarting(coordinator::initialize).finallyDo(interrupted -> coordinator.end());
 		if (finishAfterFeed) {
-			mechanisms = mechanisms.until(coordinator::isAutoComplete)
-					.withTimeout(ShooterConstants.AUTO_TOTAL_TIMEOUT_SECONDS);
+			mechanisms = mechanisms.until(coordinator::isAutoComplete).withTimeout(totalTimeoutSeconds);
 		}
 
 		Command aim = DriveCommands.joystickDriveAtAngle(drive, xSupplier, ySupplier, coordinator::targetHeading,
 				DrivetrainConstants.MAX_SPEED);
-		return Commands.deadline(mechanisms, aim).withName(finishAfterFeed ? "AutonomousHubShot" : "CoordinatedShot");
+		return Commands.deadline(mechanisms, aim).withName(commandName);
 	}
 
 	private static ShotTarget currentAllianceHubTarget() {
@@ -247,6 +264,8 @@ public class ShooterCommands {
 		private final DoubleSupplier calibrationFlywheelRps;
 		private final Consumer<Boolean> readyFeedback;
 		private final boolean finishAfterFeed;
+		private final double readyTimeoutSeconds;
+		private final double feedSeconds;
 		private final Debouncer readinessDebouncer = new Debouncer(ShooterConstants.READY_DEBOUNCE_SECONDS);
 		private final Timer totalTimer = new Timer();
 		private final Timer feedTimer = new Timer();
@@ -261,7 +280,8 @@ public class ShooterCommands {
 		ShotCoordinator(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter, Flywheel bottomIndexer,
 				Flywheel topIndexer, Flywheel conveyor, Supplier<ShotTarget> targetSupplier, BooleanSupplier poseReady,
 				BooleanSupplier forceFeed, BooleanSupplier calibrationMode, DoubleSupplier calibrationHoodRotations,
-				DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback, boolean finishAfterFeed) {
+				DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback, boolean finishAfterFeed,
+				double readyTimeoutSeconds, double feedSeconds) {
 			this.drive = drive;
 			this.hood = hood;
 			this.shooter = shooter;
@@ -276,6 +296,8 @@ public class ShooterCommands {
 			this.calibrationFlywheelRps = calibrationFlywheelRps;
 			this.readyFeedback = readyFeedback;
 			this.finishAfterFeed = finishAfterFeed;
+			this.readyTimeoutSeconds = readyTimeoutSeconds;
+			this.feedSeconds = feedSeconds;
 		}
 
 		void initialize() {
@@ -377,8 +399,7 @@ public class ShooterCommands {
 		}
 
 		boolean isAutoComplete() {
-			return feedTimer.hasElapsed(ShooterConstants.AUTO_FEED_SECONDS)
-					|| (!feedStarted && totalTimer.hasElapsed(ShooterConstants.AUTO_READY_TIMEOUT_SECONDS));
+			return feedTimer.hasElapsed(feedSeconds) || (!feedStarted && totalTimer.hasElapsed(readyTimeoutSeconds));
 		}
 
 		Rotation2d targetHeading() {

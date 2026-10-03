@@ -168,11 +168,12 @@ Copy every accepted distance, hood, and flywheel value into ``ShooterConstants.h
 complete.
 
 The current measured real-robot references with the worn shooter tape are 46.003 inches at 0.000 hood rotations and
-30 RPS, 153.64 inches at 0.020 rotations and 41 RPS, 191.86 inches at 0.020 rotations and 46 RPS, and 202.78 inches at
-0.020 rotations and 47 RPS. Other RPS entries are provisional values scaled by ``30 / 28.5`` and must be validated on
-the real robot; their hood entries were not shifted because the real and simulated close-shot hood positions are both
-zero. The projectile simulation applies the matching ``28.5 / 30`` surface-efficiency scale so those adjusted RPS
-values retain the previously calibrated simulated launch speed instead of overshooting the hub.
+30 RPS, 144.60 inches at 0.020 rotations and 40 RPS, 153.64 inches at 0.020 rotations and 41 RPS, 191.86 inches at
+0.020 rotations and 46 RPS, 202.78 inches at 0.020 rotations and 47 RPS, and 210.47 inches at 0.020 rotations and 47
+RPS. Other RPS entries are provisional values scaled by ``30 / 28.5`` and must be validated on the real robot; their
+hood entries were not shifted because the real and simulated close-shot hood positions are both zero. The projectile
+simulation applies the matching ``28.5 / 30`` surface-efficiency scale so those adjusted RPS values retain the
+previously calibrated simulated launch speed instead of overshooting the hub.
 
 The hood encoder measures increasing deflection down from vertical, while MapleSim measures projectile pitch up from
 horizontal. The simulation converts between these references: ``0.000`` hood rotations produces a nominal 74-degree

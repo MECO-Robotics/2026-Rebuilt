@@ -79,6 +79,8 @@ public class VisionIOQuestNavSim implements VisionIO {
 		}
 
 		inputs.connected = true;
+		inputs.inertialConnected = true;
+		inputs.absoluteConnected = absoluteInputs.connected;
 		inputs.latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
 		inputs.poseInitialized = fieldAligned;
 		inputs.lastAbsoluteObservationTimestamp = lastAbsoluteObservationTimestamp;

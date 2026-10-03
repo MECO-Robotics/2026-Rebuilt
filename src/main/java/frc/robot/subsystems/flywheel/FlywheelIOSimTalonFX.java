@@ -20,6 +20,7 @@ import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.system.plant.LinearSystemId;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.BatterySim;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
@@ -42,6 +43,9 @@ public class FlywheelIOSimTalonFX implements FlywheelIO {
 	private final double[] motorVoltages;
 	private final double[] motorCurrents;
 	private double velocitySetpoint = 0.0;
+	private double commandedVoltage = 0.0;
+	private FlywheelGains gains = new FlywheelGains(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+	private boolean velocityControlActive;
 
 	public FlywheelIOSimTalonFX(String name, FlywheelHardwareConfig config, DCMotor simMotorModel) {
 		this.name = name;
@@ -87,7 +91,9 @@ public class FlywheelIOSimTalonFX implements FlywheelIO {
 		double measuredPosition = plant.getAngularPositionRotations();
 		double measuredVelocity = plant.getAngularVelocity().in(RotationsPerSecond);
 		syncTalonSimState(measuredPosition, measuredVelocity, availableVoltage);
-		double appliedVoltage = motors[0].getSimState().getMotorVoltage();
+		double appliedVoltage = velocityControlActive
+				? calculateClosedLoopVoltage(measuredVelocity, availableVoltage)
+				: MathUtil.clamp(commandedVoltage, -availableVoltage, availableVoltage);
 		plant.setInputVoltage(appliedVoltage);
 		plant.update(0.02);
 
@@ -123,17 +129,22 @@ public class FlywheelIOSimTalonFX implements FlywheelIO {
 	@Override
 	public void setVelocity(double velocity) {
 		velocitySetpoint = velocity;
+		velocityControlActive = true;
+		commandedVoltage = 0.0;
 		motors[0].setControl(velocityRequest.withVelocity(velocity));
 	}
 
 	@Override
 	public void setVoltage(double voltage) {
 		velocitySetpoint = 0.0;
+		velocityControlActive = false;
+		commandedVoltage = voltage;
 		motors[0].setControl(voltageRequest.withOutput(voltage));
 	}
 
 	@Override
 	public void setGains(FlywheelGains gains) {
+		this.gains = gains;
 		motors[0].getConfigurator().apply(new Slot0Configs().withKP(gains.kP()).withKI(gains.kI()).withKD(gains.kD())
 				.withKV(gains.kV()).withKA(gains.kA()).withKS(gains.kS()));
 		motors[0].getConfigurator().apply(new MotionMagicConfigs().withMotionMagicAcceleration(gains.kMaxAccel()));
@@ -143,6 +154,23 @@ public class FlywheelIOSimTalonFX implements FlywheelIO {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public double getCurrentLimitAmps() {
+		return config.currentLimit();
+	}
+
+	@Override
+	public int[] getDeviceIds() {
+		return config.canIds().clone();
+	}
+
+	private double calculateClosedLoopVoltage(double measuredVelocity, double availableVoltage) {
+		double sign = Math.signum(velocitySetpoint);
+		double output = gains.kP() * (velocitySetpoint - measuredVelocity) + gains.kS() * sign
+				+ gains.kV() * velocitySetpoint;
+		return MathUtil.clamp(output, -availableVoltage, availableVoltage);
 	}
 
 	private void syncTalonSimState(double mechanismPosition, double mechanismVelocity, double supplyVoltage) {

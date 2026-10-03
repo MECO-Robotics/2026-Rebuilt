@@ -3,6 +3,8 @@ package frc.robot.subsystems.drive;
 import static edu.wpi.first.units.Units.*;
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -20,15 +22,18 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -37,6 +42,8 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.drive.DrivetrainConstants.TunerSwerveDrivetrain;
+import frc.robot.systemcheck.DeviceHealth;
+import frc.robot.systemcheck.SystemCheckConstants;
 import frc.robot.util.SysIdResultsPublisher;
 import frc.robot.util.SysIdRunStats;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
@@ -68,6 +75,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	/** Swerve request to apply during robot-centric path following */
 	private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 	private final SwerveRequest.Idle m_idleRequest = new SwerveRequest.Idle();
+	private final SwerveRequest.PointWheelsAt m_pointWheelsRequest = new SwerveRequest.PointWheelsAt();
+	private final SwerveRequest.SwerveDriveBrake m_brakeRequest = new SwerveRequest.SwerveDriveBrake();
+	private final SwerveRequest.RobotCentric m_systemCheckDriveRequest = new SwerveRequest.RobotCentric();
 
 	/* Swerve requests to apply during SysId characterization */
 	private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
@@ -80,6 +90,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private final SwerveDriveSimulation m_mapleDriveSimulation;
 	private final SimulatedMotorController.GenericMotorController[] m_mapleDriveControllers;
 	private final SimulatedMotorController.GenericMotorController[] m_mapleSteerControllers;
+	private boolean m_systemCheckSimOverride;
+	private double m_systemCheckSimDriveTarget;
+	private Rotation2d[] m_systemCheckSimAngleTargets = new Rotation2d[0];
 	private final LoggedTunableNumber m_driveKP = new LoggedTunableNumber("Drivetrain/DriveGains/kP",
 			DrivetrainConstants.DRIVE_KP);
 	private final LoggedTunableNumber m_driveKI = new LoggedTunableNumber("Drivetrain/DriveGains/kI",
@@ -101,6 +114,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private final LoggedTunableNumber m_autoRotationKP = new LoggedTunableNumber("Drivetrain/AutoRotation/kP", 10.0);
 	private final LoggedTunableNumber m_autoRotationKI = new LoggedTunableNumber("Drivetrain/AutoRotation/kI", 0.0);
 	private final LoggedTunableNumber m_autoRotationKD = new LoggedTunableNumber("Drivetrain/AutoRotation/kD", 0.0);
+	private List<DeviceHealth> m_healthSnapshots = List.of();
+	private double m_lastHealthPollSeconds = Double.NEGATIVE_INFINITY;
 
 	/*
 	 * SysId routine for characterizing translation. This is used to find PID gains
@@ -282,7 +297,90 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	/** Stops the drivetrain by applying an idle swerve request. */
 	public void stop() {
+		m_systemCheckSimOverride = false;
 		setControl(m_idleRequest);
+	}
+
+	/** Points every module at the supplied angle for a suspended-wheel check. */
+	public void systemCheckPointWheels(Rotation2d direction) {
+		setSystemCheckSimTargets(0.0, createUniformModuleAngles(direction));
+		setControl(m_pointWheelsRequest.withModuleDirection(direction));
+	}
+
+	/** Holds the normal swerve X-lock pattern. */
+	public void systemCheckXLock() {
+		Rotation2d[] angles = new Rotation2d[getModuleLocations().length];
+		for (int i = 0; i < angles.length; i++) {
+			angles[i] = getModuleLocations()[i].getAngle();
+		}
+		setSystemCheckSimTargets(0.0, angles);
+		setControl(m_brakeRequest);
+	}
+
+	/** Drives robot-forward at a limited speed for an on-blocks diagnostic. */
+	public void systemCheckDrive(double metersPerSecond) {
+		setSystemCheckSimTargets(metersPerSecond, createUniformModuleAngles(Rotation2d.kZero));
+		setControl(m_systemCheckDriveRequest.withVelocityX(metersPerSecond).withVelocityY(0.0).withRotationalRate(0.0));
+	}
+
+	private Rotation2d[] createUniformModuleAngles(Rotation2d direction) {
+		Rotation2d[] angles = new Rotation2d[m_moduleConstants.length];
+		java.util.Arrays.fill(angles, direction);
+		return angles;
+	}
+
+	private void setSystemCheckSimTargets(double driveMetersPerSecond, Rotation2d[] angleTargets) {
+		if (m_mapleDriveSimulation == null) {
+			return;
+		}
+		m_systemCheckSimOverride = true;
+		m_systemCheckSimDriveTarget = driveMetersPerSecond;
+		m_systemCheckSimAngleTargets = angleTargets.clone();
+	}
+
+	/**
+	 * Returns the best available physical module-state snapshot for diagnostics.
+	 *
+	 * <p>
+	 * MapleSim is the drivetrain plant in simulation, so its state is authoritative
+	 * there. On the robot, the normal Phoenix odometry state remains authoritative.
+	 */
+	public SwerveModuleState[] getSystemCheckModuleStates() {
+		if (m_mapleDriveSimulation != null) {
+			SwerveModuleSimulation[] modules = m_mapleDriveSimulation.getModules();
+			SwerveModuleState[] states = new SwerveModuleState[modules.length];
+			for (int i = 0; i < modules.length; i++) {
+				SwerveModuleState state = modules[i].getCurrentState();
+				states[i] = new SwerveModuleState(state.speedMetersPerSecond, state.angle);
+			}
+			return states;
+		}
+		return copyModuleStates(getState().ModuleStates);
+	}
+
+	/** Returns a defensive copy of Phoenix's optimized module targets. */
+	public SwerveModuleState[] getSystemCheckModuleTargets() {
+		if (m_systemCheckSimOverride && m_systemCheckSimAngleTargets.length == m_moduleConstants.length) {
+			SwerveModuleState[] targets = new SwerveModuleState[m_systemCheckSimAngleTargets.length];
+			for (int i = 0; i < targets.length; i++) {
+				targets[i] = new SwerveModuleState(m_systemCheckSimDriveTarget, m_systemCheckSimAngleTargets[i]);
+			}
+			return targets;
+		}
+		return copyModuleStates(getState().ModuleTargets);
+	}
+
+	private static SwerveModuleState[] copyModuleStates(SwerveModuleState[] source) {
+		SwerveModuleState[] copy = new SwerveModuleState[source.length];
+		for (int i = 0; i < source.length; i++) {
+			copy[i] = new SwerveModuleState(source[i].speedMetersPerSecond, source[i].angle);
+		}
+		return copy;
+	}
+
+	/** Returns the latest 2 Hz module and gyro health snapshots. */
+	public List<DeviceHealth> getHealthSnapshots() {
+		return List.copyOf(m_healthSnapshots);
 	}
 
 	/**
@@ -406,6 +504,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		}
 
 		var state = getState();
+		double nowSeconds = Timer.getFPGATimestamp();
+		if (nowSeconds - m_lastHealthPollSeconds >= SystemCheckConstants.HEALTH_POLL_PERIOD_SECONDS) {
+			updateHealthSnapshots(state);
+			m_lastHealthPollSeconds = nowSeconds;
+		}
 
 		/*
 		 * Periodically try to apply the operator perspective. If we haven't applied the
@@ -420,6 +523,57 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		}
 		telemetry.telemeterize(state, getPhysicsPose(), getPhysicsSpeeds(), getRawGyroHeading());
 
+	}
+
+	private void updateHealthSnapshots(SwerveDriveState state) {
+		List<DeviceHealth> snapshots = new ArrayList<>();
+		if (RobotBase.isSimulation()) {
+			for (int i = 0; i < state.ModuleStates.length; i++) {
+				var module = m_moduleConstants[i];
+				snapshots.add(new DeviceHealth("SwerveModule" + i, new boolean[]{true, true},
+						new double[]{Math.abs(state.ModuleStates[i].speedMetersPerSecond), 0.0}, new double[]{0.0, 0.0},
+						new double[]{SystemCheckConstants.SWERVE_DRIVE_CURRENT_LIMIT_AMPS,
+								SystemCheckConstants.SWERVE_STEER_CURRENT_LIMIT_AMPS},
+						new double[]{}, true, true, new String[]{},
+						new int[]{module.DriveMotorId, module.SteerMotorId, module.EncoderId}));
+			}
+			snapshots.add(new DeviceHealth("Pigeon2", new boolean[]{true},
+					new double[]{state.Pose.getRotation().getRadians()}, new double[]{}, new double[]{}, new double[]{},
+					false, true, new String[]{}, new int[]{getPigeon2().getDeviceID()}));
+			m_healthSnapshots = List.copyOf(snapshots);
+			return;
+		}
+		for (int i = 0; i < m_moduleConstants.length; i++) {
+			var module = getModule(i);
+			var driveTemperature = module.getDriveMotor().getDeviceTemp().refresh();
+			var steerTemperature = module.getSteerMotor().getDeviceTemp().refresh();
+			var driveCurrent = module.getDriveMotor().getSupplyCurrent().refresh();
+			var steerCurrent = module.getSteerMotor().getSupplyCurrent().refresh();
+			var steerVelocity = module.getSteerMotor().getVelocity().refresh();
+			var encoderPosition = module.getEncoder().getAbsolutePosition().refresh();
+			var driveFaults = module.getDriveMotor().getFaultField().refresh();
+			var steerFaults = module.getSteerMotor().getFaultField().refresh();
+			double driveSpeed = i < state.ModuleStates.length ? state.ModuleStates[i].speedMetersPerSecond : Double.NaN;
+			snapshots.add(new DeviceHealth("SwerveModule" + i,
+					new boolean[]{driveTemperature.getStatus().isOK(), steerTemperature.getStatus().isOK()},
+					new double[]{Math.abs(driveSpeed), Math.abs(steerVelocity.getValueAsDouble())},
+					new double[]{driveCurrent.getValueAsDouble(), steerCurrent.getValueAsDouble()},
+					new double[]{SystemCheckConstants.SWERVE_DRIVE_CURRENT_LIMIT_AMPS,
+							SystemCheckConstants.SWERVE_STEER_CURRENT_LIMIT_AMPS},
+					new double[]{driveTemperature.getValueAsDouble(), steerTemperature.getValueAsDouble()}, true,
+					encoderPosition.getStatus().isOK(),
+					new String[]{driveFaults.getValue() == 0 ? "" : "Drive faults: " + driveFaults.getValue(),
+							steerFaults.getValue() == 0 ? "" : "Steer faults: " + steerFaults.getValue()},
+					new int[]{m_moduleConstants[i].DriveMotorId, m_moduleConstants[i].SteerMotorId,
+							m_moduleConstants[i].EncoderId}));
+		}
+		var yaw = getPigeon2().getYaw().refresh();
+		var pigeonFaults = getPigeon2().getFaultField().refresh();
+		snapshots.add(new DeviceHealth("Pigeon2", new boolean[]{yaw.getStatus().isOK()},
+				new double[]{yaw.getValueAsDouble()}, new double[]{}, new double[]{}, new double[]{}, false, true,
+				new String[]{pigeonFaults.getValue() == 0 ? "" : "Pigeon faults: " + pigeonFaults.getValue()},
+				new int[]{getPigeon2().getDeviceID()}));
+		m_healthSnapshots = List.copyOf(snapshots);
 	}
 
 	private void updateTunableGains() {
@@ -693,6 +847,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 	private void applyPhoenixOutputsToMaple() {
 		double supplyVoltage = RobotController.getBatteryVoltage();
+		SwerveModuleSimulation[] mapleModules = m_mapleDriveSimulation.getModules();
 		for (int i = 0; i < m_moduleConstants.length; i++) {
 			TalonFXSimState driveSimState = getModule(i).getDriveMotor().getSimState();
 			TalonFXSimState steerSimState = getModule(i).getSteerMotor().getSimState();
@@ -702,11 +857,32 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 			steerSimState.setSupplyVoltage(supplyVoltage);
 			encoderSimState.setSupplyVoltage(supplyVoltage);
 
-			m_mapleDriveControllers[i].requestVoltage(Volts.of(driveSimState.getMotorVoltage()));
-			m_mapleSteerControllers[i].requestVoltage(Volts.of(steerSimState.getMotorVoltage()));
+			if (m_systemCheckSimOverride && m_systemCheckSimAngleTargets.length == m_moduleConstants.length) {
+				applySystemCheckSimOutputs(i, mapleModules[i], supplyVoltage);
+			} else {
+				m_mapleDriveControllers[i].requestVoltage(Volts.of(driveSimState.getMotorVoltage()));
+				m_mapleSteerControllers[i].requestVoltage(Volts.of(steerSimState.getMotorVoltage()));
+			}
 		}
 
 		getPigeon2().getSimState().setSupplyVoltage(supplyVoltage);
+	}
+
+	private void applySystemCheckSimOutputs(int moduleIndex, SwerveModuleSimulation module, double supplyVoltage) {
+		SwerveModuleState current = module.getCurrentState();
+		double angleErrorRadians = MathUtil
+				.angleModulus(m_systemCheckSimAngleTargets[moduleIndex].minus(current.angle).getRadians());
+		double steerVelocityRadiansPerSecond = module.getSteerAbsoluteEncoderSpeed().in(RadiansPerSecond);
+		double steerVolts = MathUtil.clamp(6.0 * angleErrorRadians - 0.15 * steerVelocityRadiansPerSecond,
+				-supplyVoltage, supplyVoltage);
+
+		double driveFeedforwardVolts = 12.0 * m_systemCheckSimDriveTarget
+				/ DrivetrainConstants.kSpeedAt12Volts.in(MetersPerSecond);
+		double driveVolts = MathUtil.clamp(
+				driveFeedforwardVolts + 2.0 * (m_systemCheckSimDriveTarget - current.speedMetersPerSecond),
+				-supplyVoltage, supplyVoltage);
+		m_mapleDriveControllers[moduleIndex].requestVoltage(Volts.of(driveVolts));
+		m_mapleSteerControllers[moduleIndex].requestVoltage(Volts.of(steerVolts));
 	}
 
 	private void updatePhoenixSimSignals() {
