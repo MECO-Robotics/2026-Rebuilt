@@ -5,6 +5,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.shooter.ShooterCalculator;
@@ -76,16 +78,28 @@ public class DriveCommands {
 			Translation2d linearVelocity = getLinearVelocityFromJoysticks(xSupplier.getAsDouble(),
 					ySupplier.getAsDouble()).times(maxSpeed);
 			double maxAngularRate = Math.min(ANGLE_MAX_VELOCITY.get(), DrivetrainConstants.MAX_ANGULAR_RATE);
+			Rotation2d operatorRelativeTarget = toOperatorPerspectiveTarget(rotationSupplier.get(),
+					DriverStation.getAlliance().orElse(Alliance.Blue));
 
 			drivetrain.setControl(
 					driveAtAngleRequest.withVelocityX(linearVelocity.getX()).withVelocityY(linearVelocity.getY())
-							.withTargetDirection(rotationSupplier.get()).withMaxAbsRotationalRate(maxAngularRate));
+							.withTargetDirection(operatorRelativeTarget).withMaxAbsRotationalRate(maxAngularRate));
 
 		}, drivetrain)
 
 				// Reset PID controller when command starts
 				.beforeStarting(() -> driveAtAngleRequest.HeadingController.reset());
 
+	}
+
+	/**
+	 * Converts an absolute field heading into the operator-relative heading
+	 * expected by CTRE's facing-angle request. CTRE adds the configured Red
+	 * operator perspective inside the request, so pre-subtract it to avoid applying
+	 * the alliance rotation twice while preserving driver-relative translation.
+	 */
+	static Rotation2d toOperatorPerspectiveTarget(Rotation2d fieldTarget, Alliance alliance) {
+		return alliance == Alliance.Red ? fieldTarget.minus(Rotation2d.kPi) : fieldTarget;
 	}
 
 	public static Command joystickAimToHub(CommandSwerveDrivetrain drive, DoubleSupplier xSupplier,

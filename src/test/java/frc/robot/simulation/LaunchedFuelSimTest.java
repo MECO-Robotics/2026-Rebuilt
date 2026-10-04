@@ -17,10 +17,10 @@ class LaunchedFuelSimTest {
 	private static final double EPSILON = 1e-9;
 
 	@Test
-	void shooterOriginUsesCadThroatWhileLaunchDirectionRemainsModelForward() {
+	void shooterOriginAndLaunchDirectionUseTheIntakeSide() {
 		assertTrue(MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT.getX() < 0.0);
-		assertEquals(0.0, MapleSimConstants.SHOOTER_YAW_OFFSET.getRadians(), EPSILON);
-		assertEquals(0.0, LaunchedFuelSim.getShooterFacing(Rotation2d.kZero).getRadians(), EPSILON);
+		assertEquals(Math.PI, Math.abs(MapleSimConstants.SHOOTER_YAW_OFFSET.getRadians()), EPSILON);
+		assertEquals(Math.PI, Math.abs(LaunchedFuelSim.getShooterFacing(Rotation2d.kZero).getRadians()), EPSILON);
 	}
 
 	@Test
@@ -42,7 +42,7 @@ class LaunchedFuelSimTest {
 	}
 
 	@Test
-	void drivetrainAimAndRemyModelForwardRemainSeparatedByHalfTurn() {
+	void autoAimPointsTheSimulatedProjectileAtTheTarget() {
 		Translation2d target = Translation2d.kZero;
 		Pose2d unalignedPose = new Pose2d(2.0, 0.0, Rotation2d.kZero);
 		Rotation2d alignedHeading = ShooterCalculator.calculate(unalignedPose, target).targetHeading();
@@ -53,7 +53,7 @@ class LaunchedFuelSimTest {
 		Rotation2d targetBearing = target.minus(shooterExit).getAngle();
 		Rotation2d projectileHeading = LaunchedFuelSim.getShooterFacing(alignedPose.getRotation());
 
-		assertEquals(Math.PI, Math.abs(projectileHeading.minus(targetBearing).getRadians()), EPSILON);
+		assertEquals(0.0, projectileHeading.minus(targetBearing).getRadians(), EPSILON);
 	}
 
 	@Test

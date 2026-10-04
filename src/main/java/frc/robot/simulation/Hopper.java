@@ -72,10 +72,10 @@ public class Hopper {
 		// Triangular layer spacing for sphere stacking (instead of axis-aligned cube
 		// packing).
 		double verticalPitch = Math.sqrt(3.0) / 2.0 * diameter;
-		double intakeFrontProjection = Math.max(0.0, intakeExtensionSupplier.getAsDouble())
-				* Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS);
-		double minX = MapleSimConstants.HOPPER_MIN_X_METERS;
-		double maxX = MapleSimConstants.HOPPER_MAX_X_METERS + intakeFrontProjection;
+		double intakeProjectionX = Math.max(0.0, intakeExtensionSupplier.getAsDouble())
+				* Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS) * MapleSimConstants.SHOOTER_YAW_OFFSET.getCos();
+		double minX = MapleSimConstants.HOPPER_MIN_X_METERS + Math.min(0.0, intakeProjectionX);
+		double maxX = MapleSimConstants.HOPPER_MAX_X_METERS + Math.max(0.0, intakeProjectionX);
 		double rightLimit = MapleSimConstants.HOPPER_RIGHT_LIMIT_Y_METERS;
 		double leftLimit = MapleSimConstants.HOPPER_LEFT_LIMIT_Y_METERS;
 		double bottomLimit = MapleSimConstants.HOPPER_BOTTOM_LIMIT_Z_METERS;

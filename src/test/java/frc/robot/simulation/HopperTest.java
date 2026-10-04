@@ -11,18 +11,18 @@ class HopperTest {
 	private static final double EPSILON = 1e-9;
 
 	@Test
-	void storedFuelStaysOnAndExtendsTowardRobotPositiveX() {
+	void storedFuelStaysOnAndExtendsTowardIntakeAtRobotNegativeX() {
 		Hopper stowed = new Hopper(() -> 100, () -> 0.0, Pose2d::new);
 		Hopper deployed = new Hopper(() -> 100, () -> 0.30, Pose2d::new);
 		Pose3d[] stowedPoses = stowed.getGamePiecePoses();
 		Pose3d[] deployedPoses = deployed.getGamePiecePoses();
 
 		assertTrue(stowedPoses.length > 0);
-		assertTrue(Arrays.stream(stowedPoses).allMatch(pose -> pose.getX() >= -EPSILON));
-		assertTrue(maxX(deployedPoses) > maxX(stowedPoses));
+		assertTrue(Arrays.stream(stowedPoses).allMatch(pose -> pose.getX() <= EPSILON));
+		assertTrue(minX(deployedPoses) < minX(stowedPoses));
 	}
 
-	private static double maxX(Pose3d[] poses) {
-		return Arrays.stream(poses).mapToDouble(Pose3d::getX).max().orElseThrow();
+	private static double minX(Pose3d[] poses) {
+		return Arrays.stream(poses).mapToDouble(Pose3d::getX).min().orElseThrow();
 	}
 }

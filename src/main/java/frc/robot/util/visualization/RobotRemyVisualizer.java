@@ -46,6 +46,8 @@ public class RobotRemyVisualizer {
 	 * Pushes latest robot + component transforms for custom-asset visualization.
 	 */
 	public void periodic() {
+		double intakeExtensionX = intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS)
+				* MapleSimConstants.SHOOTER_YAW_OFFSET.getCos();
 		Logger.recordOutput(ROBOT_POSE_LOG_KEY, new Pose3d(robotPoseSupplier.get()));
 		Logger.recordOutput(COMPONENT_POSES_LOG_KEY, new Pose3d[]{
 				// 0: flywheel
@@ -55,15 +57,13 @@ public class RobotRemyVisualizer {
 				Pose3d.kZero.rotateAround(SHOOTER_OFFSET,
 						new Rotation3d(0.0, Units.rotationsToRadians(hoodRotations.getAsDouble()), 0.0)),
 				// 2: intake rack
-				new Pose3d(intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS), 0,
+				new Pose3d(intakeExtensionX, 0,
 						-intakeRackRotations.getAsDouble() * Math.sin(MapleSimConstants.INTAKE_ANGLE_RADIANS),
 						Rotation3d.kZero),
 				// 3: intake kicker bar
-				new Pose3d(intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS), 0.0,
-						0.0, Rotation3d.kZero),
+				new Pose3d(intakeExtensionX, 0.0, 0.0, Rotation3d.kZero),
 				// 4: hopper
-				new Pose3d(intakeRackRotations.getAsDouble() * Math.cos(MapleSimConstants.INTAKE_ANGLE_RADIANS), 0.0,
-						0.0, Rotation3d.kZero),
+				new Pose3d(intakeExtensionX, 0.0, 0.0, Rotation3d.kZero),
 				// 5: climber
 				Pose3d.kZero.rotateAround(CLIMBER_OFFSET,
 						new Rotation3d(0.0, -Units.rotationsToRadians(climberRotations.getAsDouble()), 0.0))});

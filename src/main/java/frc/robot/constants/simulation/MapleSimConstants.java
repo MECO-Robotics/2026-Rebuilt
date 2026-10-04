@@ -55,10 +55,10 @@ public final class MapleSimConstants {
 	/** Maximum number of fuel gamepieces the simulated hopper can hold. */
 	public static final int HOPPER_MAX_BALLS = 54;
 
-	/** Hopper bounds in robot X coordinates; the intake/shooter direction is +X. */
-	public static final double HOPPER_MIN_X_METERS = 0.0;
+	/** Hopper bounds in robot X coordinates; the intake/shooter direction is -X. */
+	public static final double HOPPER_MIN_X_METERS = -0.33;
 
-	public static final double HOPPER_MAX_X_METERS = 0.33;
+	public static final double HOPPER_MAX_X_METERS = 0.0;
 
 	/** Right-to-left hopper limits in robot Y coordinates. */
 	public static final double HOPPER_RIGHT_LIMIT_Y_METERS = -0.34;

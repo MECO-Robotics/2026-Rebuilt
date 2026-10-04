@@ -25,22 +25,22 @@ public final class ShooterConstants {
 	}
 
 	/**
-	 * Shooter throat location behind robot center, expressed in robot coordinates.
-	 * The projectile still travels toward model-forward (+X).
+	 * Shooter throat location on the intake side of robot center, expressed in
+	 * drivetrain coordinates.
 	 */
 	public static final Translation2d SHOOTER_EXIT_TRANSLATION = new Translation2d(-0.19, 0.0);
 
 	/**
-	 * The intake, shooter, and Limelight face robot-forward (+X). This fixed
-	 * physical offset must not change with alliance.
+	 * The intake, shooter, and Limelight face the drivetrain's -X side. This fixed
+	 * physical offset is the same on both alliances.
 	 */
-	public static final Rotation2d SHOOTER_YAW_OFFSET = Rotation2d.kZero;
+	public static final Rotation2d SHOOTER_YAW_OFFSET = Rotation2d.kPi;
 
 	/**
-	 * The drivetrain heading convention is 180 degrees from the Remy
-	 * model/mechanism-forward convention used by intake and projectile simulation.
+	 * Heading offset used to point the physical shooter at a field target. Keep
+	 * this identical to the fixed shooter/camera yaw offset.
 	 */
-	public static final Rotation2d AUTO_AIM_HEADING_OFFSET = Rotation2d.kPi;
+	public static final Rotation2d AUTO_AIM_HEADING_OFFSET = SHOOTER_YAW_OFFSET;
 	/** Physical shooter release height used by the ferry landing calculation. */
 	public static final double SHOOTER_RELEASE_HEIGHT_METERS = 0.45;
 	/** Main shooter-wheel surface speed produced by one flywheel RPS. */

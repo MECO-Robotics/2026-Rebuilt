@@ -74,6 +74,17 @@ and autonomous timing. Use each flywheel subsystem's ``CommandedVoltage`` and ``
 verify command output in simulation; vendor-reported ``MotorVoltages`` can be stale on simulated custom CAN buses. It
 does not replace the real-robot motor-direction, roller-contact, current-limit, or shot-table checks below.
 
+Run the complete Java 17 simulation test suite once for each alliance before deploying direction or aiming changes::
+
+  FRC_TEST_ALLIANCE=blue ./gradlew clean test
+  FRC_TEST_ALLIANCE=red ./gradlew clean test
+
+The full robot integration test rejects an unknown value and confirms that Driver Station simulation actually applied
+the requested alliance before exercising the driver bindings, coordinated shooting, autonomous shooting, and system
+check flow. In the same robot process it also disables, switches to the opposite alliance, re-enables, and returns to
+the starting alliance. Each transition must update path mirroring, driver-forward field direction, the selected hub,
+and the physical intake/shooter-side aim without rebuilding or restarting robot code.
+
 
 Low-voltage mechanism verification
 ----------------------------------
@@ -120,10 +131,11 @@ The current hardware configuration contains no separate agitator motor. The top 
 agitation/feed assembly. If a separate motor exists on the robot, stop here and add its CAN configuration and command
 requirement before operating the coordinated shot.
 
-The intake, shooter, and Limelight face the Remy model's ``+X`` direction. The shooter throat is behind robot center at
-``-0.19 m`` X, but its projectile travels toward model-forward. The drivetrain heading convention is 180 degrees
-opposite that model-forward direction, so ``AUTO_AIM_HEADING_OFFSET`` is fixed at 180 degrees while
-``SHOOTER_YAW_OFFSET`` remains zero. Neither offset changes with alliance; only the hub coordinates do.
+The intake, shooter, and Limelight face the drivetrain's ``-X`` side on both alliances. The shooter throat is at
+``-0.19 m`` X and its projectile travels in that same direction. ``SHOOTER_YAW_OFFSET`` and
+``AUTO_AIM_HEADING_OFFSET`` are therefore both fixed at 180 degrees; neither may become alliance-dependent. The
+shooter exit, intake simulation, hopper extension, Remy component motion, projectile origin, and Limelight transform
+must all remain on that same physical side of the robot.
 
 
 Touch-and-own intake calibration

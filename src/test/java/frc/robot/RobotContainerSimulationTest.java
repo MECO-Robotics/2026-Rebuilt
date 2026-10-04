@@ -10,9 +10,11 @@ import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.simulation.RoboRioSim;
@@ -21,6 +23,7 @@ import edu.wpi.first.wpilibj.simulation.XboxControllerSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.commands.drive.DriveCommands;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
@@ -37,6 +40,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,7 +72,9 @@ class RobotContainerSimulationTest {
 		RobotSimulation.configureArenaOverride(frc.robot.constants.Constants.Mode.SIM);
 
 		DriverStationSim.resetData();
-		DriverStationSim.setAllianceStationId(AllianceStationID.Blue1);
+		Alliance configuredAlliance = configuredTestAlliance();
+		DriverStationSim.setAllianceStationId(
+				configuredAlliance == Alliance.Red ? AllianceStationID.Red1 : AllianceStationID.Blue1);
 		DriverStationSim.setDsAttached(true);
 		DriverStationSim.setAutonomous(false);
 		DriverStationSim.setEnabled(true);
@@ -79,6 +85,8 @@ class RobotContainerSimulationTest {
 		controller.setPOVCount(1);
 		controller.notifyNewData();
 		DriverStation.refreshData();
+		assertEquals(configuredAlliance, DriverStation.getAlliance().orElseThrow(),
+				"The simulation must use the requested FRC_TEST_ALLIANCE");
 		setCalibrationInputs(false, 0.000, 30.0);
 
 		container = new RobotContainer();
@@ -90,6 +98,17 @@ class RobotContainerSimulationTest {
 		intakeRack = getField(container, "intakeRack", PositionJoint.class);
 		hood = getField(container, "hood", PositionJoint.class);
 		runCycles(SETTLE_CYCLES);
+	}
+
+	private static Alliance configuredTestAlliance() {
+		String requestedAlliance = System.getenv().getOrDefault("FRC_TEST_ALLIANCE", "blue").trim()
+				.toLowerCase(Locale.ROOT);
+		return switch (requestedAlliance) {
+			case "blue" -> Alliance.Blue;
+			case "red" -> Alliance.Red;
+			default -> throw new IllegalArgumentException(
+					"FRC_TEST_ALLIANCE must be either 'blue' or 'red', but was '" + requestedAlliance + "'");
+		};
 	}
 
 	@AfterEach
@@ -107,6 +126,7 @@ class RobotContainerSimulationTest {
 		assertTrue(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel").length > 0,
 				"Simulation should populate field fuel before autonomous is started");
 		verifyDriveBindingMovesRobot();
+		verifyAllianceCanChangeWithoutRestartingSimulation();
 		verifyShooterPresetStopsOnRelease();
 		verifyAcquireDeploysAndStopsOnRelease();
 		verifyEjectStopsOnRelease();
@@ -163,6 +183,76 @@ class RobotContainerSimulationTest {
 		Pose2d endingPose = container.drivetrain.getPhysicsPose();
 		assertTrue(endingPose.getTranslation().getDistance(startingPose.getTranslation()) > 0.05,
 				() -> "Drive binding did not move the simulated robot: start=" + startingPose + ", end=" + endingPose);
+	}
+
+	private void verifyAllianceCanChangeWithoutRestartingSimulation() {
+		Alliance startingAlliance = DriverStation.getAlliance().orElseThrow();
+		Alliance oppositeAlliance = startingAlliance == Alliance.Blue ? Alliance.Red : Alliance.Blue;
+
+		verifyAllianceDriveAndAim(startingAlliance);
+		verifyAllianceDriveAndAim(oppositeAlliance);
+		verifyAllianceDriveAndAim(startingAlliance);
+	}
+
+	private void verifyAllianceDriveAndAim(Alliance alliance) {
+		DriverStationSim.setEnabled(false);
+		DriverStationSim
+				.setAllianceStationId(alliance == Alliance.Red ? AllianceStationID.Red1 : AllianceStationID.Blue1);
+		DriverStationSim.notifyNewData();
+		DriverStation.refreshData();
+		runCycles(5);
+
+		assertEquals(alliance, DriverStation.getAlliance().orElseThrow(),
+				"Driver Station alliance must update while disabled without restarting robot code");
+		assertEquals(FieldConstants.Hub.hubPosition(alliance), FieldConstants.Hub.hubPosition(),
+				"Pose-based shooting must select the newly selected alliance hub");
+
+		DriverStationSim.setAutonomous(false);
+		DriverStationSim.setTest(false);
+		DriverStationSim.setEnabled(true);
+		DriverStationSim.notifyNewData();
+		DriverStation.refreshData();
+
+		Pose2d driveStart = new Pose2d(Units.inchesToMeters(325.0), Units.inchesToMeters(80.0), Rotation2d.kZero);
+		container.drivetrain.resetPose(driveStart);
+		container.drivetrain.stop();
+		runCycles(SETTLE_CYCLES);
+		controller.setLeftY(-0.65);
+		runCycles(60);
+		controller.setLeftY(0.0);
+		runCycles(SETTLE_CYCLES);
+
+		double driveDeltaX = container.drivetrain.getPhysicsPose().getX() - driveStart.getX();
+		double expectedDirection = alliance == Alliance.Blue ? 1.0 : -1.0;
+		assertTrue(driveDeltaX * expectedDirection > 0.05,
+				() -> alliance + " driver-forward movement used the wrong field direction: deltaX=" + driveDeltaX);
+		assertEquals(alliance == Alliance.Red, container.drivetrain.shouldFlipAutoPath(),
+				"Path mirroring must follow the newly selected alliance");
+
+		Translation2d hub = FieldConstants.Hub.hubPosition(alliance);
+		double hubToRobotDirection = alliance == Alliance.Blue ? 1.0 : -1.0;
+		Pose2d aimStart = new Pose2d(hub.plus(new Translation2d(hubToRobotDirection * 2.0, 0.8)),
+				Rotation2d.fromDegrees(90.0));
+		container.drivetrain.resetPose(aimStart);
+		container.drivetrain.stop();
+		runCycles(SETTLE_CYCLES);
+
+		Command aim = DriveCommands.autoAimToHub(container.drivetrain,
+				frc.robot.constants.drive.DrivetrainConstants.MAX_SPEED);
+		scheduler.schedule(aim);
+		runCycles(150);
+		Pose2d aimedPose = container.drivetrain.getState().Pose;
+		Pose2d shooterPose = aimedPose
+				.transformBy(new Transform2d(ShooterConstants.SHOOTER_EXIT_TRANSLATION, Rotation2d.kZero));
+		Rotation2d targetBearing = hub.minus(shooterPose.getTranslation()).getAngle();
+		Rotation2d physicalShooterHeading = aimedPose.getRotation().plus(ShooterConstants.SHOOTER_YAW_OFFSET);
+		double aimErrorDegrees = Math.abs(physicalShooterHeading.minus(targetBearing).getDegrees());
+		scheduler.cancel(aim);
+		container.drivetrain.stop();
+
+		assertTrue(aimErrorDegrees <= ShooterConstants.HEADING_READY_TOLERANCE_DEGREES,
+				() -> alliance + " physical shooter aimed away from its hub after a live alliance change: error="
+						+ aimErrorDegrees + " degrees, pose=" + aimedPose + ", hub=" + hub);
 	}
 
 	private void verifyShooterPresetStopsOnRelease() {
@@ -300,13 +390,16 @@ class RobotContainerSimulationTest {
 
 	private void verifyAutonomousShotTimesOutSafely() {
 		Translation2d hub = FieldConstants.Hub.hubPosition();
+		Alliance alliance = DriverStation.getAlliance().orElseThrow();
 		// Use a calibrated mid-range point so static-friction chatter at the hood's
 		// zero stop
 		// cannot make this whole-robot timing test nondeterministic.
 		double shooterDistanceMeters = Units.inchesToMeters(123.24);
 		double robotCenterDistanceMeters = shooterDistanceMeters - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX();
-		container.drivetrain
-				.resetPose(new Pose2d(hub.plus(new Translation2d(robotCenterDistanceMeters, 0.0)), Rotation2d.kZero));
+		double fieldDirection = alliance == Alliance.Blue ? 1.0 : -1.0;
+		Rotation2d startingHeading = alliance == Alliance.Blue ? Rotation2d.kZero : Rotation2d.kPi;
+		container.drivetrain.resetPose(new Pose2d(
+				hub.plus(new Translation2d(fieldDirection * robotCenterDistanceMeters, 0.0)), startingHeading));
 		container.drivetrain.stop();
 		runCycles(50);
 

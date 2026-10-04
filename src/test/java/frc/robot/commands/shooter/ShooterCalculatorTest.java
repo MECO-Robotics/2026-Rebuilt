@@ -8,6 +8,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.constants.FieldConstants.Hub;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.constants.vision.VisionConstants;
 import org.junit.jupiter.api.Test;
@@ -133,13 +135,32 @@ class ShooterCalculatorTest {
 	}
 
 	@Test
-	void autoAimCompensatesForDrivetrainHeadingBeingOppositeModelForward() {
+	void autoAimCompensatesForShooterFacingRobotNegativeX() {
 		Pose2d robotPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
-		ShotSolution aimForward = ShooterCalculator.calculate(robotPose, new Translation2d(-3.0, 0.0));
-		ShotSolution modelForward = ShooterCalculator.calculate(robotPose, new Translation2d(3.0, 0.0));
+		ShotSolution aimTowardShooterSide = ShooterCalculator.calculate(robotPose, new Translation2d(-3.0, 0.0));
+		ShotSolution aimTowardDrivetrainPositiveX = ShooterCalculator.calculate(robotPose, new Translation2d(3.0, 0.0));
 
-		assertEquals(0.0, aimForward.targetHeading().getRadians(), EPSILON);
-		assertEquals(Math.PI, Math.abs(modelForward.targetHeading().getRadians()), EPSILON);
+		assertEquals(0.0, aimTowardShooterSide.targetHeading().getRadians(), EPSILON);
+		assertEquals(Math.PI, Math.abs(aimTowardDrivetrainPositiveX.targetHeading().getRadians()), EPSILON);
+	}
+
+	@Test
+	void physicalShooterFacesItsAllianceHubFromBothSidesOfTheField() {
+		for (Alliance alliance : Alliance.values()) {
+			Translation2d hub = Hub.hubPosition(alliance);
+			boolean blue = alliance == Alliance.Blue;
+			Rotation2d expectedRobotHeading = blue ? Rotation2d.kZero : Rotation2d.kPi;
+			double robotX = hub.getX() + (blue ? 2.0 : -2.0);
+			Pose2d robotPose = new Pose2d(robotX, hub.getY(), expectedRobotHeading);
+			ShotSolution solution = ShooterCalculator.calculate(robotPose, hub);
+			Pose2d shooterPose = robotPose.transformBy(new edu.wpi.first.math.geometry.Transform2d(
+					ShooterConstants.SHOOTER_EXIT_TRANSLATION, Rotation2d.kZero));
+			Rotation2d targetBearing = hub.minus(shooterPose.getTranslation()).getAngle();
+			Rotation2d physicalShooterFacing = solution.targetHeading().plus(ShooterConstants.SHOOTER_YAW_OFFSET);
+
+			assertEquals(0.0, physicalShooterFacing.minus(targetBearing).getRadians(), EPSILON,
+					alliance + " shooter must face its selected hub");
+		}
 	}
 
 	@Test
