@@ -50,6 +50,10 @@ public class SystemCheckManager {
 	private final SystemCheckFaultInjection faultInjection = new SystemCheckFaultInjection();
 	private final SystemCheckCanMonitor canMonitor = new SystemCheckCanMonitor();
 	private final SystemCheckReportWriter reportWriter;
+	private SystemCheckLiveServer liveServer;
+	private String liveError = "";
+	private double lastLivePublish = Double.NEGATIVE_INFINITY;
+	private Evaluation liveEvaluation;
 
 	private final BooleanEntry setupConfirmed = booleanEntry("Controls/SetupConfirmed");
 	private final BooleanEntry armed = booleanEntry("Controls/Armed");
@@ -129,6 +133,11 @@ public class SystemCheckManager {
 			reportError = "Could not initialize report service: " + exception.getMessage();
 		}
 		reportWriter = createdReportWriter;
+		try {
+			liveServer = SystemCheckLiveServer.shared();
+		} catch (IOException | RuntimeException exception) {
+			liveError = "Live monitor unavailable: " + exception.getMessage();
+		}
 		pollCanBuses();
 		buildStages();
 		publish();
@@ -319,6 +328,7 @@ public class SystemCheckManager {
 			visionAcceptedDuringStage |= vision.hasAcceptedTagLocalization();
 		}
 		Evaluation current = stage.evaluation().get();
+		liveEvaluation = current;
 		if (current.status() == CheckStatus.FAIL) {
 			if (!Double.isFinite(stageFailureConditionSince)) {
 				stageFailureConditionSince = stageTimer.get();
@@ -342,6 +352,7 @@ public class SystemCheckManager {
 	private void startStage(int index) {
 		neutralizeAll();
 		stageIndex = index;
+		liveEvaluation = null;
 		rackStageStartPosition = intakeRack.getPosition();
 		rackStageTravel = 0;
 		stageTimer.restart();
@@ -1273,7 +1284,36 @@ public class SystemCheckManager {
 		}
 	}
 
+	private void publishLive() {
+		String host = RobotBase.isReal() ? "roborio-8324-frc.local" : "localhost";
+		dashboard.getEntry("Live/Url").setString("http://" + host + ":" + SystemCheckLiveServer.PORT + "/");
+		dashboard.getEntry("Live/Error").setString(liveError);
+		double now = Timer.getFPGATimestamp();
+		if (liveServer == null || now - lastLivePublish < 0.1)
+			return;
+		lastLivePublish = now;
+		boolean running = runState == SystemCheckRunState.RUNNING;
+		Stage active = running && stageIndex >= 0 && stageIndex < stages.size() ? stages.get(stageIndex) : null;
+		List<CheckResult> rows = new ArrayList<>();
+		for (Stage stage : stages) {
+			CheckResult row = results.getOrDefault(stage.id(), CheckResult.notRun(stage.id(), stage.subsystem()));
+			if (stage == active && liveEvaluation != null) {
+				row = new CheckResult(stage.id(), stage.subsystem(), CheckStatus.RUNNING, liveEvaluation.explanation(),
+						stageTimer.get(), liveEvaluation.measurements());
+			}
+			rows.add(row);
+		}
+		liveServer.update(runId, runState.name(), overallStatus().name(), active == null ? "" : active.id(),
+				blockingReason, runTimer.get(), active == null ? 0 : stageTimer.get(),
+				active == null ? 0 : active.durationSeconds(),
+				runState == SystemCheckRunState.COUNTDOWN
+						? Math.max(0, SystemCheckConstants.COUNTDOWN_SECONDS - stageTimer.get())
+						: 0,
+				setupConfirmed.get(), armed.get(), practiceStatus.name(), rows);
+	}
+
 	private void publish() {
+		publishLive();
 		faultInjection.log();
 		String currentStep = stageIndex >= 0 && stageIndex < stages.size() ? stages.get(stageIndex).id() : "None";
 		double progress = stages.isEmpty() ? 0.0 : Math.max(0.0, Math.min(1.0, (stageIndex + 1.0) / stages.size()));

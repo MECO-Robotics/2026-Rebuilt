@@ -206,3 +206,37 @@ Use this order when reviewing a failed check:
 
 Save the HTML/JSON report and robot log for the failed rack stages. Real deployment is accepted only after observing
 safe/deploy/retract motion and stopping on Disable/cancellation. Passing desktop simulation cannot certify this.
+
+
+Watching the check live
+-----------------------
+
+Open the read-only **Live system check** page in a browser while robot code is running:
+
+* Robot: ``http://roborio-8324-frc.local:5806/`` (fallback: ``http://10.83.24.2:5806/``).
+* Desktop simulation: ``http://localhost:5806/``.
+* The same address is published under ``SystemCheck/Live/Url``; server startup errors appear in ``SystemCheck/Live/Error``.
+
+Keep this page beside AdvantageScope. Start the check with the existing Test-mode setup/arm/start controls.
+The page shows the countdown, run time, active-stage time budget, completed-stage progress, setup/arm status,
+practice-shot status, and ordered stage results. Expand **Measurements** for live targets and feedback.
+**Follow active stage** optionally scrolls to each new stage. Saved report downloads remain on port 5805.
+
+A running stage's observations are provisional; only its completed result is a pass/fail decision.
+The page refreshes about four times per second from memory-backed snapshots published at up to 10 Hz.
+If snapshots stop for two seconds or the network connection fails, it flags stale data and dims the last results.
+The viewer cannot arm, start, abort, or move mechanisms. Use the existing controls and Driver Station Disable.
+No live snapshot files are written to the roboRIO flash.
+
+To watch the robot model during the check, import the updated ``AdvantageScope Pit System Check.json``
+and select **Remy System Check 3D**. It uses the live Remy robot and component poses from the same
+NT4 connection as Pit Check Controls. Start the check on the controls tab, then switch to the 3D tab.
+The existing CAD animation covers rack translation, hopper/kicker movement, hood and flywheel motion;
+not every roller or swerve wheel is a separately animated CAD component.
+Run only one simulator at a time so the Driver Station, NT4 connection, and optional browser monitor
+all belong to the same process. The browser page is loaded from ``src/main/deploy/systemcheck/live.html``
+so VS Code and Gradle simulation launches both find it.
+
+The simulated SPARK MAX linear rack advances its controller feedback and physics together in 1 ms steps
+within each 20 ms robot loop. This avoids the artificial holding oscillation from coarse simulation updates;
+real controller gains, rack limits, and mechanism targets are unchanged.

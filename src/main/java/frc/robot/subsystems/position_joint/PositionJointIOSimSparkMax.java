@@ -124,18 +124,26 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 	 */
 	@Override
 	public void updateInputs(PositionJointIOInputs inputs) {
-		currentPosition = getMechanismPosition();
-		currentVelocity = getMechanismVelocity();
 		double availableVoltage = RobotController.getBatteryVoltage();
-		leaderSim.setPosition(currentPosition);
-		leaderSim.iterate(currentVelocity, availableVoltage, 0.02);
-		double appliedVoltage = leaderSim.getAppliedOutput() * availableVoltage;
-		if (shouldHoldBrake(appliedVoltage, currentVelocity)) {
-			holdBrakeState(currentPosition);
-		} else {
-			setSimulationInputVoltage(appliedVoltage);
-			updateSimulation();
-			clampToLimits();
+		double appliedVoltage = 0;
+		// The rack's fast plant and high position gain are unstable with a 20 ms
+		// sample-and-hold. Advance controller feedback and physics together at 1 ms,
+		// while preserving the normal 20 ms robot-loop duration and real gains.
+		int substeps = config.mechanismType() == MechanismType.LINEAR ? 20 : 1;
+		double dtSeconds = 0.02 / substeps;
+		for (int step = 0; step < substeps; step++) {
+			currentPosition = getMechanismPosition();
+			currentVelocity = getMechanismVelocity();
+			leaderSim.setPosition(currentPosition);
+			leaderSim.iterate(currentVelocity, availableVoltage, dtSeconds);
+			appliedVoltage = leaderSim.getAppliedOutput() * availableVoltage;
+			if (shouldHoldBrake(appliedVoltage, currentVelocity)) {
+				holdBrakeState(currentPosition);
+			} else {
+				setSimulationInputVoltage(appliedVoltage);
+				updateSimulation(dtSeconds);
+				clampToLimits();
+			}
 		}
 
 		double loadedBatteryVoltage = BatterySim.calculateDefaultBatteryLoadedVoltage(getSimulationCurrentDrawAmps());
@@ -298,13 +306,13 @@ public class PositionJointIOSimSparkMax implements PositionJointIO {
 		rotationalSim.setInputVoltage(voltage);
 	}
 
-	/** Advances the currently active arm/elevator simulation by one robot loop. */
-	private void updateSimulation() {
+	/** Advances the active arm/elevator plant by the supplied integration step. */
+	private void updateSimulation(double dtSeconds) {
 		if (config.mechanismType() == MechanismType.LINEAR) {
-			linearSim.update(0.02);
+			linearSim.update(dtSeconds);
 			return;
 		}
-		rotationalSim.update(0.02);
+		rotationalSim.update(dtSeconds);
 	}
 
 	/** Returns the simulated current draw for battery loading calculations. */

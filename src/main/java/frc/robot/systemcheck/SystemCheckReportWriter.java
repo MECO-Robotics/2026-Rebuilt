@@ -328,7 +328,7 @@ public final class SystemCheckReportWriter {
 		return csv.toString();
 	}
 
-	private static void appendMeasurements(StringBuilder json, Map<String, Double> values) {
+	static void appendMeasurements(StringBuilder json, Map<String, Double> values) {
 		json.append("{");
 		int index = 0;
 		for (Map.Entry<String, Double> value : values.entrySet()) {
@@ -405,7 +405,7 @@ public final class SystemCheckReportWriter {
 		return text(value);
 	}
 
-	private static String json(String value) {
+	static String json(String value) {
 		if (value == null) {
 			return "null";
 		}

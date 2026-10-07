@@ -134,3 +134,11 @@ The systems check now records rack controller configuration/request results, mot
 and measured output separately from open-loop voltage requests. Start with the
 [intake diagnosis procedure](docs/source/system-check.rst) and verify the expected NEO/SPARK MAX at CAN 21.
 See [shooting/intake checks](docs/source/shooting-intake-checklist.rst) for the physical-frame verification gate.
+
+Watch automated system checks live at `http://roborio-8324-frc.local:5806/`
+(or `http://localhost:5806/` in simulation). The read-only monitor shows the active
+stage, live measurements, progress, and results. See [system-check instructions](docs/source/system-check.rst).
+
+For one persistent workspace covering both robots, import **[AdvantageScope All Robots.json](AdvantageScope%20All%20Robots.json)**.
+It includes REBUILT system checks and driving, plus 16th Note driving, commissioning, fuel tuning, and simulation practice.
+See the [combined-layout guide](sim/AdvantageScope%20All%20Robots.md) for connections and model setup.

@@ -130,6 +130,7 @@ class RobotContainerSimulationTest {
 	void driverBindingsOperateAndReturnEveryRollerToNeutral() {
 		assertTrue(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel").length > 0,
 				"Simulation should populate field fuel before autonomous is started");
+		verifyRackSettlesWithoutJitter();
 		verifyDriveBindingMovesRobot();
 		verifyAllianceCanChangeWithoutRestartingSimulation();
 		verifyShooterPresetStopsOnRelease();
@@ -141,6 +142,25 @@ class RobotContainerSimulationTest {
 		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
 		verifySystemCheckInterlocksAndAbort();
 		verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures();
+	}
+
+	private void verifyRackSettlesWithoutJitter() {
+		for (double target : new double[]{0.13, 0.30, 0.13, 0.0}) {
+			Command hold = PositionJoint.holdPosition(intakeRack, () -> target);
+			scheduler.schedule(hold);
+			runCycles(150);
+			double minimum = Double.POSITIVE_INFINITY;
+			double maximum = Double.NEGATIVE_INFINITY;
+			for (int cycle = 0; cycle < 100; cycle++) {
+				runCycles(1);
+				minimum = Math.min(minimum, intakeRack.getPosition());
+				maximum = Math.max(maximum, intakeRack.getPosition());
+				assertEquals(target, intakeRack.getPosition(), .005, "Rack must settle within 5 mm at " + target);
+			}
+			assertTrue(maximum - minimum < .002,
+					"Rack holding oscillation exceeds 2 mm at " + target + ": " + (maximum - minimum));
+			scheduler.cancel(hold);
+		}
 	}
 
 	private void verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures() {
