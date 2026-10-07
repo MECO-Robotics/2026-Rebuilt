@@ -16,11 +16,14 @@ import org.junit.jupiter.api.Test;
 
 class ShooterCalculatorTest {
 	private static final double EPSILON = 1e-9;
+	private static ShotSolution calculateReal(Pose2d pose, Translation2d target) {
+		return ShooterCalculator.calculate(pose, target, frc.robot.constants.Constants.Mode.REAL);
+	}
 
 	@Test
 	void calculatesExactCloseCalibrationPointFromShooterExit() {
 		double distance = Units.inchesToMeters(46.003);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -34,7 +37,7 @@ class ShooterCalculatorTest {
 	@Test
 	void calculatesExactTrenchEdgeCalibrationPoint() {
 		double distance = Units.inchesToMeters(153.64);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -47,7 +50,7 @@ class ShooterCalculatorTest {
 	@Test
 	void calculatesExactIntermediateCalibrationPoint() {
 		double distance = Units.inchesToMeters(123.24);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -60,7 +63,7 @@ class ShooterCalculatorTest {
 	@Test
 	void calculatesExactFarCalibrationPoint() {
 		double distance = Units.inchesToMeters(191.86);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -73,7 +76,7 @@ class ShooterCalculatorTest {
 	@Test
 	void calculatesExact202InchCalibrationPoint() {
 		double distance = Units.inchesToMeters(202.78);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -86,7 +89,7 @@ class ShooterCalculatorTest {
 	@Test
 	void calculatesExact144InchCalibrationPoint() {
 		double distance = Units.inchesToMeters(144.60);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -99,7 +102,7 @@ class ShooterCalculatorTest {
 	@Test
 	void calculatesExact210InchCalibrationPoint() {
 		double distance = Units.inchesToMeters(210.47);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -112,7 +115,7 @@ class ShooterCalculatorTest {
 	@Test
 	void interpolatesBetweenCalibrationPoints() {
 		double distance = Units.inchesToMeters((46.003 + 123.24) / 2.0);
-		ShotSolution solution = ShooterCalculator.calculate(
+		ShotSolution solution = calculateReal(
 				new Pose2d(distance - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0, Rotation2d.kZero),
 				Translation2d.kZero);
 
@@ -123,12 +126,14 @@ class ShooterCalculatorTest {
 
 	@Test
 	void flagsDistancesOutsideCalibrationRange() {
-		ShotSolution tooClose = ShooterCalculator
-				.calculate(new Pose2d(Units.inchesToMeters(40.0) - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(),
-						0.0, Rotation2d.kZero), Translation2d.kZero);
-		ShotSolution tooFar = ShooterCalculator
-				.calculate(new Pose2d(Units.inchesToMeters(250.0) - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(),
-						0.0, Rotation2d.kZero), Translation2d.kZero);
+		ShotSolution tooClose = calculateReal(
+				new Pose2d(Units.inchesToMeters(40.0) - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0,
+						Rotation2d.kZero),
+				Translation2d.kZero);
+		ShotSolution tooFar = calculateReal(
+				new Pose2d(Units.inchesToMeters(250.0) - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX(), 0.0,
+						Rotation2d.kZero),
+				Translation2d.kZero);
 
 		assertFalse(tooClose.calibrated());
 		assertFalse(tooFar.calibrated());
@@ -137,8 +142,8 @@ class ShooterCalculatorTest {
 	@Test
 	void autoAimCompensatesForShooterFacingRobotNegativeX() {
 		Pose2d robotPose = new Pose2d(0.0, 0.0, Rotation2d.kZero);
-		ShotSolution aimTowardShooterSide = ShooterCalculator.calculate(robotPose, new Translation2d(-3.0, 0.0));
-		ShotSolution aimTowardDrivetrainPositiveX = ShooterCalculator.calculate(robotPose, new Translation2d(3.0, 0.0));
+		ShotSolution aimTowardShooterSide = calculateReal(robotPose, new Translation2d(-3.0, 0.0));
+		ShotSolution aimTowardDrivetrainPositiveX = calculateReal(robotPose, new Translation2d(3.0, 0.0));
 
 		assertEquals(0.0, aimTowardShooterSide.targetHeading().getRadians(), EPSILON);
 		assertEquals(Math.PI, Math.abs(aimTowardDrivetrainPositiveX.targetHeading().getRadians()), EPSILON);
@@ -152,7 +157,7 @@ class ShooterCalculatorTest {
 			Rotation2d expectedRobotHeading = blue ? Rotation2d.kZero : Rotation2d.kPi;
 			double robotX = hub.getX() + (blue ? 2.0 : -2.0);
 			Pose2d robotPose = new Pose2d(robotX, hub.getY(), expectedRobotHeading);
-			ShotSolution solution = ShooterCalculator.calculate(robotPose, hub);
+			ShotSolution solution = calculateReal(robotPose, hub);
 			Pose2d shooterPose = robotPose.transformBy(new edu.wpi.first.math.geometry.Transform2d(
 					ShooterConstants.SHOOTER_EXIT_TRANSLATION, Rotation2d.kZero));
 			Rotation2d targetBearing = hub.minus(shooterPose.getTranslation()).getAngle();
@@ -166,7 +171,7 @@ class ShooterCalculatorTest {
 	@Test
 	void rotatesShooterExitTransformWithRobot() {
 		Pose2d robotPose = new Pose2d(2.0, 2.0, Rotation2d.kCCW_90deg);
-		ShotSolution solution = ShooterCalculator.calculate(robotPose, new Translation2d(2.0, 0.0));
+		ShotSolution solution = calculateReal(robotPose, new Translation2d(2.0, 0.0));
 
 		assertEquals(Math.PI / 2.0, solution.targetHeading().getRadians(), EPSILON);
 		assertEquals(1.81, solution.distanceMeters(), EPSILON);

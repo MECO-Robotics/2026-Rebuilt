@@ -131,11 +131,18 @@ The current hardware configuration contains no separate agitator motor. The top 
 agitation/feed assembly. If a separate motor exists on the robot, stop here and add its CAN configuration and command
 requirement before operating the coordinated shot.
 
-The intake, shooter, and Limelight face the drivetrain's ``-X`` side on both alliances. The shooter throat is at
-``-0.19 m`` X and its projectile travels in that same direction. ``SHOOTER_YAW_OFFSET`` and
-``AUTO_AIM_HEADING_OFFSET`` are therefore both fixed at 180 degrees; neither may become alliance-dependent. The
-shooter exit, intake simulation, hopper extension, Remy component motion, projectile origin, and Limelight transform
-must all remain on that same physical side of the robot.
+The current **real-robot** shooter/camera configuration retains a 180-degree yaw offset and a shooter throat
+at ``-0.19 m`` X. Its physical relationship to robot-relative forward still needs verification. Neither direction
+should depend on alliance. Do not change this hardware yaw merely to repair the simulation display.
+
+The Remy CAD asset places the intake roller on **+X** after its existing import rotations. Desktop simulation now
+collects, extends the rack/hopper, and launches toward +X. Simulated automatic aiming uses that same yaw; real/replay
+aiming retains the existing hardware yaw. The throat location remains the existing estimated -0.19 m offset;
+being behind robot center does not imply shooting backward. No drivetrain or whole-asset rotation was changed.
+Intake rack extension has its own direction constant and no longer borrows shooter yaw.
+
+Before unifying the physical and CAD frames, identify which end leads during a robot-relative forward command and
+verify the shooter throat/camera mounting. This is a required hardware measurement, not an inferred motor inversion.
 
 
 Touch-and-own intake calibration

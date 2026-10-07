@@ -84,6 +84,11 @@ class RobotContainerSimulationTest {
 		controller.setButtonCount(10);
 		controller.setPOVCount(1);
 		controller.notifyNewData();
+		var copilot = new edu.wpi.first.wpilibj.simulation.GenericHIDSim(1);
+		copilot.setAxisCount(6);
+		copilot.setButtonCount(10);
+		copilot.setPOVCount(1);
+		copilot.notifyNewData();
 		DriverStation.refreshData();
 		assertEquals(configuredAlliance, DriverStation.getAlliance().orElseThrow(),
 				"The simulation must use the requested FRC_TEST_ALLIANCE");
@@ -139,6 +144,10 @@ class RobotContainerSimulationTest {
 	}
 
 	private void verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures() {
+		// Run motor checks in clear neutral-zone space, independent of the prior shot
+		// pose.
+		container.drivetrain.resetPose(new Pose2d(7.0, 1.2, Rotation2d.kZero));
+		container.drivetrain.stop();
 		SystemCheckManager manager;
 		try {
 			manager = getField(container, "systemCheckManager", SystemCheckManager.class);
@@ -240,12 +249,31 @@ class RobotContainerSimulationTest {
 		Command aim = DriveCommands.autoAimToHub(container.drivetrain,
 				frc.robot.constants.drive.DrivetrainConstants.MAX_SPEED);
 		scheduler.schedule(aim);
-		runCycles(150);
+		// CTRE status arrives on native worker threads. Wait for stable convergence
+		// within six simulated seconds, yielding wall time for those workers.
+		int stableCycles = 0;
+		for (int cycle = 0; cycle < 300 && stableCycles < 10; cycle++) {
+			runCycles(1);
+			try {
+				Thread.sleep(2);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new AssertionError(e);
+			}
+			Pose2d pose = container.drivetrain.getState().Pose;
+			Rotation2d target = ShooterCalculator.calculate(pose, hub).targetHeading();
+			stableCycles = Math.abs(
+					pose.getRotation().minus(target).getDegrees()) <= ShooterConstants.HEADING_READY_TOLERANCE_DEGREES
+							? stableCycles + 1
+							: 0;
+		}
+		assertEquals(10, stableCycles, "Auto aim must settle at the CAD-aligned heading");
 		Pose2d aimedPose = container.drivetrain.getState().Pose;
 		Pose2d shooterPose = aimedPose
 				.transformBy(new Transform2d(ShooterConstants.SHOOTER_EXIT_TRANSLATION, Rotation2d.kZero));
 		Rotation2d targetBearing = hub.minus(shooterPose.getTranslation()).getAngle();
-		Rotation2d physicalShooterHeading = aimedPose.getRotation().plus(ShooterConstants.SHOOTER_YAW_OFFSET);
+		Rotation2d physicalShooterHeading = aimedPose.getRotation()
+				.plus(ShooterConstants.aimingYawForMode(frc.robot.constants.Constants.Mode.SIM));
 		double aimErrorDegrees = Math.abs(physicalShooterHeading.minus(targetBearing).getDegrees());
 		scheduler.cancel(aim);
 		container.drivetrain.stop();
@@ -395,9 +423,9 @@ class RobotContainerSimulationTest {
 		// zero stop
 		// cannot make this whole-robot timing test nondeterministic.
 		double shooterDistanceMeters = Units.inchesToMeters(123.24);
-		double robotCenterDistanceMeters = shooterDistanceMeters - ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX();
+		double robotCenterDistanceMeters = shooterDistanceMeters + ShooterConstants.SHOOTER_EXIT_TRANSLATION.getX();
 		double fieldDirection = alliance == Alliance.Blue ? 1.0 : -1.0;
-		Rotation2d startingHeading = alliance == Alliance.Blue ? Rotation2d.kZero : Rotation2d.kPi;
+		Rotation2d startingHeading = alliance == Alliance.Blue ? Rotation2d.kPi : Rotation2d.kZero;
 		container.drivetrain.resetPose(new Pose2d(
 				hub.plus(new Translation2d(fieldDirection * robotCenterDistanceMeters, 0.0)), startingHeading));
 		container.drivetrain.stop();
@@ -612,6 +640,13 @@ class RobotContainerSimulationTest {
 		scheduler.run();
 		container.updateDashboardOutputs();
 		container.simulationPeriodic();
+		// Allow the native CTRE status workers to publish between simulation steps.
+		try {
+			Thread.sleep(2);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError(e);
+		}
 	}
 
 	private static void assertNeutral(Flywheel flywheel, String mechanism) {

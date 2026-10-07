@@ -13,8 +13,15 @@ public final class MapleSimConstants {
 	/** Shooter location relative to robot center in robot coordinates. */
 	public static final Translation2d SHOOTER_TRANSLATION_ON_ROBOT = ShooterConstants.SHOOTER_EXIT_TRANSLATION;
 
-	/** Shooter yaw offset relative to robot heading; shared with real aiming. */
-	public static final Rotation2d SHOOTER_YAW_OFFSET = ShooterConstants.SHOOTER_YAW_OFFSET;
+	/**
+	 * CAD-aligned simulation yaw. Real yaw remains gated on physical verification.
+	 */
+	public static final Rotation2d SHOOTER_YAW_OFFSET = Rotation2d.kZero;
+
+	/**
+	 * Remy CAD intake extends along +X after its existing asset import rotations.
+	 */
+	public static final double INTAKE_EXTENSION_X_SIGN = 1.0;
 
 	/** Shooter release height from floor. */
 	public static final double SHOOTER_HEIGHT_METERS = ShooterConstants.SHOOTER_RELEASE_HEIGHT_METERS;
@@ -55,7 +62,9 @@ public final class MapleSimConstants {
 	/** Maximum number of fuel gamepieces the simulated hopper can hold. */
 	public static final int HOPPER_MAX_BALLS = 54;
 
-	/** Hopper bounds in robot X coordinates; the intake/shooter direction is -X. */
+	/**
+	 * Stowed hopper bounds in robot X coordinates; deployed volume grows toward +X.
+	 */
 	public static final double HOPPER_MIN_X_METERS = -0.33;
 
 	public static final double HOPPER_MAX_X_METERS = 0.0;

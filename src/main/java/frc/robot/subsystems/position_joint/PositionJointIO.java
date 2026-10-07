@@ -14,11 +14,30 @@ public interface PositionJointIO {
 	 * Logged inputs shared by all joint implementations.
 	 *
 	 * <p>
-	 * Units are rotations and rotations/sec unless otherwise documented by a
-	 * specific implementation.
+	 * Linear rack units are metres and metres/second; rotational joints use their
+	 * configured output units. Rotor position is always motor rotations.
 	 */
 	@AutoLog
 	public static class PositionJointIOInputs {
+		/** True when this IO reports vendor configuration/control results. */
+		public boolean controllerDiagnosticsSupported = false;
+		public boolean configurationHealthy = true;
+		public String[] configurationStatus = {};
+		public String controlStatus = "Not reported";
+		public boolean controlRequestHealthy = true;
+		public String encoderResetStatus = "Not requested";
+		public String profileStatus = "Not reported";
+		public String brakeStatus = "Not reported";
+		public String positionUnits = "Mechanism units";
+		public double positionConversionFactor = 1;
+		public double velocityConversionFactor = 1;
+		public double configuredMinPosition = Double.NaN;
+		public double configuredMaxPosition = Double.NaN;
+		public double configuredMaxVelocity = Double.NaN;
+		public double configuredMaxAcceleration = Double.NaN;
+		public boolean atReverseLimit = false;
+		public boolean atForwardLimit = false;
+
 		/** Joint output position after gearing (mechanism position). */
 		public double outputPosition = 0.0;
 		/** Motor rotor position before gearing (motor shaft position). */

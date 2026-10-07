@@ -44,9 +44,10 @@ public class PositionJointConstants {
 	 *            clockwise / positive, rest of the booleans correspond to whether
 	 *            each subsequent motor is reversed relative to the first motor.
 	 * @param gearRatio
-	 *            The gear ratio between the motor and the joint output (output
-	 *            speed / motor speed). For rotation joints, this gear ratio should
-	 *            be multiplied by 2 * Math.PI to convert from rotations to radians.
+	 *            Motor rotations per configured output unit. The SPARK encoder
+	 *            position factor is 1/gearRatio and velocity factor is
+	 *            1/(60*gearRatio). Linear rack output units are metres. Preserve
+	 *            each rotational joint's existing configured output units.
 	 * @param momentOfInertiaKgMetersSquared
 	 *            Equivalent inertia reflected to the motor/input shaft in kg*m^2
 	 *            for sim modeling. Simulation code converts this back to

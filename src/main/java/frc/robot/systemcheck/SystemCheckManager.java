@@ -75,6 +75,8 @@ public class SystemCheckManager {
 	private Command activeCommand;
 	private Command practiceCommand;
 	private int stageIndex = -1;
+	private double rackStageStartPosition;
+	private double rackStageTravel;
 	private int baselineRioBusOffCount;
 	private Map<String, Integer> baselineBusOffCounts = Map.of();
 	private List<CanBusSnapshot> canBusSnapshots = List.of();
@@ -311,6 +313,7 @@ public class SystemCheckManager {
 		}
 
 		Stage stage = stages.get(stageIndex);
+		rackStageTravel = Math.max(rackStageTravel, Math.abs(intakeRack.getPosition() - rackStageStartPosition));
 		stage.action().run();
 		if (stage.id().equals("vision-observation")) {
 			visionAcceptedDuringStage |= vision.hasAcceptedTagLocalization();
@@ -339,6 +342,8 @@ public class SystemCheckManager {
 	private void startStage(int index) {
 		neutralizeAll();
 		stageIndex = index;
+		rackStageStartPosition = intakeRack.getPosition();
+		rackStageTravel = 0;
 		stageTimer.restart();
 		stageStableSince = Double.NaN;
 		stageFailureConditionSince = Double.NaN;
@@ -747,10 +752,15 @@ public class SystemCheckManager {
 	}
 
 	private Stage jointStage(String id, String subsystem, double position) {
+		List<String> prerequisites = switch (id) {
+			case "intake-rack-safe" -> List.of("intake-rack-stow");
+			case "intake-rack-deploy" -> List.of("intake-rack-safe");
+			default -> List.of(); // Always attempt the return under the existing global interlocks.
+		};
 		return new Stage(id, subsystem, SystemCheckConstants.JOINT_STAGE_SECONDS,
 				() -> intakeRack.setPosition(position),
-				() -> evaluateJoint(intakeRack, position, SystemCheckConstants.RACK_TOLERANCE_METERS), () -> true, 0.0,
-				List.of());
+				() -> evaluateJoint(intakeRack, position, SystemCheckConstants.RACK_TOLERANCE_METERS),
+				() -> prerequisites.stream().allMatch(this::passed), 0.0, prerequisites);
 	}
 
 	private Stage hoodStage(String id, double position) {
@@ -849,12 +859,39 @@ public class SystemCheckManager {
 				values("TargetMetersPerSecond", target, "MaxVelocityErrorMetersPerSecond", maxError));
 	}
 
+	/**
+	 * Startup at stow needs no movement; safe/deploy must demonstrate a real
+	 * position change.
+	 */
+	static boolean rackMovementProven(String stageId, double start, double travel, double target, double tolerance) {
+		if (!Double.isFinite(start) || !Double.isFinite(travel))
+			return false;
+		boolean required = stageId.equals("intake-rack-safe") || stageId.equals("intake-rack-deploy")
+				|| Math.abs(target - start) > tolerance;
+		return !required || travel > tolerance;
+	}
+
 	private Evaluation evaluateJoint(PositionJoint joint, double target, double tolerance) {
 		DeviceHealth health = joint.getHealthSnapshot();
 		double error = Math.abs(joint.getPosition() - target);
-		boolean pass = health.allConnected() && error <= tolerance && !faultInjection.frozenEncoder();
+		String controllerFailure = joint.controllerDiagnosticFailure();
+		boolean movementProven = joint != intakeRack || stageIndex < 0 || rackMovementProven(
+				stages.get(stageIndex).id(), rackStageStartPosition, rackStageTravel, target, tolerance);
+		boolean pass = health.allConnected() && error <= tolerance && !faultInjection.frozenEncoder()
+				&& controllerFailure.isEmpty() && movementProven;
 		Map<String, Double> measurements = values("Target", target, "Position", joint.getPosition(), "Error", error,
 				"Velocity", joint.getVelocity());
+		measurements.putAll(joint.diagnosticMeasurements());
+		if (joint == intakeRack) {
+			measurements.put("StageStartPosition", rackStageStartPosition);
+			measurements.put("StageTravel", rackStageTravel);
+		}
+		if (!controllerFailure.isEmpty())
+			return threshold(false, "", controllerFailure, measurements);
+		if (!movementProven)
+			return threshold(false, "",
+					"Rack stage did not demonstrate movement; inspect request, applied volts, encoder and limits",
+					measurements);
 		if (!pass && RobotBase.isSimulation() && joint == intakeRack && health.allConnected()
 				&& !faultInjection.frozenEncoder() && error <= SystemCheckConstants.SIM_RACK_WARNING_TOLERANCE_METERS) {
 			return new Evaluation(CheckStatus.WARNING,

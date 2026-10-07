@@ -47,6 +47,7 @@ public class PositionJoint extends SubsystemBase {
 
 	private final LoggedTunableNumber kSetpoint;
 	private Double profileMaxVelocityOverride = null;
+	private double requestedPosition;
 	private double goalPosition;
 	private boolean complianceAfterTarget = false;
 	private boolean complianceActive = false;
@@ -141,6 +142,13 @@ public class PositionJoint extends SubsystemBase {
 			}
 		}, kSetpoint, kMinPosition, kMaxPosition);
 
+		Logger.recordOutput(name + "/RequestedPosition", requestedPosition);
+		Logger.recordOutput(name + "/ControlMode",
+				openLoopMode ? "VOLTAGE" : complianceActive ? "COMPLIANCE" : "POSITION");
+		Logger.recordOutput(name + "/CommandOwner",
+				getCurrentCommand() == null ? "None" : getCurrentCommand().getName());
+		Logger.recordOutput(name + "/ControllerDiagnostic", controllerDiagnosticFailure());
+		Logger.recordOutput(name + "/ConfiguredDeviceIds", positionJoint.getDeviceIds());
 		Logger.recordOutput(name + "/GoalPosition", goalPosition);
 		Logger.recordOutput(name + "/isFinished", atTarget);
 		Logger.recordOutput(name + "/ComplianceAfterTarget", complianceAfterTarget);
@@ -153,6 +161,7 @@ public class PositionJoint extends SubsystemBase {
 
 	/** Sets a new goal position, clamped to configured mechanism limits. */
 	public void setPosition(double position) {
+		requestedPosition = position;
 		openLoopMode = false;
 		commandedVoltage = 0.0;
 		double clampedPosition = MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get());
@@ -238,6 +247,43 @@ public class PositionJoint extends SubsystemBase {
 		return new DeviceHealth(name, inputs.motorsConnected, normalizedVelocities, inputs.motorCurrents, currentLimits,
 				motorHealth.temperaturesCelsius, positionJoint.isExternalEncoderExpected(), inputs.encoderConnected,
 				motorHealth.activeFaults, positionJoint.getDeviceIds());
+	}
+
+	/**
+	 * Vendor diagnostics are separate from sensor connectivity and are not CAN
+	 * freshness proof.
+	 */
+	public String controllerDiagnosticFailure() {
+		if (!inputs.controllerDiagnosticsSupported)
+			return "";
+		if (!inputs.configurationHealthy)
+			return "Controller configuration failed: " + String.join(", ", inputs.configurationStatus);
+		if (!inputs.controlRequestHealthy)
+			return "Controller request failed: " + inputs.controlStatus;
+		return "";
+	}
+
+	public java.util.Map<String, Double> diagnosticMeasurements() {
+		var values = new java.util.LinkedHashMap<String, Double>();
+		values.put("RequestedPosition", requestedPosition);
+		values.put("ClampedTarget", goalPosition);
+		values.put("OpenLoopMode", openLoopMode ? 1.0 : 0.0);
+		values.put("OpenLoopRequestedVolts", commandedVoltage);
+		values.put("MaxAppliedVolts", java.util.Arrays.stream(inputs.motorVoltages).map(Math::abs).max().orElse(0));
+		values.put("MaxCurrentAmps", java.util.Arrays.stream(inputs.motorCurrents).max().orElse(0));
+		if (inputs.controllerDiagnosticsSupported) {
+			values.put("ConfigurationAccepted", inputs.configurationHealthy ? 1.0 : 0.0);
+			values.put("ControlRequestAccepted", inputs.controlRequestHealthy ? 1.0 : 0.0);
+			values.put("AtReverseLimit", inputs.atReverseLimit ? 1.0 : 0.0);
+			values.put("AtForwardLimit", inputs.atForwardLimit ? 1.0 : 0.0);
+			values.put("MinPosition", inputs.configuredMinPosition);
+			values.put("MaxPosition", inputs.configuredMaxPosition);
+			values.put("ProfileMaxVelocity", inputs.configuredMaxVelocity);
+			values.put("ProfileMaxAcceleration", inputs.configuredMaxAcceleration);
+			values.put("PositionConversionFactor", inputs.positionConversionFactor);
+			values.put("VelocityConversionFactor", inputs.velocityConversionFactor);
+		}
+		return values;
 	}
 
 	/** Returns current measured mechanism position. */

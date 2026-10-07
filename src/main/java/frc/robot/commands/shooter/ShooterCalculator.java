@@ -19,6 +19,15 @@ import org.littletonrobotics.junction.Logger;
 public class ShooterCalculator {
 	/** Calculates a stationary shot solution for an explicit target. */
 	public static ShotSolution calculate(Pose2d robotPose, Translation2d targetPosition) {
+		return calculate(robotPose, targetPosition, frc.robot.constants.Constants.currentMode);
+	}
+
+	/**
+	 * Explicit mode allows real aiming to be regression-tested independently of CAD
+	 * simulation.
+	 */
+	public static ShotSolution calculate(Pose2d robotPose, Translation2d targetPosition,
+			frc.robot.constants.Constants.Mode mode) {
 		Pose2d shooterPose = robotPose
 				.transformBy(new Transform2d(ShooterConstants.SHOOTER_EXIT_TRANSLATION, Rotation2d.kZero));
 		Translation2d shooterToTarget = targetPosition.minus(shooterPose.getTranslation());
@@ -28,7 +37,7 @@ public class ShooterCalculator {
 		var distance = Meters.of(distanceMeters);
 
 		return new ShotSolution(distanceMeters,
-				shooterToTarget.getAngle().minus(ShooterConstants.AUTO_AIM_HEADING_OFFSET),
+				shooterToTarget.getAngle().minus(ShooterConstants.aimingYawForMode(mode)),
 				ShooterConstants.hoodMap.get(distance).in(Units.Rotations),
 				ShooterConstants.shooterVelocityMap.get(distance).in(Units.RevolutionsPerSecond), calibrated);
 	}

@@ -123,3 +123,14 @@ Flywheels have mechanism gains and motor configs:
 
   Default Setpoint:
   * kDefaultSetpoint: (rotation) the setpoint the mechanism should go to upon intialization
+
+## REBUILT intake diagnostics and CAD alignment
+
+Desktop simulation now extends the Remy intake, collects fuel, and shoots toward the CAD's +X end.
+Real aiming retains its existing 180-degree yaw until robot-relative forward and mounting are verified.
+The intake is a linear rack in metres, not 16th Note's pivot in degrees.
+
+The systems check now records rack controller configuration/request results, motion evidence, limits,
+and measured output separately from open-loop voltage requests. Start with the
+[intake diagnosis procedure](docs/source/system-check.rst) and verify the expected NEO/SPARK MAX at CAN 21.
+See [shooting/intake checks](docs/source/shooting-intake-checklist.rst) for the physical-frame verification gate.

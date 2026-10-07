@@ -156,3 +156,53 @@ Before relying on the sequence at an event, complete three consecutive unloaded 
 direction and CAN ID of every mechanism against :doc:`shooting-intake-checklist`, disconnect one device at a time to
 verify identification, and press Disable once during each mechanism group to confirm immediate neutral output. Only
 perform the projectile check in the controlled practice area with exactly one fuel.
+
+
+Diagnosing an intake rack that does not move
+-------------------------------------------
+
+The expected deployment device is a NEO/SPARK MAX at **CAN 21** on the roboRIO bus, using its internal encoder.
+Verify that identity in REV Hardware Client and the wiring before changing code. Intake rollers are separate devices;
+identify them from the current configuration rather than changing their ordering to fix rack motion.
+
+The rack is linear: stow is 0.00 m, safe is 0.13 m, deploy is 0.30 m, and the configured upper limit is 0.35 m.
+The conversion currently represents 9 motor rotations per pi*0.0254 metres of travel (about 112.79 motor rotations
+per metre). Its position conversion factor is 1/ratio and velocity factor is 1/(60*ratio), giving metres and metres/sec.
+REVLib 2026 MAXMotion velocity/acceleration honor the velocity conversion factor; do not multiply these settings by
+60 again. The configured 0.5 m/s and 100 m/s^2 remain existing settings, not newly verified hardware measurements.
+See `REV closed-loop units <https://docs.revrobotics.com/revlib/spark/closed-loop/units>`_.
+
+In AdvantageScope, inspect ``AdvantageKit/IntakeRack`` inputs and ``AdvantageKit/RealOutputs/IntakeRack`` outputs:
+
+* ``RequestedPosition``, ``GoalPosition``, ``CommandOwner``, and ``ControlMode`` distinguish a missing request from
+  a clamped target, compliance hold, or another command owning the mechanism.
+* ``ConfigurationStatus``, ``ConfigurationHealthy``, ``ControlStatus``, and ``ControlRequestHealthy`` contain vendor
+  results. Nonzero output is blocked after a known configuration failure; neutral output remains available.
+* ``EncoderResetStatus`` records explicit reset calls. An internal encoder is not an external-encoder fault, and
+  the code does not automatically zero the rack just because a check starts.
+* ``ConfiguredMinPosition``, ``ConfiguredMaxPosition``, profile constraints, conversion factors, and the
+  ``AtReverseLimit``/``AtForwardLimit`` position comparisons help diagnose conversion or zero errors. These comparisons
+  describe configured bounds; they are not a claim that a physical limit switch is installed or active.
+* ``MotorVoltages`` uses the controller's applied duty and bus voltage; compare it with ``MotorCurrents`` and encoder
+  motion. ``CommandedVoltage`` is only the open-loop request and normally reads zero during closed-loop position control.
+* ``ProfileStatus`` and ``BrakeStatus`` explicitly distinguish synchronous results from asynchronous enqueue results.
+  A queued request or cached successful read does not prove a fresh CAN frame or acknowledged configuration.
+
+The report includes requested/clamped targets, stage start position/travel, actual voltage/current, and controller
+acceptance/limit data. Safe and deploy stages must demonstrate encoder motion as well as reach the target. A failed
+stow blocks the safe stage; failed safe blocks deploy. The return stage remains available under the original global
+interlocks even if deployment fails. Starting at stow is allowed to pass without moving.
+
+Use this order when reviewing a failed check:
+
+#. Confirm the report's run/stage state and that Test mode, setup confirmation, arm, and Start were accepted.
+#. Confirm CAN 21 is the expected controller and inspect configuration/request error strings.
+#. Compare requested target, current position, encoder zero, soft limits, and physical travel. Never zero at an
+   unknown position or bypass limits to force movement.
+#. If there is a valid position request but no reported voltage, inspect controller faults/configuration/limits.
+#. If voltage is reported but the encoder does not move, inspect wiring, power and the mechanical drive. High current
+   is different evidence from zero current; neither proves the cause by itself.
+#. If the encoder moves but the mechanism does not, inspect coupling/gearing and conversion before tuning gains.
+
+Save the HTML/JSON report and robot log for the failed rack stages. Real deployment is accepted only after observing
+safe/deploy/retract motion and stopping on Disable/cancellation. Passing desktop simulation cannot certify this.

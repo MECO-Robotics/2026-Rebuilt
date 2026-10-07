@@ -31,8 +31,8 @@ public final class ShooterConstants {
 	public static final Translation2d SHOOTER_EXIT_TRANSLATION = new Translation2d(-0.19, 0.0);
 
 	/**
-	 * The intake, shooter, and Limelight face the drivetrain's -X side. This fixed
-	 * physical offset is the same on both alliances.
+	 * Existing real-robot/camera yaw, retained pending robot-relative forward
+	 * verification. Do not infer this hardware frame from the CAD display.
 	 */
 	public static final Rotation2d SHOOTER_YAW_OFFSET = Rotation2d.kPi;
 
@@ -41,6 +41,13 @@ public final class ShooterConstants {
 	 * this identical to the fixed shooter/camera yaw offset.
 	 */
 	public static final Rotation2d AUTO_AIM_HEADING_OFFSET = SHOOTER_YAW_OFFSET;
+	/** Simulation follows CAD +X; REAL/REPLAY retain the existing physical yaw. */
+	public static Rotation2d aimingYawForMode(frc.robot.constants.Constants.Mode mode) {
+		return mode == frc.robot.constants.Constants.Mode.SIM
+				? frc.robot.constants.simulation.MapleSimConstants.SHOOTER_YAW_OFFSET
+				: AUTO_AIM_HEADING_OFFSET;
+	}
+
 	/** Physical shooter release height used by the ferry landing calculation. */
 	public static final double SHOOTER_RELEASE_HEIGHT_METERS = 0.45;
 	/** Main shooter-wheel surface speed produced by one flywheel RPS. */

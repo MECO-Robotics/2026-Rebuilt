@@ -19,8 +19,8 @@ class LaunchedFuelSimTest {
 	@Test
 	void shooterOriginAndLaunchDirectionUseTheIntakeSide() {
 		assertTrue(MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT.getX() < 0.0);
-		assertEquals(Math.PI, Math.abs(MapleSimConstants.SHOOTER_YAW_OFFSET.getRadians()), EPSILON);
-		assertEquals(Math.PI, Math.abs(LaunchedFuelSim.getShooterFacing(Rotation2d.kZero).getRadians()), EPSILON);
+		assertEquals(0, MapleSimConstants.SHOOTER_YAW_OFFSET.getRadians(), EPSILON);
+		assertEquals(0, LaunchedFuelSim.getShooterFacing(Rotation2d.kZero).getRadians(), EPSILON);
 	}
 
 	@Test
