@@ -208,11 +208,19 @@ public class RobotContainer {
 		controller.leftTrigger().and(teleopEnabled)
 				.whileTrue(IntakeCommands.eject(intakeRoller, conveyor, bottomIndexer, topIndexer));
 
-		// Deploy intake backup for intake skipping
-		coPilot.povUp().and(teleopEnabled).whileTrue(IntakeCommands.deployIntakeVelocity(intakeRack, intakeRoller));
-		// Stow intake backup for intake skipping
-		coPilot.povDown().and(teleopEnabled)
-				.whileTrue(IntakeCommands.stowIntakeVelocity(intakeRack, intakeRoller, conveyor));
+		
+		// Deploy intake setpoint for pilot
+		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+		// Stow intake setpoint
+		controller.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+
+		// Deploy intake setpoint for copilot
+		coPilot.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
+		// Stow intake setpoint
+		coPilot.povDown().whileTrue(IntakeCommands.stowIntake(intakeRack, intakeRoller, conveyor))
+				.onFalse(IntakeCommands.idle(intakeRack, intakeRoller, conveyor));
+
 		coPilot.povLeft().and(teleopEnabled).onTrue(IntakeCommands.deployRack(intakeRack));
 		coPilot.povRight().and(teleopEnabled).onTrue(IntakeCommands.stowRack(intakeRack));
 
