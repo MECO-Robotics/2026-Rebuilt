@@ -9,7 +9,7 @@ robot.
 Driver controls
 ---------------
 
-- Hold driver ``A`` to run the coordinated hub-or-ferry shot. Inside the robot's own alliance zone, ``A`` always
+- Hold driver ``A`` to aim and prepare the coordinated hub-or-ferry shot; it does not feed by itself. Inside the robot's own alliance zone, ``A`` always
   selects the alliance hub even if no tag is visible. Outside that zone, any visible red-side tag (1--16) selects the
   red hub for red, and any visible blue-side tag (17--32) selects the blue hub for blue. If no tag from the robot's
   alliance side is visible, ferry mode uses one of two safe landing points inside the robot's alliance zone, one on
@@ -17,8 +17,15 @@ Driver controls
   centerline while holding ``A`` switches the point and resets shot readiness. Tags 6/7 and 22/23 are lane references
   only; neither pair is a landing target. The hub-versus-ferry mode remains fixed until ``A`` is released. A tag remains
   recently visible for 0.25 seconds so a normal gap between camera frames cannot select ferry mode accidentally.
-- Hold driver ``A`` and right bumper to force the feed path for recovery only. This bypasses range, pose, motion, and
-  mechanism-readiness protection.
+- Hold driver ``A`` and right bumper to feed continuously. Release right bumper to stop the conveyor and both
+  indexers while keeping ``A`` held to prepare the shooter. Each new bumper hold waits for flywheel speed within 0.75 RPS (45 RPM) of its target for
+  0.15 seconds before starting all three feed motors. Once started, speed dips do not interrupt the volley.
+  While feeding, the intake rack retracts to its saved feeding position (default 0.13 m)
+  at its saved maximum speed (default 0.10 m/s) and holds there.
+  The intake roller is not started by this motion.
+  Releasing right bumper stops feeding and commands the rack back to deployed (0.30 m) for pickup; it also resets the
+  initial-speed gate for the next volley. Releasing ``A``, disabling, or interrupting the command still stops it.
+  Manual feeding bypasses range, pose, motion, and hood-readiness checks after initial flywheel spin-up.
 - When ``/TunableNumbers/ShooterCalibration/Enabled`` is true, holding ``A`` uses the live calibration hood and
   flywheel values and automatic feeding is disabled. Hold ``A`` and right bumper to fire a calibration trial.
 - Hold driver left bumper to deploy the rack and run the intake roller, conveyor, and both storage indexers. Release it
@@ -27,7 +34,7 @@ Driver controls
 - Copilot POV left/right commands rack deploy/stow setpoints. POV up/down remain open-loop velocity backups.
 
 The dashboard key ``Shooter/Readiness`` identifies the current blocker, and ``Shooter/TargetMode`` reports ``HUB`` or
-``FERRY``. Automatic feeding requires a field-aligned pose, translation at or below 0.25 m/s, rotation at or below 10
+``FERRY``. Autonomous automatic feeding requires a field-aligned pose, translation at or below 0.25 m/s, rotation at or below 10
 degrees/s, heading error at or below 2 degrees, hood error at or below 0.002 rotations, and flywheel error at or below
 0.75 RPS. Hub shots additionally require a distance from 46.003 through 236 inches. Ferry shots use the ferry hood
 position and calculate enough flywheel speed to land at the safe field point. If that would exceed the configured
@@ -217,3 +224,26 @@ fender shot does not reset odometry, so it requires an accepted absolute vision 
 shooting if that pose never becomes ready.
 
 .. |square| unicode:: U+2610
+
+Saved feeding-rack tuning
+------------------------
+
+With NetworkTables connected, edit ``/Preferences/Intake/ShotRetractSpeedMps``
+(default 0.10, allowed 0.01–0.50 m/s) and
+``/Preferences/Intake/ShotHoldPositionMeters`` (default 0.13, allowed 0.13–0.30 m).
+These are WPILib Preferences, saved on the roboRIO across program restarts;
+simulation uses its own NetworkTables persistence file and does not transfer values to the robot.
+Use a NetworkTables editor or Shuffleboard Preferences widget to edit these entries.
+
+Lower speed means slower inward motion. Larger position means less inward travel:
+0.30 m is deployed and 0.13 m is the existing safe retracted position. Values outside
+these ranges are clamped; nonfinite values use the defaults. The applied values are
+logged as ``Intake/Shot/AppliedRetractSpeedMps`` and ``AppliedHoldPositionMeters``.
+The target is a commanded position, not a physical hard stop; verify actual stopping
+and clearance on the robot at low speed before increasing travel or speed.
+
+Settings are sampled when feeding begins and stay fixed for that volley. Release RB
+and start another volley to apply edits. RB release restores the usual deployment
+speed and sends the rack to the deployed preset. Other rack commands retain their
+normal motion settings. Initial flywheel readiness and continuous feeding behavior
+are unchanged.

@@ -219,7 +219,7 @@ public class RobotContainer {
 		// ************************** SHOOTER KEYBINDS **************************
 		controller.a().and(teleopEnabled)
 				.whileTrue(ShooterCommands.coordinatedSelectedShot(drivetrain, hood, shooterFlywheel, bottomIndexer,
-						topIndexer, conveyor, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
+						topIndexer, conveyor, intakeRack, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
 						this::selectDriverShotTarget, this::isShotPoseReady, controller.rightBumper()::getAsBoolean,
 						ShooterConstants.CALIBRATION.ENABLED::get, ShooterConstants.CALIBRATION.HOOD_ROTATIONS::get,
 						ShooterConstants.CALIBRATION.FLYWHEEL_RPS::get,

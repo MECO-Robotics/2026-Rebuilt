@@ -114,8 +114,8 @@ public class ShooterCommands {
 	}
 
 	/**
-	 * A driver-held hub shot that aims and spins continuously, then feeds only
-	 * while every stationary-shot readiness condition is satisfied.
+	 * A driver-held hub shot that aims and spins continuously. Feeding follows the
+	 * manual feed control until release, regardless of speed dips.
 	 */
 	public static Command coordinatedHubShot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter,
 			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, DoubleSupplier xSupplier,
@@ -147,13 +147,20 @@ public class ShooterCommands {
 	 * scheduled, then keeps aiming at that target until the button is released.
 	 */
 	public static Command coordinatedSelectedShot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter,
-			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, DoubleSupplier xSupplier,
-			DoubleSupplier ySupplier, Supplier<ShotTarget> targetSupplier, BooleanSupplier poseReady,
-			BooleanSupplier forceFeed, BooleanSupplier calibrationMode, DoubleSupplier calibrationHoodRotations,
-			DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback) {
-		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, xSupplier, ySupplier,
+			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, PositionJoint intakeRack,
+			DoubleSupplier xSupplier, DoubleSupplier ySupplier, Supplier<ShotTarget> targetSupplier,
+			BooleanSupplier poseReady, BooleanSupplier forceFeed, BooleanSupplier calibrationMode,
+			DoubleSupplier calibrationHoodRotations, DoubleSupplier calibrationFlywheelRps,
+			Consumer<Boolean> readyFeedback) {
+		boolean[] feeding = {false};
+		Command shot = coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, xSupplier, ySupplier,
 				targetSupplier, poseReady, forceFeed, calibrationMode, calibrationHoodRotations, calibrationFlywheelRps,
-				readyFeedback, false, 0.0, 0.0, 0.0, "CoordinatedShot");
+				ready -> {
+					feeding[0] = ready;
+					readyFeedback.accept(ready);
+				}, false, 0.0, 0.0, 0.0, "CoordinatedShot");
+		return shot.alongWith(
+				frc.robot.commands.IntakeCommands.holdRackRetractedWhileFeeding(intakeRack, () -> feeding[0]));
 	}
 
 	/**
@@ -275,6 +282,7 @@ public class ShooterCommands {
 		private ShotReadiness readiness = ShotReadiness.POSE_NOT_READY;
 		private boolean feeding;
 		private boolean feedStarted;
+		private final VolleyFeedGate volleyFeedGate = new VolleyFeedGate();
 		private boolean calibrationActive;
 		private boolean currentPoseReady;
 
@@ -310,6 +318,7 @@ public class ShooterCommands {
 			readiness = ShotReadiness.POSE_NOT_READY;
 			feeding = false;
 			feedStarted = false;
+			volleyFeedGate.reset();
 			calibrationActive = false;
 			currentPoseReady = false;
 			readinessDebouncer.calculate(false);
@@ -346,10 +355,15 @@ public class ShooterCommands {
 			}
 
 			ShotReadiness rawReadiness = determineReadiness();
-			boolean ready = forced || readinessDebouncer
+			// Teleop waits for initial speed, then feeds until bumper release.
+			// Timed autonomous shots retain their existing readiness gate.
+			boolean automaticReady = readinessDebouncer
 					.calculate(!ferrySideChanged && !calibrationActive && rawReadiness == ShotReadiness.READY);
+			boolean ready = finishAfterFeed
+					? automaticReady
+					: volleyFeedGate.calculate(forced, shooter.getVelocity(), solution.flywheelRotationsPerSecond());
 			readiness = forced
-					? ShotReadiness.FORCE_FEED_OVERRIDE
+					? (ready ? ShotReadiness.FORCE_FEED_OVERRIDE : ShotReadiness.FLYWHEEL_SPINNING_UP)
 					: calibrationActive ? ShotReadiness.CALIBRATION_MODE : rawReadiness;
 			setFeeding(ready);
 

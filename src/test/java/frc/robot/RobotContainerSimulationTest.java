@@ -351,6 +351,12 @@ class RobotContainerSimulationTest {
 		assertNeutral(conveyor, "Conveyor with right bumper alone");
 
 		controller.setAButton(true);
+		runCycles(2); // First cycle schedules the command; second executes it.
+		assertNeutral(conveyor, "Feeding waits for initial flywheel speed");
+		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(),
+				intakeRack.diagnosticMeasurements().get("ClampedTarget"), 1e-6,
+				"Rack stays deployed until feeding starts");
+
 		runCycles(SETTLE_CYCLES);
 		assertTrue(shooter.getVelocitySetpoint() > 0.0, "A should prepare the shooter");
 		assertOutputActive(bottomIndexer, "Bottom indexer during A + right-bumper force feed");
@@ -359,11 +365,24 @@ class RobotContainerSimulationTest {
 		assertTrue(controller.getRumble(GenericHID.RumbleType.kBothRumble) > 0.0,
 				"Force-feed readiness should provide driver rumble");
 
+		for (int cycle = 0; cycle < 200; cycle++) {
+			runCycles(1);
+			assertEquals(IntakeConstants.RACK_PRESETS.SAFE.get(),
+					intakeRack.diagnosticMeasurements().get("ClampedTarget"), 1e-6,
+					"Feeding must hold the retracted target without cycling out");
+		}
+		assertEquals(IntakeConstants.RACK_PRESETS.SAFE.get(), intakeRack.getPosition(), .02,
+				"Rack reaches and holds the safe position while feeding");
 		controller.setRightBumperButton(false);
 		runCycles(SETTLE_CYCLES);
 		assertTrue(shooter.getVelocitySetpoint() > 0.0, "A should keep the shooter prepared after override release");
-		// The path may continue automatically if normal readiness becomes valid after
-		// the override is released; that is the intended one-button shooting behavior.
+		assertNeutral(bottomIndexer, "Bottom indexer after right-bumper release with A held");
+		assertNeutral(topIndexer, "Top indexer after right-bumper release with A held");
+		assertNeutral(conveyor, "Conveyor after right-bumper release with A held");
+		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getDesiredPosition(), 1e-6);
+		runCycles(100);
+		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getPosition(), .02,
+				"Rack returns to pickup position after releasing RB");
 
 		controller.setAButton(false);
 		runCycles(SETTLE_CYCLES);
@@ -414,6 +433,13 @@ class RobotContainerSimulationTest {
 		assertOutputActive(bottomIndexer, "Bottom indexer during calibration force feed");
 		assertOutputActive(topIndexer, "Top indexer during calibration force feed");
 		assertOutputActive(conveyor, "Conveyor during calibration force feed");
+		// A new speed target creates a speed deficit, but must not interrupt the
+		// volley.
+		setCalibrationInputs(true, calibrationHoodRotations, 50.0);
+		runCycles(1);
+		assertOutputActive(conveyor, "Conveyor stays feeding through speed changes with RB held");
+		assertOutputActive(bottomIndexer, "Bottom indexer stays feeding with RB held");
+		assertOutputActive(topIndexer, "Top indexer stays feeding with RB held");
 
 		controller.setRightBumperButton(false);
 		controller.setAButton(false);

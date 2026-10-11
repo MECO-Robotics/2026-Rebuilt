@@ -25,6 +25,51 @@ public class IntakeCommands {
 		intakeSimulation = sim;
 	}
 
+	/** Holds the rack at a saved feeding position with a saved retraction speed. */
+	public static Command holdRackRetractedWhileFeeding(PositionJoint rack,
+			java.util.function.BooleanSupplier feeding) {
+		ShotIntakeSettings.initialize();
+		return new Command() {
+			private boolean wasFeeding;
+			private ShotIntakeSettings settings;
+			{
+				addRequirements(rack);
+			}
+			@Override
+			public void initialize() {
+				wasFeeding = false;
+				rack.clearProfileConstraintsOverride();
+				rack.setComplianceAfterTarget(false);
+			}
+			@Override
+			public void execute() {
+				boolean isFeeding = feeding.getAsBoolean();
+				if (isFeeding) {
+					if (!wasFeeding)
+						settings = ShotIntakeSettings.load();
+					rack.setPosition(settings.holdPositionMeters(), settings.retractSpeedMetersPerSecond());
+					org.littletonrobotics.junction.Logger.recordOutput("Intake/Shot/AppliedRetractSpeedMps",
+							settings.retractSpeedMetersPerSecond());
+					org.littletonrobotics.junction.Logger.recordOutput("Intake/Shot/AppliedHoldPositionMeters",
+							settings.holdPositionMeters());
+				} else {
+					rack.clearProfileConstraintsOverride();
+					rack.setPosition(RACK_PRESETS.DEPLOY.get());
+				}
+				wasFeeding = isFeeding;
+			}
+			@Override
+			public void end(boolean interrupted) {
+				rack.clearProfileConstraintsOverride();
+				if (edu.wpi.first.wpilibj.DriverStation.isTeleopEnabled()) {
+					rack.setPosition(RACK_PRESETS.DEPLOY.get());
+				} else {
+					rack.stop();
+				}
+			}
+		}.withName("ShotIntakeHold");
+	}
+
 	/** Starts the simulated intake when simulation support is available. */
 	private static Command activateIntakeSimulation() {
 		return intakeSimulation != null ? intakeSimulation.startIntake() : Commands.none();

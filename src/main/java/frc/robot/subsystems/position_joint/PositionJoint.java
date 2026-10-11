@@ -47,6 +47,7 @@ public class PositionJoint extends SubsystemBase {
 
 	private final LoggedTunableNumber kSetpoint;
 	private Double profileMaxVelocityOverride = null;
+	private boolean restoreProfileConstraints;
 	private double requestedPosition;
 	private double goalPosition;
 	private boolean complianceAfterTarget = false;
@@ -124,8 +125,11 @@ public class PositionJoint extends SubsystemBase {
 			}
 		} else {
 			disableComplianceHold();
-			boolean usingDynamicOverride = profileMaxVelocityOverride != null
-					&& positionJoint.setPositionDynamic(goalPosition, profileMaxVelocityOverride, kMaxAccel.get());
+			boolean usingDynamicOverride = (profileMaxVelocityOverride != null || restoreProfileConstraints)
+					&& positionJoint.setPositionDynamic(goalPosition,
+							profileMaxVelocityOverride != null ? profileMaxVelocityOverride : kMaxVelo.get(),
+							kMaxAccel.get());
+			restoreProfileConstraints = false;
 			if (!usingDynamicOverride) {
 				positionJoint.setPosition(goalPosition, 0.0);
 			}
@@ -187,6 +191,9 @@ public class PositionJoint extends SubsystemBase {
 		}
 
 		profileMaxVelocityOverride = null;
+		// SPARK MAX retains its last dynamic cruise constraint until explicitly
+		// restored.
+		restoreProfileConstraints = true;
 	}
 
 	/** Enables/disables post-target compliance mode for impact absorption. */
