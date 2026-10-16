@@ -207,8 +207,9 @@ public class RobotContainer {
 				.whileTrue(IntakeCommands.acquire(intakeRack, intakeRoller, conveyor, bottomIndexer, topIndexer));
 		controller.leftTrigger().and(teleopEnabled)
 				.whileTrue(IntakeCommands.eject(intakeRoller, conveyor, bottomIndexer, topIndexer));
+		controller.rightTrigger().and(teleopEnabled)
+				.whileTrue(Flywheel.setVoltage(intakeRoller, IntakeConstants.ROLLER_PRESETS.INTAKE));
 
-		
 		// Deploy intake setpoint for pilot
 		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
 		// Stow intake setpoint

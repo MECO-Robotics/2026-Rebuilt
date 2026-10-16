@@ -31,6 +31,7 @@ Driver controls
 - Hold driver left bumper to deploy the rack and run the intake roller, conveyor, and both storage indexers. Release it
   to stop the path while leaving the rack deployed.
 - Hold driver left trigger to reverse the complete acquisition path.
+- Hold driver right trigger to run only the intake roller inward; release it to stop the roller.
 - Copilot POV left/right commands rack deploy/stow setpoints. POV up/down remain open-loop velocity backups.
 
 The dashboard key ``Shooter/Readiness`` identifies the current blocker, and ``Shooter/TargetMode`` reports ``HUB`` or

@@ -129,6 +129,7 @@ This repo uses controller bindings to compose commands directly where operator i
 Examples:
 
 - left bumper deploys the intake and runs its roller, conveyor, and storage indexers while held
+- right trigger runs only the intake roller inward while held and stops it on release
 - releasing left bumper stops the fuel path and leaves the rack at its deployed target
 - left trigger reverses the complete acquisition path for ejection
 - copilot POV controls provide manual rack deploy/stow and velocity backups
