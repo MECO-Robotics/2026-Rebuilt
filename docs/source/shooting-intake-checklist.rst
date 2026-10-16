@@ -6,43 +6,68 @@ conflicts, but motor direction, roller wrap, mechanism compression, and the shot
 robot.
 
 
+Control-change contract
+-----------------------
+
+Scope: the approved driver mapping changes command ownership and lifecycle only. Existing rack limits, saved
+retraction settings, roller voltages, current limits, and shooter presets remain owned by their existing constants
+and subsystem code. No new physical ratings or hardware performance are inferred from desktop tests.
+
+Acceptance requirements (owner: ``RobotContainer`` bindings and ``ShooterCommands``):
+
+- Start retains heading reset and D-pad behavior is preserved by binding review.
+- Acquisition runs intake/conveyor inward and both indexers opposite their feed direction; release stops rollers.
+- Ejection uses the intake eject direction and independently corrected conveyor/indexer directions; release stops all rollers.
+- Agitation runs the intake immediately and retracts the rack with continuous feed after initial spin-up, independently of aiming.
+- Feed waits for an active positive RPM target and initial speed; release or shooter stop neutralizes feed rollers.
+- Preset selection persists after button release; replacing/stopping/disabling interrupts it.
+- Shooter off uses open-loop zero voltage, not a zero-RPM velocity PID request.
+
+``RobotContainerSimulationTest`` checks bindings, targets, release, preset replacement, feed gating, and stop while
+agitation remains held. ``CommandLifetimeTest`` checks interruption/zero-voltage behavior. Physical direction and
+ball movement require observation on the robot; no automated test commands real hardware.
+
+
 Driver controls
 ---------------
 
-- Hold driver ``A`` to aim and prepare the coordinated hub-or-ferry shot; it does not feed by itself. Inside the robot's own alliance zone, ``A`` always
-  selects the alliance hub even if no tag is visible. Outside that zone, any visible red-side tag (1--16) selects the
-  red hub for red, and any visible blue-side tag (17--32) selects the blue hub for blue. If no tag from the robot's
-  alliance side is visible, ferry mode uses one of two safe landing points inside the robot's alliance zone, one on
-  each side of the field. The robot's current field half selects the matching landing point, and crossing the field
-  centerline while holding ``A`` switches the point and resets shot readiness. Tags 6/7 and 22/23 are lane references
-  only; neither pair is a landing target. The hub-versus-ferry mode remains fixed until ``A`` is released. A tag remains
-  recently visible for 0.25 seconds so a normal gap between camera frames cannot select ferry mode accidentally.
-- Hold driver ``A`` and right bumper to feed continuously. Release right bumper to stop the conveyor and both
-  indexers while keeping ``A`` held to prepare the shooter. Each new bumper hold waits for flywheel speed within 0.75 RPS (45 RPM) of its target for
-  0.15 seconds before starting all three feed motors. Once started, speed dips do not interrupt the volley.
-  While feeding, the intake rack retracts to its saved feeding position (default 0.13 m)
-  at its saved maximum speed (default 0.10 m/s) and holds there.
-  The intake roller is not started by this motion.
-  Releasing right bumper stops feeding and commands the rack back to deployed (0.30 m) for pickup; it also resets the
-  initial-speed gate for the next volley. Releasing ``A``, disabling, or interrupting the command still stops it.
-  Manual feeding bypasses range, pose, motion, and hood-readiness checks after initial flywheel spin-up.
-- When ``/TunableNumbers/ShooterCalibration/Enabled`` is true, holding ``A`` uses the live calibration hood and
-  flywheel values and automatic feeding is disabled. Hold ``A`` and right bumper to fire a calibration trial.
-- Hold driver left bumper to deploy the rack and run the intake roller, conveyor, and both storage indexers. Release it
-  to stop the path while leaving the rack deployed.
-- Hold driver left trigger to reverse the complete acquisition path.
-- Hold driver right trigger to run only the intake roller inward; release it to stop the roller.
-- Copilot POV left/right commands rack deploy/stow setpoints. POV up/down remain open-loop velocity backups.
+- Hold driver ``A`` to auto-aim while retaining left-stick translation. This does not start the shooter or feed motors.
+- Press ``X`` once to latch the hub hood/RPM preset, or ``Y`` once for the ferry preset. Releasing the button keeps
+  the preset active. Copilot ``X``/``Y`` select the same presets; copilot ``A`` latches the trench preset.
+- Press ``B`` on either controller to interrupt the preset, command shooter voltage to zero (leave velocity PID),
+  and stow the hood. Disable/interruption also stops the preset; re-enabling does not restart it.
+- Hold driver right bumper to agitate and shoot: run the intake roller immediately; once feeding starts, retract
+  the intake rack to the saved feeding position (default 0.13 m) at the saved maximum speed (default 0.10 m/s),
+  while the intake roller continues inward.
+  The conveyor and indexers wait until a positive active flywheel RPM target is reached within 3 RPS (180 RPM) for 0.15 s.
+  All rollers stay running during retraction. Once feeding begins, speed dips do not interrupt the volley.
+  Pressing ``B`` stops shooter and feed even if the bumper remains held; intake agitation continues until release.
+- Release right bumper to stop the intake, conveyor, and indexers and return the rack to deployed (0.30 m).
+  The selected flywheel preset keeps running. Aim and feed are independent: ``A`` is optional while feeding.
+- Hold driver right trigger to deploy the rack and acquire balls using intake + conveyor with both indexers running
+  backwards relative to shooting. Release to stop the rollers and leave the rack deployed.
+- Hold driver left trigger for full fuel-path ejection: rack deployed, intake at its eject voltage, conveyor at
+  half the intake voltage, and both indexers at their negated feed voltages. Release stops all four rollers.
+- While right bumper is held, two strong rumble pulses each second mean feeding is blocked (no shooter preset or
+  waiting for initial shooter speed). Steady lighter rumble means feeding is active. Release, Disable, or command
+  interruption clears rumble. ``Shooter/FeedBlockedReason`` shows ``SELECT_SHOOTER_PRESET`` or
+  ``WAITING_FOR_SHOOTER_SPEED`` and clears when feeding starts or the command ends.
+- Driver left bumper is unassigned. Driver Start resets heading.
+- Driver and copilot D-pad up/down retain deploy/safe-retract behavior; down runs intake + conveyor inward and
+  stops them on release. Copilot D-pad left/right retain rack deploy/full-stow setpoints.
+- When ``/TunableNumbers/ShooterCalibration/Enabled`` is true, pressing ``X`` selects bounded live calibration
+  hood/RPM values instead of the hub preset. Right bumper still handles agitation/feed; ``B`` stops the preset.
 
-The dashboard key ``Shooter/Readiness`` identifies the current blocker, and ``Shooter/TargetMode`` reports ``HUB`` or
-``FERRY``. Autonomous automatic feeding requires a field-aligned pose, translation at or below 0.25 m/s, rotation at or below 10
+For coordinated autonomous shots, ``Shooter/Readiness`` identifies the current blocker and
+``Shooter/TargetMode`` reports ``HUB`` or ``FERRY``. Autonomous automatic feeding requires a field-aligned pose, translation at or below 0.25 m/s, rotation at or below 10
 degrees/s, heading error at or below 2 degrees, hood error at or below 0.002 rotations, and flywheel error at or below
 0.75 RPS. Hub shots additionally require a distance from 46.003 through 236 inches. Ferry shots use the ferry hood
 position and calculate enough flywheel speed to land at the safe field point. If that would exceed the configured
 ferry maximum, pass through the hub structure, or fail to clear the complete trench depth with the configured safety
 margin, readiness reports ``UNSAFE_FERRY_PATH`` and automatic feeding remains blocked. All conditions must remain
 valid for 0.15 seconds. Without a valid pose, the command holds the current heading, stops the flywheel, and stows the
-hood instead of preparing from an uninitialized field position; ``A`` plus right bumper remains the explicit override.
+hood instead of preparing from an uninitialized field position. This autonomous gate does not apply to the independent
+manual right-bumper feed action.
 
 
 Deployment identity and neutral-output check
@@ -182,13 +207,13 @@ The prepared AdvantageScope layout includes these editable NetworkTables values:
 - ``/TunableNumbers/ShooterCalibration/HoodRotations``
 - ``/TunableNumbers/ShooterCalibration/FlywheelRPS``
 
-Set ``Enabled`` true only during a controlled calibration session. Hold driver ``A`` to keep AprilTag/QuestNav-based
-aiming active while the live hood and flywheel values are applied. Calibration mode never feeds automatically; hold
-driver ``A`` and right bumper together for each firing trial. Hood input is clamped to 0--0.049 rotations and
+Set ``Enabled`` true only during a controlled calibration session, then press ``X`` to latch the live hood/RPM preset.
+Hold driver ``A`` for pose-based aiming if needed, and hold right bumper for each firing trial.
+Release right bumper to stop feed and press ``B`` to stop the shooter. Hood input is clamped to 0--0.049 rotations and
 flywheel input is clamped to 0--60 RPS. Autonomous shooting always ignores calibration mode.
 
-Calibration mode and autonomous shooting always select the alliance hub; the no-visible-tag ferry fallback applies
-only to the normal driver-held ``A`` command.
+Calibration aiming selects the alliance hub. Outside calibration, driver ``A`` uses the visible-tag hub/ferry selection;
+manual presets and manual feeding remain independent of that aim selection.
 
 Watch ``Shooter/CalibrationDistanceInches`` and the applied/measured hood and flywheel rows in the
 ``Shot & Intake Status`` tab. Dashboard values are temporary calibration inputs, not permanent shot-table changes.

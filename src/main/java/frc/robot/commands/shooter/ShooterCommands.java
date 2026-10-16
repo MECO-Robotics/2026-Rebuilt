@@ -90,6 +90,85 @@ public class ShooterCommands {
 				launchedFuelSimulation != null ? launchedFuelSimulation.launchCommand() : Commands.none());
 	}
 
+	/**
+	 * Runs the intake while held; retracts with continuous feed after initial
+	 * spin-up.
+	 */
+	public static Command agitateAndFeed(PositionJoint rack, Flywheel intake, Flywheel conveyor, Flywheel bottomIndexer,
+			Flywheel topIndexer, Flywheel shooter, java.util.function.DoubleConsumer rumbleFeedback) {
+		VolleyFeedGate gate = new VolleyFeedGate();
+		Timer feedbackTimer = new Timer();
+		boolean[] feedingActive = {false};
+		Command feed = Commands.run(() -> {
+			boolean feeding = gate.calculate(shooter.isVelocityControlActive(), shooter.getVelocity(),
+					shooter.getVelocitySetpoint());
+			feedingActive[0] = feeding;
+			if (feeding) {
+				bottomIndexer.setVoltage(INDEXER_PRESET.FEED_BOTTOM.get());
+				topIndexer.setVoltage(INDEXER_PRESET.FEED_TOP.get());
+				conveyor.setVoltage(CONVEYOR_PRESET.FEED.get());
+			} else {
+				bottomIndexer.stop();
+				topIndexer.stop();
+				conveyor.stop();
+			}
+			// Two strong pulses each second mean the held action is blocked.
+			double phase = feedbackTimer.get() % 1.0;
+			boolean pulse = phase < 0.15 || (phase >= 0.30 && phase < 0.45);
+			rumbleFeedback.accept(feeding ? 0.35 : pulse ? 0.75 : 0.0);
+			String blockedReason = feeding
+					? ""
+					: !shooter.isVelocityControlActive() || shooter.getVelocitySetpoint() <= 0.0
+							? "SELECT_SHOOTER_PRESET"
+							: "WAITING_FOR_SHOOTER_SPEED";
+			SmartDashboard.putString("Shooter/FeedBlockedReason", blockedReason);
+			Logger.recordOutput("Shooter/FeedBlockedReason", blockedReason);
+			SmartDashboard.putBoolean("Shooter/Feeding", feeding);
+			Logger.recordOutput("Shooter/Feeding", feeding);
+		}, bottomIndexer, topIndexer, conveyor).beforeStarting(() -> {
+			gate.reset();
+			feedbackTimer.restart();
+			feedingActive[0] = false;
+		}).finallyDo(interrupted -> {
+			feedingActive[0] = false;
+			bottomIndexer.stop();
+			topIndexer.stop();
+			conveyor.stop();
+			rumbleFeedback.accept(0.0);
+			feedbackTimer.stop();
+			SmartDashboard.putString("Shooter/FeedBlockedReason", "");
+			Logger.recordOutput("Shooter/FeedBlockedReason", "");
+			SmartDashboard.putBoolean("Shooter/Feeding", false);
+			Logger.recordOutput("Shooter/Feeding", false);
+		});
+		return Commands
+				.parallel(feed,
+						frc.robot.commands.IntakeCommands.holdRackRetractedWhileFeeding(rack, () -> feedingActive[0]),
+						Flywheel.setVoltage(intake,
+								frc.robot.constants.subsystems.IntakeConstants.ROLLER_PRESETS.INTAKE))
+				.withName("AgitateAndFeed");
+	}
+
+	/**
+	 * Hub preset, or bounded live calibration setpoints when calibration is
+	 * enabled.
+	 */
+	public static Command driverHubPreset(Flywheel shooter, PositionJoint hood) {
+		return Commands
+				.either(Commands
+						.parallel(
+								PositionJoint.holdPosition(
+										hood,
+										() -> clampCalibrationHoodRotations(
+												ShooterConstants.CALIBRATION.HOOD_ROTATIONS.get())),
+								Flywheel.holdVelocity(shooter,
+										() -> clampCalibrationFlywheelRps(
+												ShooterConstants.CALIBRATION.FLYWHEEL_RPS.get())))
+						.beforeStarting(() -> SmartDashboard.putBoolean("Shooter/CalibrationMode", true))
+						.finallyDo(interrupted -> SmartDashboard.putBoolean("Shooter/CalibrationMode", false)),
+						hubPreset(shooter, hood), ShooterConstants.CALIBRATION.ENABLED::get);
+	}
+
 	/** Stows the hood and stops the shooter flywheel. */
 	public static Command shooterIdle(Flywheel shooterRoller, PositionJoint hood) {
 		return Commands.deadline(PositionJoint.setPosition(hood, HOOD_PRESET.STOW), Flywheel.idle(shooterRoller));

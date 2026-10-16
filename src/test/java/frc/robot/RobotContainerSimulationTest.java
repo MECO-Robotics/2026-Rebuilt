@@ -133,12 +133,12 @@ class RobotContainerSimulationTest {
 		verifyRackSettlesWithoutJitter();
 		verifyDriveBindingMovesRobot();
 		verifyAllianceCanChangeWithoutRestartingSimulation();
-		verifyShooterPresetStopsOnRelease();
+		verifyShooterPresetLatchesUntilStopped();
 		verifyAcquireDeploysAndStopsOnRelease();
 		verifyEjectStopsOnRelease();
 		verifyDefaultAutonomousRefusesUninitializedPose();
 		verifyAutonomousShotTimesOutSafely();
-		verifyForceFeedRequiresCoordinatedShot();
+		verifyIndependentAgitateAndAim();
 		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
 		verifySystemCheckInterlocksAndAbort();
 		verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures();
@@ -303,7 +303,7 @@ class RobotContainerSimulationTest {
 						+ aimErrorDegrees + " degrees, pose=" + aimedPose + ", hub=" + hub);
 	}
 
-	private void verifyShooterPresetStopsOnRelease() {
+	private void verifyShooterPresetLatchesUntilStopped() {
 		controller.setXButton(true);
 		runCycles(SETTLE_CYCLES);
 		assertEquals(ShooterConstants.SHOOTER_PRESET.HUB.get(), shooter.getVelocitySetpoint(), 1e-6);
@@ -315,7 +315,18 @@ class RobotContainerSimulationTest {
 
 		controller.setXButton(false);
 		runCycles(SETTLE_CYCLES);
-		assertNeutral(shooter, "Shooter after X release");
+		assertTrue(shooter.isVelocityControlActive(), "Releasing X keeps PID active");
+		assertEquals(ShooterConstants.SHOOTER_PRESET.HUB.get(), shooter.getVelocitySetpoint(), 1e-6);
+		controller.setYButton(true);
+		runCycles(2);
+		controller.setYButton(false);
+		runCycles(SETTLE_CYCLES);
+		assertEquals(ShooterConstants.SHOOTER_PRESET.FERRY.get(), shooter.getVelocitySetpoint(), 1e-6);
+		controller.setBButton(true);
+		runCycles(2);
+		controller.setBButton(false);
+		runCycles(SETTLE_CYCLES);
+		assertNeutral(shooter, "B stops the latched preset");
 		assertEquals(ShooterConstants.HOOD_PRESET.STOW.get(), hood.getDesiredPosition(), 1e-6,
 				() -> "Hood should return to its default safe position after X is released; current command="
 						+ (hood.getCurrentCommand() == null ? "none" : hood.getCurrentCommand().getName())
@@ -324,74 +335,100 @@ class RobotContainerSimulationTest {
 	}
 
 	private void verifyAcquireDeploysAndStopsOnRelease() {
-		controller.setLeftBumperButton(true);
+		controller.setRightTriggerAxis(1.0);
 		runCycles(SETTLE_CYCLES);
 
 		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getDesiredPosition(), 1e-6);
-		assertOutputActive(intake, "Intake roller while left bumper is held");
-		assertOutputActive(conveyor, "Conveyor while left bumper is held");
-		assertOutputActive(bottomIndexer, "Bottom indexer while left bumper is held");
-		assertOutputActive(topIndexer, "Top indexer while left bumper is held");
+		assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get() / 2.0, bottomIndexer.getCommandedVoltage(),
+				1e-6);
+		assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_TOP.get() / 2.0, topIndexer.getCommandedVoltage(), 1e-6);
+		assertOutputActive(intake, "Intake roller while right trigger is held");
+		assertOutputActive(conveyor, "Conveyor while right trigger is held");
+		assertOutputActive(bottomIndexer, "Bottom indexer while right trigger is held");
+		assertOutputActive(topIndexer, "Top indexer while right trigger is held");
 
-		controller.setLeftBumperButton(false);
+		controller.setRightTriggerAxis(0.0);
 		runCycles(SETTLE_CYCLES);
-		assertNeutral(intake, "Intake roller after left bumper release");
-		assertNeutral(conveyor, "Conveyor after left bumper release");
-		assertNeutral(bottomIndexer, "Bottom indexer after left bumper release");
-		assertNeutral(topIndexer, "Top indexer after left bumper release");
+		assertNeutral(intake, "Intake roller after right trigger release");
+		assertNeutral(conveyor, "Conveyor after right trigger release");
+		assertNeutral(bottomIndexer, "Bottom indexer after right trigger release");
+		assertNeutral(topIndexer, "Top indexer after right trigger release");
 		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getDesiredPosition(), 1e-6,
 				"The intake rack should remain deployed after acquisition is released");
 	}
 
-	private void verifyForceFeedRequiresCoordinatedShot() {
-		controller.setRightBumperButton(true);
-		runCycles(SETTLE_CYCLES);
-		assertNeutral(bottomIndexer, "Bottom indexer with right bumper alone");
-		assertNeutral(topIndexer, "Top indexer with right bumper alone");
-		assertNeutral(conveyor, "Conveyor with right bumper alone");
-
+	private void verifyIndependentAgitateAndAim() {
 		controller.setAButton(true);
-		runCycles(2); // First cycle schedules the command; second executes it.
-		assertNeutral(conveyor, "Feeding waits for initial flywheel speed");
+		runCycles(SETTLE_CYCLES);
+		assertNeutral(shooter, "A aims without starting the shooter");
+		assertNeutral(conveyor, "A does not feed");
+		controller.setAButton(false);
+		runCycles(2);
+
+		controller.setRightBumperButton(true);
+		runCycles(2);
+		assertOutputActive(intake, "Agitation runs the intake immediately without a preset");
 		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(),
 				intakeRack.diagnosticMeasurements().get("ClampedTarget"), 1e-6,
-				"Rack stays deployed until feeding starts");
-
+				"Rack waits for feed rollers before retracting");
+		assertNeutral(conveyor, "Feed waits for a positive active RPM target");
+		boolean sawBlockedPulse = false;
+		boolean sawBlockedGap = false;
+		for (int cycle = 0; cycle < 30; cycle++) {
+			runCycles(1);
+			double rumble = controller.getRumble(GenericHID.RumbleType.kBothRumble);
+			sawBlockedPulse |= rumble > 0.70;
+			sawBlockedGap |= rumble < 0.01;
+			assertNeutral(conveyor, "Blocked rumble must not start feeding");
+		}
+		assertTrue(sawBlockedPulse && sawBlockedGap, "Blocked feedback pulses instead of staying silent or steady");
+		assertEquals("SELECT_SHOOTER_PRESET", SmartDashboard.getString("Shooter/FeedBlockedReason", "missing"));
+		controller.setXButton(true);
+		runCycles(2);
+		controller.setXButton(false);
 		runCycles(SETTLE_CYCLES);
-		assertTrue(shooter.getVelocitySetpoint() > 0.0, "A should prepare the shooter");
-		assertOutputActive(bottomIndexer, "Bottom indexer during A + right-bumper force feed");
-		assertOutputActive(topIndexer, "Top indexer during A + right-bumper force feed");
-		assertOutputActive(conveyor, "Conveyor during A + right-bumper force feed");
-		assertTrue(controller.getRumble(GenericHID.RumbleType.kBothRumble) > 0.0,
-				"Force-feed readiness should provide driver rumble");
-
+		assertOutputActive(bottomIndexer, "Indexer feeds with preset and RB alone");
+		assertOutputActive(topIndexer, "Indexer feeds with preset and RB alone");
+		assertOutputActive(conveyor, "Conveyor feeds with preset and RB alone");
+		assertEquals(0.35, controller.getRumble(GenericHID.RumbleType.kBothRumble), 1e-4,
+				"Active feeding has steady weaker rumble");
+		assertEquals("", SmartDashboard.getString("Shooter/FeedBlockedReason", "missing"));
+		boolean observedRetraction = false;
+		double previousPosition = intakeRack.getPosition();
 		for (int cycle = 0; cycle < 200; cycle++) {
 			runCycles(1);
-			assertEquals(IntakeConstants.RACK_PRESETS.SAFE.get(),
-					intakeRack.diagnosticMeasurements().get("ClampedTarget"), 1e-6,
-					"Feeding must hold the retracted target without cycling out");
+			observedRetraction |= intakeRack.getPosition() < previousPosition - 1e-5;
+			previousPosition = intakeRack.getPosition();
+			assertOutputActive(intake, "Intake keeps spinning throughout retraction");
+			assertOutputActive(conveyor, "Conveyor keeps spinning throughout retraction");
+			assertOutputActive(bottomIndexer, "Bottom indexer keeps spinning throughout retraction");
+			assertOutputActive(topIndexer, "Top indexer keeps spinning throughout retraction");
 		}
-		assertEquals(IntakeConstants.RACK_PRESETS.SAFE.get(), intakeRack.getPosition(), .02,
-				"Rack reaches and holds the safe position while feeding");
+		assertTrue(observedRetraction, "Rack must actually move inward while rollers run");
+		assertEquals(IntakeConstants.RACK_PRESETS.SAFE.get(), intakeRack.getPosition(), .02);
 		controller.setRightBumperButton(false);
 		runCycles(SETTLE_CYCLES);
-		assertTrue(shooter.getVelocitySetpoint() > 0.0, "A should keep the shooter prepared after override release");
-		assertNeutral(bottomIndexer, "Bottom indexer after right-bumper release with A held");
-		assertNeutral(topIndexer, "Top indexer after right-bumper release with A held");
-		assertNeutral(conveyor, "Conveyor after right-bumper release with A held");
+		assertNeutral(intake, "Intake stops on agitation release");
+		assertEquals(0.0, controller.getRumble(GenericHID.RumbleType.kBothRumble), 1e-6,
+				"Releasing RB clears haptic feedback");
+		assertNeutral(bottomIndexer, "Indexer stops on agitation release");
+		assertNeutral(topIndexer, "Indexer stops on agitation release");
+		assertNeutral(conveyor, "Conveyor stops on agitation release");
+		assertTrue(shooter.isVelocityControlActive(), "Agitation release keeps preset RPM");
 		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getDesiredPosition(), 1e-6);
 		runCycles(100);
-		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getPosition(), .02,
-				"Rack returns to pickup position after releasing RB");
+		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getPosition(), .02);
 
-		controller.setAButton(false);
+		controller.setRightBumperButton(true);
 		runCycles(SETTLE_CYCLES);
-		assertNeutral(shooter, "Shooter after A release");
-		assertNeutral(bottomIndexer, "Bottom indexer after A release");
-		assertNeutral(topIndexer, "Top indexer after A release");
-		assertNeutral(conveyor, "Conveyor after A release");
-		assertEquals(0.0, controller.getRumble(GenericHID.RumbleType.kBothRumble), VOLTAGE_TOLERANCE);
-		assertEquals(ShooterConstants.HOOD_PRESET.STOW.get(), hood.getDesiredPosition(), 1e-6);
+		controller.setBButton(true);
+		runCycles(3);
+		assertNeutral(shooter, "B leaves shooter in zero-voltage mode even while RB is held");
+		assertNeutral(conveyor, "B stops feed even while RB is held");
+		assertNeutral(bottomIndexer, "B stops indexers even while RB is held");
+		controller.setBButton(false);
+		controller.setRightBumperButton(false);
+		runCycles(SETTLE_CYCLES);
 	}
 
 	private void verifyEjectStopsOnRelease() {
@@ -401,6 +438,11 @@ class RobotContainerSimulationTest {
 		assertOutputActive(conveyor, "Conveyor while eject is held");
 		assertOutputActive(bottomIndexer, "Bottom indexer while eject is held");
 		assertOutputActive(topIndexer, "Top indexer while eject is held");
+
+		assertEquals(IntakeConstants.ROLLER_PRESETS.EJECT.get(), intake.getCommandedVoltage(), 1e-6);
+		assertEquals(IntakeConstants.ROLLER_PRESETS.INTAKE.get() / 2.0, conveyor.getCommandedVoltage(), 1e-6);
+		assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(), bottomIndexer.getCommandedVoltage(), 1e-6);
+		assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(), 1e-6);
 
 		controller.setLeftTriggerAxis(0.0);
 		runCycles(SETTLE_CYCLES);
@@ -419,14 +461,15 @@ class RobotContainerSimulationTest {
 		double calibrationFlywheelRps = 37.0;
 		setCalibrationInputs(true, calibrationHoodRotations, calibrationFlywheelRps);
 
-		controller.setAButton(true);
+		controller.setXButton(true);
+		runCycles(2);
+		controller.setXButton(false);
 		runCycles(SETTLE_CYCLES);
 		assertEquals(calibrationHoodRotations, hood.getDesiredPosition(), 1e-6);
 		assertEquals(calibrationFlywheelRps, shooter.getVelocitySetpoint(), 1e-6);
 		assertNeutral(bottomIndexer, "Bottom indexer during calibration without force feed");
 		assertNeutral(topIndexer, "Top indexer during calibration without force feed");
 		assertNeutral(conveyor, "Conveyor during calibration without force feed");
-		assertEquals("CALIBRATION_MODE", SmartDashboard.getString("Shooter/Readiness", "missing"));
 
 		controller.setRightBumperButton(true);
 		runCycles(SETTLE_CYCLES);
@@ -442,14 +485,16 @@ class RobotContainerSimulationTest {
 		assertOutputActive(topIndexer, "Top indexer stays feeding with RB held");
 
 		controller.setRightBumperButton(false);
-		controller.setAButton(false);
+		controller.setBButton(true);
+		runCycles(2);
+		controller.setBButton(false);
 		runCycles(SETTLE_CYCLES);
 		assertNeutral(shooter, "Shooter after calibration release");
 		assertNeutral(bottomIndexer, "Bottom indexer after calibration release");
 		assertNeutral(topIndexer, "Top indexer after calibration release");
 		assertNeutral(conveyor, "Conveyor after calibration release");
 		assertFalse(SmartDashboard.getBoolean("Shooter/CalibrationMode", true),
-				"Calibration-active telemetry must clear when A is released");
+				"Calibration-active telemetry must clear when B stops the preset");
 		setCalibrationInputs(false, calibrationHoodRotations, calibrationFlywheelRps);
 	}
 

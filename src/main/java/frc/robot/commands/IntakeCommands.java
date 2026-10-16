@@ -167,13 +167,17 @@ public class IntakeCommands {
 				});
 	}
 
-	/** Reverses the complete acquisition path to eject fuel through the intake. */
+	/**
+	 * Ejects through the intake using independent conveyor and indexer directions.
+	 */
 	public static Command eject(Flywheel intakeRoller, Flywheel conveyor, Flywheel bottomIndexer, Flywheel topIndexer) {
-		return Commands
-				.parallel(Flywheel.setVoltage(intakeRoller, ROLLER_PRESETS.EJECT),
-						Flywheel.setVoltage(conveyor, () -> ROLLER_PRESETS.INTAKE.getAsDouble() / 2.0),
-						ShooterCommands.runFeedIndexers(bottomIndexer, topIndexer), activateIntakeSimulation())
-				.finallyDo(interrupted -> {
+		return Commands.parallel(Flywheel.setVoltage(intakeRoller, ROLLER_PRESETS.EJECT),
+				Flywheel.setVoltage(conveyor, () -> ROLLER_PRESETS.INTAKE.getAsDouble() / 2.0),
+				Flywheel.setVoltage(bottomIndexer,
+						() -> -frc.robot.constants.subsystems.ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get()),
+				Flywheel.setVoltage(topIndexer,
+						() -> -frc.robot.constants.subsystems.ShooterConstants.INDEXER_PRESET.FEED_TOP.get()),
+				activateIntakeSimulation()).finallyDo(interrupted -> {
 					intakeRoller.stop();
 					conveyor.stop();
 					bottomIndexer.stop();

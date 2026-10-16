@@ -201,14 +201,16 @@ public class RobotContainer {
 			}
 		}, hood));
 
-		// Deploy and run the complete acquisition path while held. On release, the
-		// motors idle and the rack finishes at its deployed setpoint.
-		controller.leftBumper().and(teleopEnabled)
+		// Primary fuel-path actions are separate from aiming and flywheel presets.
+		controller.rightTrigger().and(teleopEnabled)
 				.whileTrue(IntakeCommands.acquire(intakeRack, intakeRoller, conveyor, bottomIndexer, topIndexer));
 		controller.leftTrigger().and(teleopEnabled)
-				.whileTrue(IntakeCommands.eject(intakeRoller, conveyor, bottomIndexer, topIndexer));
-		controller.rightTrigger().and(teleopEnabled)
-				.whileTrue(Flywheel.setVoltage(intakeRoller, IntakeConstants.ROLLER_PRESETS.INTAKE));
+				.whileTrue(IntakeCommands.eject(intakeRoller, conveyor, bottomIndexer, topIndexer)
+						.alongWith(IntakeCommands.holdDeployedRack(intakeRack)));
+		controller.rightBumper().and(teleopEnabled)
+				.whileTrue(ShooterCommands.agitateAndFeed(intakeRack, intakeRoller, conveyor, bottomIndexer, topIndexer,
+						shooterFlywheel,
+						intensity -> controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, intensity)));
 
 		// Deploy intake setpoint for pilot
 		controller.povUp().whileTrue(IntakeCommands.deployIntake(intakeRack, intakeRoller));
@@ -225,25 +227,20 @@ public class RobotContainer {
 		coPilot.povLeft().and(teleopEnabled).onTrue(IntakeCommands.deployRack(intakeRack));
 		coPilot.povRight().and(teleopEnabled).onTrue(IntakeCommands.stowRack(intakeRack));
 
-		// ************************** SHOOTER KEYBINDS **************************
+		// Aim independently while the driver retains translation control.
 		controller.a().and(teleopEnabled)
-				.whileTrue(ShooterCommands.coordinatedSelectedShot(drivetrain, hood, shooterFlywheel, bottomIndexer,
-						topIndexer, conveyor, intakeRack, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
-						this::selectDriverShotTarget, this::isShotPoseReady, controller.rightBumper()::getAsBoolean,
-						ShooterConstants.CALIBRATION.ENABLED::get, ShooterConstants.CALIBRATION.HOOD_ROTATIONS::get,
-						ShooterConstants.CALIBRATION.FLYWHEEL_RPS::get,
-						ready -> controller.getHID().setRumble(GenericHID.RumbleType.kBothRumble, ready ? 0.35 : 0.0)));
+				.whileTrue(DriveCommands.joystickDriveAtAngle(drivetrain, () -> -controller.getLeftY(),
+						() -> -controller.getLeftX(), () -> ShooterCalculator
+								.calculate(drivetrain.getState().Pose, selectDriverShotTarget()).targetHeading(),
+						DrivetrainConstants.MAX_SPEED));
 
-		controller.y().and(teleopEnabled).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		// Press once to latch a preset; release does not cancel its RPM hold.
+		controller.x().or(coPilot.x()).and(teleopEnabled)
+				.onTrue(ShooterCommands.driverHubPreset(shooterFlywheel, hood));
+		controller.y().or(coPilot.y()).and(teleopEnabled).onTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
+		coPilot.a().and(teleopEnabled).onTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
+		controller.b().or(coPilot.b()).and(teleopEnabled).onTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
 
-		// Shooter presets
-		controller.b().or(coPilot.b()).and(teleopEnabled).whileTrue(ShooterCommands.shooterIdle(shooterFlywheel, hood));
-
-		controller.x().or(coPilot.x()).and(teleopEnabled).whileTrue(ShooterCommands.hubPreset(shooterFlywheel, hood));
-
-		coPilot.y().and(teleopEnabled).whileTrue(ShooterCommands.ferryPreset(shooterFlywheel, hood));
-
-		coPilot.a().and(teleopEnabled).whileTrue(ShooterCommands.trenchPreset(shooterFlywheel, hood));
 	}
 
 	public void updateDashboardOutputs() {

@@ -68,6 +68,7 @@ public final class ShooterConstants {
 	public static final double MAX_CALIBRATED_DISTANCE_METERS = Units.Inches.of(236.0).in(Units.Meters);
 	public static final double READY_DEBOUNCE_SECONDS = 0.15;
 	public static final double FLYWHEEL_READY_TOLERANCE_RPS = 0.75;
+	public static final double MANUAL_FEED_INITIAL_TOLERANCE_RPS = 3.0;
 	public static final double HOOD_READY_TOLERANCE_ROTATIONS = 0.002;
 	public static final double HEADING_READY_TOLERANCE_DEGREES = 2.0;
 	public static final double MAX_SHOOTING_TRANSLATION_METERS_PER_SECOND = 0.25;

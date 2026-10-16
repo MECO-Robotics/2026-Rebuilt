@@ -15,7 +15,7 @@ final class VolleyFeedGate {
 		}
 		if (!feeding) {
 			feeding = atSpeed.calculate(Double.isFinite(measuredRps) && Double.isFinite(targetRps) && targetRps > 0
-					&& Math.abs(measuredRps - targetRps) <= ShooterConstants.FLYWHEEL_READY_TOLERANCE_RPS);
+					&& Math.abs(measuredRps - targetRps) <= ShooterConstants.MANUAL_FEED_INITIAL_TOLERANCE_RPS);
 		}
 		return feeding;
 	}

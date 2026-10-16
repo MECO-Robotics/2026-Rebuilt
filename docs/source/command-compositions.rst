@@ -112,13 +112,13 @@ accounts for FUEL radius, launch-angle/speed variation, and extra vertical clear
 close to clear the trench, a horizontal path through the hub structure, or a shot requiring more than the configured
 ferry maximum RPS. Rejected ferry shots report ``UNSAFE_FERRY_PATH`` and do not feed automatically.
 
-Right bumper forces the feed path only while ``A`` is held. The dashboard reports the readiness blocker, and driver
-rumble indicates that feeding is allowed.
+The reusable coordinated-shot command retains its readiness reporting for autonomous/test consumers. Driver
+right bumper uses a separate agitation/feed command independent of ``A``; driver rumble uses two strong pulses per second while blocked and a weaker steady signal while feeding.
+Release, Disable, and interruption clear feedback; ``Shooter/FeedBlockedReason`` explains the blocked state.
 
-For live shot calibration, the AdvantageScope/NetworkTables calibration switch replaces the interpolated hood and
-flywheel setpoints with editable values while preserving pose-based aiming. Automatic feeding is intentionally
-disabled in this mode; ``A`` plus right bumper fires the trial. Autonomous commands always use the saved shot table
-and ignore the calibration switch.
+For live shot calibration, enable the AdvantageScope/NetworkTables calibration switch, then press ``X`` to latch
+bounded live hood/flywheel values. ``A`` aims independently and right bumper fires the trial. ``B`` switches the
+shooter to zero voltage. Autonomous commands use the saved shot table and ignore the calibration switch.
 
 
 Teleop examples from RobotContainer
@@ -128,14 +128,21 @@ This repo uses controller bindings to compose commands directly where operator i
 
 Examples:
 
-- left bumper deploys the intake and runs its roller, conveyor, and storage indexers while held
-- right trigger runs only the intake roller inward while held and stops it on release
-- releasing left bumper stops the fuel path and leaves the rack at its deployed target
-- left trigger reverses the complete acquisition path for ejection
-- copilot POV controls provide manual rack deploy/stow and velocity backups
-- ``A`` runs the readiness-gated hub-or-ferry shot; ``A`` plus right bumper is the emergency force-feed override
-- copilot preset buttons hold ``hubPreset``, ``ferryPreset``, and ``trenchPreset`` while pressed
-- start resets drivetrain heading
+- right trigger deploys the intake and runs acquisition: intake + conveyor inward, indexers reverse
+- left trigger deploys the rack and ejects using independent intake/conveyor/indexer directions
+- right bumper runs the intake immediately, then starts continuous feed and rack retraction together after initial flywheel spin-up
+- releasing either trigger or right bumper stops its fuel-path rollers; right-bumper release returns the rack deployed
+- ``A`` aims while allowing translation; it owns no shooter or fuel-path mechanisms
+- ``X``/``Y`` latch hub/ferry hood and flywheel presets with ``onTrue``; releasing the button does not cancel RPM hold
+- copilot ``X``/``Y`` latch hub/ferry and copilot ``A`` latches trench
+- ``B`` on either controller interrupts the preset and commands zero-voltage shooter output, disabling velocity PID
+- driver Start resets heading; D-pad bindings retain their existing behavior
+- driver left bumper is unassigned
+
+Presets remain scheduled after the selection edge, so the normal zero-voltage default cannot overwrite their RPM
+hold. Agitation/feed never claims the shooter or drivetrain: preset changes, stop, and auto-aim remain independent.
+Normal command interruption and Disable stop outputs. Simultaneous fuel-path commands compete for the same
+requirements; release and re-press a held action after it is interrupted by another action.
 
 These bindings are small because the actual behavior has already been packaged into reusable command factories.
 
