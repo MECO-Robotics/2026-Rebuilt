@@ -40,7 +40,7 @@ public final class IntakeConstants {
 	public static final class RACK_PRESETS {
 		public static final LoggedTunableNumber STOW = new LoggedTunableNumber("Presets/IntakePosition/Stow", 0);
 		public static final LoggedTunableNumber DEPLOY = new LoggedTunableNumber("Presets/IntakePosition/Deploy", .3);
-		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("Presets/IntakePosition/Safe", 0.13);
+		public static final LoggedTunableNumber SAFE = new LoggedTunableNumber("Presets/IntakePosition/Safe", 0.12);
 	}
 
 	/** Intake roller preset voltages. */
