@@ -40,6 +40,7 @@ public class VisionIOPhotonVisionTrig implements VisionIO {
 	@Override
 	public void updateInputs(VisionIOInputs inputs) {
 		inputs.connected = camera.isConnected();
+		inputs.absoluteConnected = inputs.connected;
 
 		// Read new camera observations
 		Set<Integer> tagIds = new HashSet<>();
@@ -49,9 +50,11 @@ public class VisionIOPhotonVisionTrig implements VisionIO {
 			// Update latest target observation
 			// Note:
 			if (result.hasTargets()) {
+				int tagId = result.getBestTarget().fiducialId;
 				inputs.latestTargetObservation = new TargetObservation(
 						Rotation2d.fromDegrees(result.getBestTarget().getYaw()),
-						Rotation2d.fromDegrees(result.getBestTarget().getPitch()), result.getBestTarget().fiducialId);
+						Rotation2d.fromDegrees(result.getBestTarget().getPitch()), tagId);
+				tagIds.add(tagId);
 
 				Transform3d cameraToTarget = result.getBestTarget().getBestCameraToTarget();
 				// Transform3d bestFieldToRobot =
@@ -82,7 +85,8 @@ public class VisionIOPhotonVisionTrig implements VisionIO {
 				robotPose2d = new Pose2d(robotPose2d.getTranslation(), gyro);
 
 				poseObservations.add(new PoseObservation(result.getTimestampSeconds(), new Pose3d(robotPose2d),
-						result.getBestTarget().getPoseAmbiguity(), 1, distance, PoseObservationType.PHOTONVISIONTRIG));
+						result.getBestTarget().getPoseAmbiguity(), 1, distance, PoseObservationType.PHOTONVISIONTRIG,
+						new int[]{tagId}));
 			} else {
 				inputs.latestTargetObservation = new TargetObservation(new Rotation2d(), new Rotation2d(), 0);
 			}

@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.constants.FieldConstants.Hub;
+import frc.robot.commands.shooter.ShooterCalculator;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
@@ -78,10 +78,12 @@ public class DriveCommands {
 			Translation2d linearVelocity = getLinearVelocityFromJoysticks(xSupplier.getAsDouble(),
 					ySupplier.getAsDouble()).times(maxSpeed);
 			double maxAngularRate = Math.min(ANGLE_MAX_VELOCITY.get(), DrivetrainConstants.MAX_ANGULAR_RATE);
+			Rotation2d operatorRelativeTarget = toOperatorPerspectiveTarget(rotationSupplier.get(),
+					DriverStation.getAlliance().orElse(Alliance.Blue));
 
 			drivetrain.setControl(
 					driveAtAngleRequest.withVelocityX(linearVelocity.getX()).withVelocityY(linearVelocity.getY())
-							.withTargetDirection(rotationSupplier.get()).withMaxAbsRotationalRate(maxAngularRate));
+							.withTargetDirection(operatorRelativeTarget).withMaxAbsRotationalRate(maxAngularRate));
 
 		}, drivetrain)
 
@@ -90,27 +92,29 @@ public class DriveCommands {
 
 	}
 
+	/**
+	 * Converts an absolute field heading into the operator-relative heading
+	 * expected by CTRE's facing-angle request. CTRE adds the configured Red
+	 * operator perspective inside the request, so pre-subtract it to avoid applying
+	 * the alliance rotation twice while preserving driver-relative translation.
+	 */
+	static Rotation2d toOperatorPerspectiveTarget(Rotation2d fieldTarget, Alliance alliance) {
+		return alliance == Alliance.Red ? fieldTarget.minus(Rotation2d.kPi) : fieldTarget;
+	}
+
 	public static Command joystickAimToHub(CommandSwerveDrivetrain drive, DoubleSupplier xSupplier,
 			DoubleSupplier ySupplier, double maxSpeed) {
 
-		Supplier<Rotation2d> angleToHub = () -> Hub.hubPosition().minus(drive.getState().Pose.getTranslation())
-				.getAngle().plus(getHubAimOffset());
+		Supplier<Rotation2d> angleToHub = () -> ShooterCalculator.calculate(drive.getState().Pose).targetHeading();
 
 		return joystickDriveAtAngle(drive, xSupplier, ySupplier, angleToHub, maxSpeed);
 	}
 
 	/** Auto aim to the hub. */
 	public static Command autoAimToHub(CommandSwerveDrivetrain drive, double maxspeed) {
-		Supplier<Rotation2d> angleToHub = () -> Hub.hubPosition().minus(drive.getState().Pose.getTranslation())
-				.getAngle().plus(getHubAimOffset());
+		Supplier<Rotation2d> angleToHub = () -> ShooterCalculator.calculate(drive.getState().Pose).targetHeading();
 
 		return joystickDriveAtAngle(drive, () -> 0.0, () -> 0.0, angleToHub, maxspeed);
-	}
-
-	private static Rotation2d getHubAimOffset() {
-		return DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
-				? Rotation2d.kZero
-				: Rotation2d.k180deg;
 	}
 
 	// // public static Command azimuthTuning()

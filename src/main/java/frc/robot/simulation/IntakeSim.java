@@ -9,6 +9,7 @@ import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 
 public class IntakeSim {
 
+	public static final IntakeSimulation.IntakeSide INTAKE_SIDE = IntakeSimulation.IntakeSide.FRONT;
 	public final IntakeSimulation intakeSimulation;
 
 	public IntakeSim(AbstractDriveTrainSimulation driveTrainSimulation) {
@@ -21,9 +22,9 @@ public class IntakeSim {
 				Meters.of(0.7),
 				// The extension length of the intake beyond the robot's frame (when activated)
 				Meters.of(0.2),
-				// The intake is mounted on the back side of the chassis
-				IntakeSimulation.IntakeSide.FRONT,
-				// The intake can hold up to 1 note
+				// Remy's CAD intake deploys toward +X.
+				INTAKE_SIDE,
+				// Simulated hopper capacity
 				54);
 	}
 

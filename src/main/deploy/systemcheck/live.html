@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>REBUILT · Live system check</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#10151e;color:#e9edf4}body{margin:0}main{max-width:1200px;margin:auto;padding:28px}header,.summary{display:flex;justify-content:space-between;gap:20px;align-items:center}h1{font-size:30px;margin:4px 0 16px}h2{margin:8px 0;font-size:24px}.eyebrow{color:#99aac2;letter-spacing:.13em;font-size:12px}a{color:#90caff}a:focus,summary:focus{outline:2px solid #90caff}.connection{padding:9px 14px;border-radius:30px;background:#343d4b}.live{background:#164737;color:#a0f2cd}.stale{background:#632c22;color:#ffe1a8}.panel{border:1px solid #344253;border-radius:14px;background:#192330;padding:20px;margin:16px 0}.meta{color:#aebdd0;font-size:14px;line-height:1.8}.big{font-size:32px;font-weight:700}progress{width:100%;height:14px;accent-color:#65baff}.reason{white-space:pre-wrap;color:#ffd18b}.table{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px}th{text-align:left;color:#aebdd0;font-weight:500}td,th{padding:14px 12px;border-bottom:1px solid #303e4f;vertical-align:top}tr.active{background:#203d59;box-shadow:inset 3px 0 #77c2ff}.badge{font-size:12px;font-weight:700;white-space:nowrap}.PASS{color:#8ae6b5}.FAIL,.ABORTED{color:#ff9999}.WARNING,.SKIPPED{color:#ffd18b}.RUNNING{color:#90caff}.NOT_RUN{color:#a6b2c1}summary{cursor:pointer;margin-top:8px;color:#90caff}pre{font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap;margin:8px 0}.dim{opacity:.55}footer{font-size:13px;color:#aebdd0;margin:20px 0}#warning{font-weight:600}.time{white-space:nowrap}@media(max-width:650px){main{padding:16px}header,.summary{align-items:flex-start;flex-direction:column}h1{font-size:25px}td,th{padding:10px 6px}}
+</style></head><body><main>
+<header><div><div class="eyebrow">MECO · 2026 REBUILT</div><h1>Live system check</h1></div><div id="connection" class="connection" role="status">Connecting…</div></header>
+<p id="warning" role="status">Waiting for robot data.</p>
+<section class="panel"><div class="summary"><div><div class="eyebrow">CURRENT STATE</div><h2 id="state">Waiting</h2><div id="active">No active stage</div></div><div><div id="elapsed" class="big">0.0 s</div><div class="meta">run elapsed</div></div></div>
+<p id="reason" class="reason"></p><progress id="progress" max="1" value="0" aria-label="Completed stages"></progress>
+<div id="progressText" class="meta">No sequence received</div><div id="stageTime" class="meta"></div><div id="setup" class="meta"></div></section>
+<section id="results" class="panel"><div class="summary"><h2>Check sequence</h2><label><input id="follow" type="checkbox"> Follow active stage</label></div>
+<p class="meta">RUNNING shows current observations, not a final decision. Measurements refresh automatically.</p>
+<div class="table"><table><thead><tr><th>#</th><th>Stage / subsystem</th><th>Status</th><th>Time</th><th>Explanation / measurements</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<footer>Read-only viewer · Start, arm and abort through the existing SystemCheck controls. Disable from Driver Station to stop the robot.<br><a id="reports" href="#">Saved reports and downloads</a> · <span id="runId">No run yet</span></footer>
+</main><script>
+const $=id=>document.getElementById(id); let previousActive='';
+const reportUrl=new URL(location.href);reportUrl.port='5805';reportUrl.pathname='/';reportUrl.search='';reportUrl.hash='';$('reports').href=reportUrl.href;
+const seconds=v=>Number.isFinite(v)?v.toFixed(1)+' s':'—';
+const known=new Set(['NOT_RUN','RUNNING','PASS','WARNING','FAIL','SKIPPED','AWAITING_CONFIRMATION','ABORTED']);
+function connection(ok,message){$('connection').textContent=message;$('connection').className='connection '+(ok?'live':'stale');$('results').classList.toggle('dim',!ok);}
+function render(d){
+ $('state').textContent=d.state+' · '+d.overall;$('active').textContent=d.state==='COUNTDOWN'?'Starting in '+seconds(d.countdown):d.active||'No active stage';
+ $('elapsed').textContent=seconds(d.elapsed);$('reason').textContent=d.reason||'';$('runId').textContent=d.runId?'Run '+d.runId:'No run yet';
+ const finished=d.rows.filter(r=>!['NOT_RUN','RUNNING'].includes(r.status)).length;
+ $('progress').value=d.rows.length?finished/d.rows.length:0;$('progressText').textContent=finished+' / '+d.rows.length+' stages finished';
+ $('stageTime').textContent=d.active?'Stage '+seconds(d.stageElapsed)+' / '+seconds(d.stageDuration):'';
+ $('setup').textContent='Setup confirmed: '+(d.setup?'Yes':'No')+' · Armed: '+(d.armed?'Yes':'No')+' · Practice shot: '+d.practice;
+ const open=new Set([...document.querySelectorAll('details[open]')].map(e=>e.dataset.stage)); const fragment=document.createDocumentFragment();
+ d.rows.forEach((r,i)=>{const tr=document.createElement('tr');tr.dataset.stage=r.id;if(r.id===d.active)tr.className='active';
+ const cell=text=>{const td=document.createElement('td');td.textContent=text;tr.append(td);return td;};
+ cell(i+1);cell(r.id+' / '+r.subsystem);const badge=cell(r.status);badge.className='badge '+(known.has(r.status)?r.status:'NOT_RUN');cell(seconds(r.seconds)).className='time';const info=cell(r.explanation);
+ if(Object.keys(r.measurements).length){const details=document.createElement('details');details.dataset.stage=r.id;details.open=open.has(r.id);const title=document.createElement('summary');title.textContent='Measurements';const pre=document.createElement('pre');pre.textContent=Object.entries(r.measurements).map(([k,v])=>k+': '+(typeof v==='number'?Number(v.toFixed(4)): 'unavailable')).join('\n');details.append(title,pre);info.append(details);}fragment.append(tr);});
+ $('rows').replaceChildren(fragment);
+ if(d.active!==previousActive&&$('follow').checked){[...$('rows').children].find(row=>row.dataset.stage===d.active)?.scrollIntoView({block:'center',behavior:'smooth'});}previousActive=d.active;
+}
+async function poll(){try{const response=await fetch('/api/live',{cache:'no-store',signal:AbortSignal.timeout(2000)});if(!response.ok)throw Error('HTTP '+response.status);const payload=await response.json();if(!payload.data)throw Error('Waiting for robot snapshots');render(payload.data);const fresh=payload.ageSeconds<2;connection(fresh,fresh?'● Live · 4 updates/s':'Updates stopped');$('warning').textContent=fresh?'':'STALE DATA — robot updates stopped. Displayed results are the last received values.';}catch(error){connection(false,'Disconnected');$('warning').textContent='No live connection. Check robot/simulator power and the network. Last displayed values may be stale.';}finally{setTimeout(poll,250);}}
+poll();
+</script></body></html>

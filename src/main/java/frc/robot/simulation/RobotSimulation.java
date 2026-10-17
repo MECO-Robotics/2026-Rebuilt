@@ -84,6 +84,9 @@ public interface RobotSimulation {
 		MapleRobotSimulation(CommandSwerveDrivetrain drive, PositionJoint intakeRack, PositionJoint hood,
 				Flywheel shooterFlywheel) {
 			this.drive = drive;
+			// MapleSim creates an empty arena. Populate starting fuel immediately so
+			// teleop-only simulation sessions do not require entering autonomous first.
+			SimulatedArena.getInstance().resetFieldForAuto();
 			IntakeSim intakeSim = new IntakeSim(drive.getSimulation());
 			launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
 			hopper = new Hopper(intakeSim::getStoredFuelCount, intakeRack::getPosition, drive::getPhysicsPose);

@@ -16,12 +16,20 @@ public interface VisionIO {
 	public static class VisionIOInputs {
 		/** True when the camera/pipeline is connected and publishing data. */
 		public boolean connected = false;
+		/** Absolute AprilTag camera connection, when this is a composite source. */
+		public boolean absoluteConnected = false;
+		/** Inertial pose-source connection, when this is a composite source. */
+		public boolean inertialConnected = false;
 		/** Latest simple target observation (tx/ty) for servo use cases. */
 		public TargetObservation latestTargetObservation = new TargetObservation(Rotation2d.kZero, Rotation2d.kZero, 0);
 		/** Pose observations produced this cycle. */
 		public PoseObservation[] poseObservations = new PoseObservation[0];
 		/** Tag IDs observed this cycle. */
 		public int[] tagIds = new int[0];
+		/** True once this source has a field-aligned pose. */
+		public boolean poseInitialized = false;
+		/** Timestamp of the most recent accepted absolute observation. */
+		public double lastAbsoluteObservationTimestamp = -1.0;
 	}
 
 	/** Represents the angle to a simple target, not used for pose estimation. */
@@ -30,7 +38,15 @@ public interface VisionIO {
 
 	/** Represents a robot pose sample used for pose estimation. */
 	public static record PoseObservation(double timestamp, Pose3d pose, double ambiguity, int tagCount,
-			double averageTagDistance, PoseObservationType type) {
+			double averageTagDistance, PoseObservationType type, int[] tagIds) {
+		public PoseObservation {
+			tagIds = tagIds == null ? new int[0] : tagIds.clone();
+		}
+
+		@Override
+		public int[] tagIds() {
+			return tagIds.clone();
+		}
 	}
 
 	public static enum PoseObservationType {

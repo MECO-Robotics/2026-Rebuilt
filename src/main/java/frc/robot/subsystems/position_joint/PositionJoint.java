@@ -3,11 +3,15 @@ package frc.robot.subsystems.position_joint;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.commands.position_joint.PositionJointVelocityCommand;
 import frc.robot.constants.types.PositionJointConstants.PositionJointGains;
 import frc.robot.util.mechanical_advantage.LoggedTunableNumber;
+import frc.robot.systemcheck.DeviceHealth;
+import frc.robot.systemcheck.MotorHealthData;
+import frc.robot.systemcheck.SystemCheckConstants;
 import java.util.function.DoubleSupplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -21,6 +25,7 @@ import org.littletonrobotics.junction.Logger;
 public class PositionJoint extends SubsystemBase {
 	private final PositionJointIO positionJoint;
 	private final PositionJointIOInputsAutoLogged inputs = new PositionJointIOInputsAutoLogged();
+	private final MotorHealthData motorHealth = new MotorHealthData();
 
 	private final String name;
 
@@ -42,9 +47,16 @@ public class PositionJoint extends SubsystemBase {
 
 	private final LoggedTunableNumber kSetpoint;
 	private Double profileMaxVelocityOverride = null;
+	private boolean restoreProfileConstraints;
+	private double requestedPosition;
 	private double goalPosition;
 	private boolean complianceAfterTarget = false;
 	private boolean complianceActive = false;
+	private double complianceEnterTolerance;
+	private double complianceExitTolerance;
+	private boolean openLoopMode = false;
+	private double commandedVoltage = 0.0;
+	private double lastHealthPollSeconds = Double.NEGATIVE_INFINITY;
 
 	/**
 	 * Creates a position-joint subsystem.
@@ -78,6 +90,8 @@ public class PositionJoint extends SubsystemBase {
 
 		kSetpoint = new LoggedTunableNumber(name + "/Gains/kSetpoint", gains.kDefaultSetpoint());
 		goalPosition = gains.kDefaultSetpoint();
+		complianceEnterTolerance = gains.kTolerance();
+		complianceExitTolerance = gains.kTolerance();
 
 		// Load the configured gains immediately so sim IO PID/FF are initialized at
 		// startup.
@@ -90,17 +104,32 @@ public class PositionJoint extends SubsystemBase {
 	public void periodic() {
 		positionJoint.updateInputs(inputs);
 		Logger.processInputs(name, inputs);
+		double nowSeconds = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+		if (nowSeconds - lastHealthPollSeconds >= SystemCheckConstants.HEALTH_POLL_PERIOD_SECONDS) {
+			positionJoint.updateHealth(motorHealth);
+			lastHealthPollSeconds = nowSeconds;
+		}
 
-		boolean atTarget = isFinished();
-		if (complianceAfterTarget && atTarget) {
+		double positionError = Math.abs(inputs.outputPosition - goalPosition);
+		boolean atTarget = positionError < kTolerance.get();
+		boolean withinComplianceBand = complianceActive
+				? positionError <= complianceExitTolerance
+				: positionError <= complianceEnterTolerance;
+		if (openLoopMode) {
+			positionJoint.setVoltage(commandedVoltage);
+		} else if (complianceAfterTarget && withinComplianceBand) {
 			if (!complianceActive) {
 				positionJoint.setBrakeMode(false);
 				positionJoint.setVoltage(0.0);
 				complianceActive = true;
 			}
 		} else {
-			boolean usingDynamicOverride = profileMaxVelocityOverride != null
-					&& positionJoint.setPositionDynamic(goalPosition, profileMaxVelocityOverride, kMaxAccel.get());
+			disableComplianceHold();
+			boolean usingDynamicOverride = (profileMaxVelocityOverride != null || restoreProfileConstraints)
+					&& positionJoint.setPositionDynamic(goalPosition,
+							profileMaxVelocityOverride != null ? profileMaxVelocityOverride : kMaxVelo.get(),
+							kMaxAccel.get());
+			restoreProfileConstraints = false;
 			if (!usingDynamicOverride) {
 				positionJoint.setPosition(goalPosition, 0.0);
 			}
@@ -117,16 +146,33 @@ public class PositionJoint extends SubsystemBase {
 			}
 		}, kSetpoint, kMinPosition, kMaxPosition);
 
+		Logger.recordOutput(name + "/RequestedPosition", requestedPosition);
+		Logger.recordOutput(name + "/ControlMode",
+				openLoopMode ? "VOLTAGE" : complianceActive ? "COMPLIANCE" : "POSITION");
+		Logger.recordOutput(name + "/CommandOwner",
+				getCurrentCommand() == null ? "None" : getCurrentCommand().getName());
+		Logger.recordOutput(name + "/ControllerDiagnostic", controllerDiagnosticFailure());
+		Logger.recordOutput(name + "/ConfiguredDeviceIds", positionJoint.getDeviceIds());
 		Logger.recordOutput(name + "/GoalPosition", goalPosition);
 		Logger.recordOutput(name + "/isFinished", atTarget);
 		Logger.recordOutput(name + "/ComplianceAfterTarget", complianceAfterTarget);
 		Logger.recordOutput(name + "/ComplianceActive", complianceActive);
+		Logger.recordOutput(name + "/OpenLoopMode", openLoopMode);
+		Logger.recordOutput(name + "/CommandedVoltage", commandedVoltage);
+		Logger.recordOutput(name + "/Health/TemperaturesCelsius", motorHealth.temperaturesCelsius);
+		Logger.recordOutput(name + "/Health/ActiveFaults", motorHealth.activeFaults);
 	}
 
 	/** Sets a new goal position, clamped to configured mechanism limits. */
 	public void setPosition(double position) {
-		disableComplianceHold();
-		goalPosition = MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get());
+		requestedPosition = position;
+		openLoopMode = false;
+		commandedVoltage = 0.0;
+		double clampedPosition = MathUtil.clamp(position, kMinPosition.get(), kMaxPosition.get());
+		if (Math.abs(clampedPosition - goalPosition) > 1e-9) {
+			disableComplianceHold();
+		}
+		goalPosition = clampedPosition;
 	}
 
 	/** Sets a new goal position with a temporary max-velocity override. */
@@ -145,6 +191,9 @@ public class PositionJoint extends SubsystemBase {
 		}
 
 		profileMaxVelocityOverride = null;
+		// SPARK MAX retains its last dynamic cruise constraint until explicitly
+		// restored.
+		restoreProfileConstraints = true;
 	}
 
 	/** Enables/disables post-target compliance mode for impact absorption. */
@@ -153,6 +202,12 @@ public class PositionJoint extends SubsystemBase {
 		if (!enabled) {
 			disableComplianceHold();
 		}
+	}
+
+	/** Sets the enter/exit error bands used by compliant post-target control. */
+	public void setComplianceThresholds(double enterTolerance, double exitTolerance) {
+		complianceEnterTolerance = Math.max(0.0, enterTolerance);
+		complianceExitTolerance = Math.max(complianceEnterTolerance, exitTolerance);
 	}
 
 	/** Adds an offset to the current goal position. */
@@ -167,7 +222,75 @@ public class PositionJoint extends SubsystemBase {
 
 	/** Applies open-loop voltage to the joint leader motor. */
 	public void setVoltage(double voltage) {
+		openLoopMode = true;
+		commandedVoltage = voltage;
+		disableComplianceHold();
 		positionJoint.setVoltage(voltage);
+	}
+
+	/** Leaves the joint in persistent open-loop neutral until a new goal is set. */
+	public void stop() {
+		setVoltage(0.0);
+	}
+
+	/** Returns true while direct-voltage control is active. */
+	public boolean isOpenLoopMode() {
+		return openLoopMode;
+	}
+
+	/** Returns the direct voltage most recently requested for the joint. */
+	public double getCommandedVoltage() {
+		return commandedVoltage;
+	}
+
+	/** Returns a defensive snapshot of fast telemetry and low-rate diagnostics. */
+	public DeviceHealth getHealthSnapshot() {
+		double[] normalizedVelocities = new double[inputs.motorVelocities.length];
+		for (int i = 0; i < normalizedVelocities.length; i++) {
+			normalizedVelocities[i] = Math.abs(inputs.motorVelocities[i]);
+		}
+		double[] currentLimits = new double[inputs.motorCurrents.length];
+		java.util.Arrays.fill(currentLimits, positionJoint.getCurrentLimitAmps());
+		return new DeviceHealth(name, inputs.motorsConnected, normalizedVelocities, inputs.motorCurrents, currentLimits,
+				motorHealth.temperaturesCelsius, positionJoint.isExternalEncoderExpected(), inputs.encoderConnected,
+				motorHealth.activeFaults, positionJoint.getDeviceIds());
+	}
+
+	/**
+	 * Vendor diagnostics are separate from sensor connectivity and are not CAN
+	 * freshness proof.
+	 */
+	public String controllerDiagnosticFailure() {
+		if (!inputs.controllerDiagnosticsSupported)
+			return "";
+		if (!inputs.configurationHealthy)
+			return "Controller configuration failed: " + String.join(", ", inputs.configurationStatus);
+		if (!inputs.controlRequestHealthy)
+			return "Controller request failed: " + inputs.controlStatus;
+		return "";
+	}
+
+	public java.util.Map<String, Double> diagnosticMeasurements() {
+		var values = new java.util.LinkedHashMap<String, Double>();
+		values.put("RequestedPosition", requestedPosition);
+		values.put("ClampedTarget", goalPosition);
+		values.put("OpenLoopMode", openLoopMode ? 1.0 : 0.0);
+		values.put("OpenLoopRequestedVolts", commandedVoltage);
+		values.put("MaxAppliedVolts", java.util.Arrays.stream(inputs.motorVoltages).map(Math::abs).max().orElse(0));
+		values.put("MaxCurrentAmps", java.util.Arrays.stream(inputs.motorCurrents).max().orElse(0));
+		if (inputs.controllerDiagnosticsSupported) {
+			values.put("ConfigurationAccepted", inputs.configurationHealthy ? 1.0 : 0.0);
+			values.put("ControlRequestAccepted", inputs.controlRequestHealthy ? 1.0 : 0.0);
+			values.put("AtReverseLimit", inputs.atReverseLimit ? 1.0 : 0.0);
+			values.put("AtForwardLimit", inputs.atForwardLimit ? 1.0 : 0.0);
+			values.put("MinPosition", inputs.configuredMinPosition);
+			values.put("MaxPosition", inputs.configuredMaxPosition);
+			values.put("ProfileMaxVelocity", inputs.configuredMaxVelocity);
+			values.put("ProfileMaxAcceleration", inputs.configuredMaxAcceleration);
+			values.put("PositionConversionFactor", inputs.positionConversionFactor);
+			values.put("VelocityConversionFactor", inputs.velocityConversionFactor);
+		}
+		return values;
 	}
 
 	/** Returns current measured mechanism position. */
@@ -190,6 +313,13 @@ public class PositionJoint extends SubsystemBase {
 		return Math.abs(inputs.outputPosition - goalPosition) < kTolerance.get();
 	}
 
+	/**
+	 * Returns true when measured position is within a caller-provided tolerance.
+	 */
+	public boolean atPosition(double position, double tolerance) {
+		return Math.abs(inputs.outputPosition - position) <= tolerance;
+	}
+
 	/** Resets sensor position and clears the active goal to zero. */
 	public void resetPosition() {
 		positionJoint.resetPosition();
@@ -200,6 +330,19 @@ public class PositionJoint extends SubsystemBase {
 	/** Builds a command that continuously sets position from a supplier. */
 	public static Command setPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier) {
 		return new PositionJointPositionCommand(positionJoint, positionSupplier);
+	}
+
+	/** Holds a supplied position until the command is interrupted. */
+	public static Command holdPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier) {
+		return Commands.run(() -> positionJoint.setPosition(positionSupplier.getAsDouble()), positionJoint)
+				.beforeStarting(() -> positionJoint.setComplianceAfterTarget(false));
+	}
+
+	/** Holds a supplied position with optional post-target compliance. */
+	public static Command holdPosition(PositionJoint positionJoint, DoubleSupplier positionSupplier,
+			boolean complianceAfterTarget) {
+		return Commands.run(() -> positionJoint.setPosition(positionSupplier.getAsDouble()), positionJoint)
+				.beforeStarting(() -> positionJoint.setComplianceAfterTarget(complianceAfterTarget));
 	}
 
 	/** Builds a command that sets position using a temporary max-velocity limit. */

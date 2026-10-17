@@ -11,11 +11,16 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
+import frc.robot.systemcheck.DeviceHealth;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -27,6 +32,11 @@ public class Vision extends SubsystemBase {
 	private final VisionIO[] io;
 	private final VisionIOInputsAutoLogged[] inputs;
 	private final Alert[] disconnectedAlerts;
+	private final Supplier<Pose2d> referencePoseSupplier;
+	private boolean poseReady;
+	private boolean acceptedTagLocalization;
+	private double lastAbsoluteCorrectionSeconds = Double.NEGATIVE_INFINITY;
+	private final Map<Integer, Double> recentTagTimestamps = new HashMap<>();
 
 	/**
 	 * Creates the vision subsystem.
@@ -37,7 +47,15 @@ public class Vision extends SubsystemBase {
 	 *            one or more camera IO implementations
 	 */
 	public Vision(VisionConsumer consumer, VisionIO... io) {
+		this(consumer, Pose2d::new, io);
+	}
+
+	/**
+	 * Creates vision filtering with a current-pose reference for single-tag gates.
+	 */
+	public Vision(VisionConsumer consumer, Supplier<Pose2d> referencePoseSupplier, VisionIO... io) {
 		this.consumer = consumer;
+		this.referencePoseSupplier = referencePoseSupplier;
 		this.io = io;
 
 		// Initialize inputs
@@ -54,6 +72,70 @@ public class Vision extends SubsystemBase {
 		}
 	}
 
+	/** Returns true once at least one configured pose source is field aligned. */
+	public boolean isPoseReady() {
+		return poseReady;
+	}
+
+	/** Returns true when every configured vision source is currently connected. */
+	public boolean isConnected() {
+		for (VisionIOInputsAutoLogged input : inputs) {
+			boolean compositeSource = input.absoluteConnected || input.inertialConnected;
+			if (compositeSource ? !input.absoluteConnected || !input.inertialConnected : !input.connected) {
+				return false;
+			}
+		}
+		return inputs.length > 0;
+	}
+
+	/** Returns whether an accepted AprilTag localization was seen this cycle. */
+	public boolean hasAcceptedTagLocalization() {
+		return acceptedTagLocalization;
+	}
+
+	/** Returns seconds since the last accepted absolute AprilTag correction. */
+	public double getLastAbsoluteCorrectionAgeSeconds() {
+		return Double.isFinite(lastAbsoluteCorrectionSeconds)
+				? Math.max(0.0, Timer.getFPGATimestamp() - lastAbsoluteCorrectionSeconds)
+				: Double.POSITIVE_INFINITY;
+	}
+
+	/** Returns a defensive connectivity snapshot for passive diagnostics. */
+	public DeviceHealth getHealthSnapshot() {
+		List<Boolean> connectionList = new ArrayList<>();
+		List<String> faultList = new ArrayList<>();
+		for (int i = 0; i < inputs.length; i++) {
+			boolean compositeSource = inputs[i].absoluteConnected || inputs[i].inertialConnected;
+			if (compositeSource) {
+				connectionList.add(inputs[i].absoluteConnected);
+				faultList.add(inputs[i].absoluteConnected ? "" : "Absolute camera " + i + " disconnected");
+				connectionList.add(inputs[i].inertialConnected);
+				faultList.add(inputs[i].inertialConnected ? "" : "QuestNav " + i + " disconnected");
+			} else {
+				connectionList.add(inputs[i].connected);
+				faultList.add(inputs[i].connected ? "" : "Camera " + i + " disconnected");
+			}
+		}
+		boolean[] connections = new boolean[connectionList.size()];
+		for (int i = 0; i < connections.length; i++) {
+			connections[i] = connectionList.get(i);
+		}
+		String[] faults = faultList.toArray(String[]::new);
+		return new DeviceHealth("Vision", connections, new double[]{}, new double[]{}, new double[]{}, new double[]{},
+				false, true, faults);
+	}
+
+	/**
+	 * Returns tags seen recently enough to bridge normal gaps between camera
+	 * frames.
+	 */
+	public int[] getVisibleTagIds() {
+		double nowSeconds = Timer.getFPGATimestamp();
+		return recentTagTimestamps.entrySet().stream()
+				.filter(entry -> nowSeconds - entry.getValue() <= visibleTagRetentionSeconds)
+				.mapToInt(Map.Entry::getKey).sorted().toArray();
+	}
+
 	/**
 	 * Returns the X angle to the best target, which can be used for simple servoing
 	 * with vision.
@@ -67,18 +149,25 @@ public class Vision extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		Set<Integer> whitelistedTagIds = getOdometryTagWhitelistForCurrentAlliance();
-
 		for (int i = 0; i < io.length; i++) {
 			io[i].updateInputs(inputs[i]);
 			Logger.processInputs("Vision/Camera" + Integer.toString(i), inputs[i]);
 		}
+		double nowSeconds = Timer.getFPGATimestamp();
+		for (VisionIOInputsAutoLogged input : inputs) {
+			for (int tagId : input.tagIds) {
+				recentTagTimestamps.put(tagId, nowSeconds);
+			}
+		}
+		recentTagTimestamps.entrySet().removeIf(entry -> nowSeconds - entry.getValue() > visibleTagRetentionSeconds);
 
 		// Initialize logging values
 		List<Pose3d> allTagPoses = new LinkedList<>();
 		List<Pose3d> allRobotPoses = new LinkedList<>();
 		List<Pose3d> allRobotPosesAccepted = new LinkedList<>();
 		List<Pose3d> allRobotPosesRejected = new LinkedList<>();
+		poseReady = false;
+		acceptedTagLocalization = false;
 
 		// Loop over cameras
 		for (int cameraIndex = 0; cameraIndex < io.length; cameraIndex++) {
@@ -90,41 +179,27 @@ public class Vision extends SubsystemBase {
 			List<Pose3d> robotPoses = new LinkedList<>();
 			List<Pose3d> robotPosesAccepted = new LinkedList<>();
 			List<Pose3d> robotPosesRejected = new LinkedList<>();
-			int observedWhitelistedTagCount = 0;
-
 			// Add tag poses
 			for (int tagId : inputs[cameraIndex].tagIds) {
-				if (whitelistedTagIds.isEmpty() || whitelistedTagIds.contains(tagId)) {
-					var tagPose = aprilTagLayout.getTagPose(tagId);
-					if (tagPose.isPresent()) {
-						tagPoses.add(tagPose.get());
-					}
-					observedWhitelistedTagCount++;
+				var tagPose = aprilTagLayout.getTagPose(tagId);
+				if (tagPose.isPresent()) {
+					tagPoses.add(tagPose.get());
 				}
 			}
-			boolean hasEnoughWhitelistedTags = observedWhitelistedTagCount >= minWhitelistedTagCountForOdometry;
-			Logger.recordOutput("Vision/Camera" + Integer.toString(cameraIndex) + "/ObservedWhitelistedTagCount",
-					observedWhitelistedTagCount);
+			poseReady |= inputs[cameraIndex].poseInitialized;
+			double absoluteTimestamp = inputs[cameraIndex].lastAbsoluteObservationTimestamp;
+			if (Double.isFinite(absoluteTimestamp) && absoluteTimestamp > lastAbsoluteCorrectionSeconds) {
+				acceptedTagLocalization = true;
+				lastAbsoluteCorrectionSeconds = absoluteTimestamp;
+			}
 
 			// Loop over pose observations
 			for (var observation : inputs[cameraIndex].poseObservations) {
 				boolean isQuestNav = observation.type() == PoseObservationType.QUESTNAV;
-				boolean enforceWhitelistedTagMinimum = !isQuestNav && !whitelistedTagIds.isEmpty()
-						&& minWhitelistedTagCountForOdometry > 0;
-				// Check whether to reject pose
-				boolean rejectPose = (!isQuestNav && observation.tagCount() < minTagCountForOdometry) // Must have
-																										// enough tags
-						|| (!isQuestNav && observation.tagCount() == 1) // && observation.ambiguity() > maxAmbiguity)
-						// Single-tag solve must not be too ambiguous
-						|| (enforceWhitelistedTagMinimum && !hasEnoughWhitelistedTags) // Must include enough
-																						// currently-whitelisted tags
-						|| Math.abs(observation.pose().getZ()) > maxZError // Must have realistic Z coordinate
-
-						// Must be within the field boundaries
-						|| observation.pose().getX() < 0.0
-						|| observation.pose().getX() > aprilTagLayout.getFieldLength()
-						|| observation.pose().getY() < 0.0
-						|| observation.pose().getY() > aprilTagLayout.getFieldWidth();
+				boolean rejectPose = isQuestNav
+						? !inputs[cameraIndex].poseInitialized
+								|| !VisionObservationFilter.isPoseInsideField(observation)
+						: !VisionObservationFilter.isValid(observation, referencePoseSupplier.get());
 
 				// Add pose to log
 				robotPoses.add(observation.pose());
@@ -137,6 +212,10 @@ public class Vision extends SubsystemBase {
 				// Skip if rejected
 				if (rejectPose) {
 					continue;
+				}
+				if (!isQuestNav) {
+					acceptedTagLocalization = true;
+					lastAbsoluteCorrectionSeconds = Math.max(lastAbsoluteCorrectionSeconds, observation.timestamp());
 				}
 
 				// Calculate standard deviations
@@ -185,6 +264,9 @@ public class Vision extends SubsystemBase {
 		Logger.recordOutput("Vision/Summary/RobotPoses", allRobotPoses.toArray(new Pose3d[0]));
 		Logger.recordOutput("Vision/Summary/RobotPosesAccepted", allRobotPosesAccepted.toArray(new Pose3d[0]));
 		Logger.recordOutput("Vision/Summary/RobotPosesRejected", allRobotPosesRejected.toArray(new Pose3d[0]));
+		Logger.recordOutput("Vision/PoseReady", poseReady);
+		Logger.recordOutput("Vision/AcceptedTagLocalization", acceptedTagLocalization);
+		Logger.recordOutput("Vision/LastAbsoluteCorrectionAgeSeconds", getLastAbsoluteCorrectionAgeSeconds());
 	}
 
 	@FunctionalInterface

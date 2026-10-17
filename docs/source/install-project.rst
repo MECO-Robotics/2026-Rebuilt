@@ -37,6 +37,10 @@ Once the project builds, choose the fastest way to confirm it runs:
 - **Deploy to robot**
   Deploy only after you have updated hardware config and mechanism gains and limits to match your robot.
 
+Before deploying, run ``git branch --show-current`` and ``git log -1 --oneline`` and verify that the checked-out
+branch contains the code you tested. After deployment, compare those values with AdvantageKit's
+``RealMetadata/GitBranch`` and ``RealMetadata/GitSHA`` fields before enabling mechanisms.
+
 Deployment synchronizes ``src/main/deploy`` to ``/home/lvuser/deploy`` and removes
 remote files absent from the local directory. Keep required deployment assets in
 ``src/main/deploy``. This removes obsolete PathPlanner autos that could otherwise

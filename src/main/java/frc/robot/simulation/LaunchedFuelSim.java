@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.constants.Constants;
 import frc.robot.constants.FieldConstants;
 import frc.robot.constants.simulation.MapleSimConstants;
+import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.position_joint.PositionJoint;
@@ -56,12 +57,17 @@ public class LaunchedFuelSim {
 		boolean inSim = Constants.currentMode == Constants.Mode.SIM && drive.getSimulation() != null;
 		boolean hasVelocity = hasLaunchVelocity();
 		boolean cooldownReady = pastCooldown(nowSeconds);
+		double hoodDeflectionRadians = getHoodDeflectionFromVerticalRadians(hood.getPosition());
 
 		Logger.recordOutput("FieldSimulation/LaunchDebug/InSim", inSim);
 		Logger.recordOutput("FieldSimulation/LaunchDebug/HasLaunchVelocity", hasVelocity);
 		Logger.recordOutput("FieldSimulation/LaunchDebug/CooldownReady", cooldownReady);
 		Logger.recordOutput("FieldSimulation/LaunchDebug/StoredFuelCount", intakeSim.getStoredFuelCount());
 		Logger.recordOutput("FieldSimulation/LaunchDebug/PendingBurstShots", pendingBurstShots);
+		Logger.recordOutput("FieldSimulation/LaunchDebug/HoodPositionRotations", hood.getPosition());
+		Logger.recordOutput("FieldSimulation/LaunchDebug/HoodDeflectionDegrees", Math.toDegrees(hoodDeflectionRadians));
+		Logger.recordOutput("FieldSimulation/LaunchDebug/NominalLaunchPitchDegrees",
+				Math.toDegrees(toMapleLaunchPitchRadians(hoodDeflectionRadians)));
 
 		if (!inSim || !hasVelocity) {
 			return;
@@ -132,15 +138,17 @@ public class LaunchedFuelSim {
 	}
 
 	private void launchSingleFuel(int burstIndex, double projectileSpeedMps) {
-		double randomizedAngleRadians = getRandomizedLaunchAngleRadians();
+		double randomizedHoodDeflectionRadians = getRandomizedHoodDeflectionRadians();
+		double launchPitchRadians = toMapleLaunchPitchRadians(randomizedHoodDeflectionRadians);
 		double randomizedSpeedMps = getRandomizedProjectileSpeedMps(projectileSpeedMps);
+		Rotation2d shooterFacing = getShooterFacing(drive.getPhysicsPose().getRotation());
+		Logger.recordOutput("FieldSimulation/LaunchDebug/LastLaunchPitchDegrees", Math.toDegrees(launchPitchRadians));
 
 		SimulatedArena.getInstance()
 				.addGamePieceProjectile(new RebuiltFuelOnFly(drive.getPhysicsPose().getTranslation(),
-						getShooterTranslationForBurstIndex(burstIndex), getLaunchChassisSpeedsFieldRelative(),
-						drive.getPhysicsPose().getRotation().plus(MapleSimConstants.SHOOTER_YAW_OFFSET),
-						Meters.of(MapleSimConstants.SHOOTER_HEIGHT_METERS), MetersPerSecond.of(randomizedSpeedMps),
-						Radians.of(Math.PI / 2.0 - randomizedAngleRadians))
+						getMapleShooterTranslationForBurstIndex(burstIndex), getLaunchChassisSpeedsFieldRelative(),
+						shooterFacing, Meters.of(MapleSimConstants.SHOOTER_HEIGHT_METERS),
+						MetersPerSecond.of(randomizedSpeedMps), Radians.of(launchPitchRadians))
 								.withTargetPosition(() -> new Translation3d(FieldConstants.Hub.hubPosition().getX(),
 										FieldConstants.Hub.hubPosition().getY(), FieldConstants.Hub.hubHeight))
 								.withTargetTolerance(
@@ -156,11 +164,12 @@ public class LaunchedFuelSim {
 												pose3ds.toArray(Pose3d[]::new))));
 	}
 
-	private double getRandomizedLaunchAngleRadians() {
-		double baseAngleRadians = getLaunchAngleRadians();
+	private double getRandomizedHoodDeflectionRadians() {
+		double baseAngleRadians = getHoodDeflectionFromVerticalRadians(hood.getPosition());
 		double jitterRadians = (Math.random() * 2.0 - 1.0) * MapleSimConstants.SHOT_ANGLE_RANDOMNESS_RADIANS;
-		return MathUtil.clamp(baseAngleRadians + jitterRadians, MapleSimConstants.MIN_LAUNCH_ANGLE_RADIANS,
-				MapleSimConstants.MAX_LAUNCH_ANGLE_RADIANS);
+		return MathUtil.clamp(baseAngleRadians + jitterRadians,
+				MapleSimConstants.MIN_HOOD_DEFLECTION_FROM_VERTICAL_RADIANS,
+				MapleSimConstants.MAX_HOOD_DEFLECTION_FROM_VERTICAL_RADIANS);
 	}
 
 	private double getRandomizedProjectileSpeedMps(double baseSpeedMps) {
@@ -168,17 +177,22 @@ public class LaunchedFuelSim {
 		return baseSpeedMps * jitterScale;
 	}
 
-	private double getLaunchAngleRadians() {
-		double hoodAngle = Rotation2d.fromRotations(hood.getPosition()).getRadians()
-				+ MapleSimConstants.HOOD_ANGLE_OFFSET_RADIANS;
-		return MathUtil.clamp(hoodAngle, MapleSimConstants.MIN_LAUNCH_ANGLE_RADIANS,
-				MapleSimConstants.MAX_LAUNCH_ANGLE_RADIANS);
+	/**
+	 * Converts a measured hood position to its physical deflection down from
+	 * vertical.
+	 */
+	static double getHoodDeflectionFromVerticalRadians(double hoodRotations) {
+		double hoodDeflection = Rotation2d.fromRotations(hoodRotations).getRadians()
+				+ MapleSimConstants.HOOD_ZERO_DEFLECTION_FROM_VERTICAL_RADIANS;
+		return MathUtil.clamp(hoodDeflection, MapleSimConstants.MIN_HOOD_DEFLECTION_FROM_VERTICAL_RADIANS,
+				MapleSimConstants.MAX_HOOD_DEFLECTION_FROM_VERTICAL_RADIANS);
 	}
 
 	private double getProjectileSpeedMps() {
 		double mainWheelLinearSpeedMps = Math.abs(shooterFlywheel.getVelocity())
 				* MapleSimConstants.MPS_PER_FLYWHEEL_RPS;
-		return mainWheelLinearSpeedMps * getBackspinEnergyTransferScale() * getFlywheelSlowdownScale();
+		return mainWheelLinearSpeedMps * getBackspinEnergyTransferScale()
+				* ShooterConstants.SHOOTER_SURFACE_EFFICIENCY_SCALE * getFlywheelSlowdownScale();
 	}
 
 	private double getBackspinEnergyTransferScale() {
@@ -200,10 +214,29 @@ public class LaunchedFuelSim {
 		return ChassisSpeeds.fromRobotRelativeSpeeds(drive.getPhysicsSpeeds(), drive.getPhysicsPose().getRotation());
 	}
 
-	private Translation2d getShooterTranslationForBurstIndex(int burstIndex) {
+	/** Returns the field-facing direction of the physical shooter. */
+	static Rotation2d getShooterFacing(Rotation2d robotHeading) {
+		return robotHeading.plus(MapleSimConstants.SHOOTER_YAW_OFFSET);
+	}
+
+	/**
+	 * MapleSim rotates this offset by shooter yaw, while our physical offset is in
+	 * the robot frame. Convert frames so the projectile starts at the real muzzle.
+	 */
+	static Translation2d getMapleShooterTranslationForBurstIndex(int burstIndex) {
 		double centeredIndex = burstIndex - (MapleSimConstants.FUEL_PER_SHOT - 1) / 2.0;
 		double lateralOffset = centeredIndex * MapleSimConstants.FUEL_BURST_LATERAL_SPACING_METERS;
-		return MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT.plus(new Translation2d(0.0, lateralOffset));
+		Translation2d robotFrameOffset = MapleSimConstants.SHOOTER_TRANSLATION_ON_ROBOT
+				.plus(new Translation2d(0.0, lateralOffset));
+		return robotFrameOffset.rotateBy(MapleSimConstants.SHOOTER_YAW_OFFSET.unaryMinus());
+	}
+
+	/**
+	 * Converts hood deflection down from vertical to MapleSim pitch up from
+	 * horizontal.
+	 */
+	static double toMapleLaunchPitchRadians(double hoodDeflectionFromVerticalRadians) {
+		return MathUtil.clamp(Math.PI / 2.0 - hoodDeflectionFromVerticalRadians, 0.0, Math.PI / 2.0);
 	}
 
 	private Translation2d getHubBackSpawnPosition() {

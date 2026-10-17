@@ -34,6 +34,11 @@ public class FlywheelVelocityCommand extends Command {
 	}
 
 	@Override
+	public void end(boolean interrupted) {
+		flywheel.stop();
+	}
+
+	@Override
 	public boolean isFinished() {
 		return flywheel.isFinished();
 	}

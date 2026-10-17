@@ -4,6 +4,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.constants.Constants;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.systemcheck.MotorHealthData;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLog;
 
@@ -38,6 +39,22 @@ public interface FlywheelIO {
 
 	/** Refreshes all sensor and diagnostic inputs. */
 	public default void updateInputs(FlywheelIOInputs inputs) {
+	}
+
+	/** Polls low-rate temperature and vendor fault telemetry. */
+	public default void updateHealth(MotorHealthData health) {
+		health.temperaturesCelsius = new double[0];
+		health.activeFaults = new String[0];
+	}
+
+	/** Returns the configured per-motor current limit. */
+	public default double getCurrentLimitAmps() {
+		return Double.POSITIVE_INFINITY;
+	}
+
+	/** Returns configured CAN IDs, in the same order as motor telemetry. */
+	public default int[] getDeviceIds() {
+		return new int[0];
 	}
 
 	/** Commands a closed-loop velocity setpoint. */

@@ -1,0 +1,745 @@
+{
+  "version": "26.0.0",
+  "hubs": [
+    {
+      "x": 80,
+      "y": 60,
+      "width": 1320,
+      "height": 900,
+      "state": {
+        "sidebar": {
+          "width": 330,
+          "expanded": [
+            "/SystemCheck",
+            "/SystemCheck/Controls",
+            "/SystemCheck/PracticeShot",
+            "/SystemCheck/Passive",
+            "/SystemCheck/Results",
+            "/SystemCheck/Report",
+            "/SystemCheck/CAN",
+            "/AdvantageKit/RealOutputs/Visualization",
+            "/SmartDashboard/Fuel",
+            "/AdvantageKit/TankDrive"
+          ]
+        },
+        "tabs": {
+          "selected": 1,
+          "tabs": [
+            {
+              "type": 0,
+              "title": "",
+              "controller": null,
+              "controllerUUID": "mecoCombinedRobotLayout00",
+              "renderer": "",
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "REBUILT | Remy System Check 3D",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Visualization/RobotRemy/RobotPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "model": "Remy"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Visualization/RobotRemy/ComponentPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/FieldSimulation/FuelPositions",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/FieldSimulation/FuelProjectilePositions",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
+                  }
+                ],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "mecoCombinedRobotLayout01",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  8.77,
+                  8.5,
+                  16.0
+                ],
+                "cameraTarget": [
+                  8.77,
+                  0.75,
+                  4.0
+                ]
+              },
+              "controlsHeight": 285
+            },
+            {
+              "type": 9,
+              "title": "REBUILT | Swerve Drive",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "states",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/DriveState/ModuleStates",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "states",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/DriveState/ModuleTargets",
+                    "logType": "SwerveModuleState[]",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ffff",
+                      "arrangement": "0,1,2,3"
+                    }
+                  },
+                  {
+                    "type": "chassisSpeeds",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/DriveState/Speeds",
+                    "logType": "ChassisSpeeds",
+                    "visible": true,
+                    "options": {
+                      "color": "#ff0000"
+                    }
+                  },
+                  {
+                    "type": "chassisSpeeds",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/DriveState/AutoCommandedSpeeds",
+                    "logType": "ChassisSpeeds",
+                    "visible": true,
+                    "options": {
+                      "color": "#00ffff"
+                    }
+                  }
+                ],
+                "maxSpeed": 5,
+                "sizeX": 0.65,
+                "sizeY": 0.65,
+                "orientation": 1
+              },
+              "controllerUUID": "mecoCombinedRobotLayout02",
+              "renderer": null,
+              "controlsHeight": 200
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Pit Check Controls",
+              "controller": [
+                "NT:/SystemCheck/Controls/SetupConfirmed",
+                "NT:/SystemCheck/Controls/Armed",
+                "NT:/SystemCheck/Controls/Start",
+                "NT:/SystemCheck/Controls/Abort",
+                "NT:/SystemCheck/RunState",
+                "NT:/SystemCheck/OverallStatus",
+                "NT:/SystemCheck/CurrentStep",
+                "NT:/SystemCheck/Progress",
+                "NT:/SystemCheck/CountdownSeconds",
+                "NT:/SystemCheck/BlockingReason",
+                "NT:/SystemCheck/RunId",
+                "NT:/SystemCheck/RunElapsedSeconds",
+                "NT:/SystemCheck/Results/preflight/Status",
+                "NT:/SystemCheck/Results/preflight/Explanation",
+                "NT:/SystemCheck/Results/swerve-forward-orientation/Status",
+                "NT:/SystemCheck/Results/swerve-forward-orientation/Explanation",
+                "NT:/SystemCheck/Results/swerve-sideways-orientation/Status",
+                "NT:/SystemCheck/Results/swerve-sideways-orientation/Explanation",
+                "NT:/SystemCheck/Results/swerve-x-lock/Status",
+                "NT:/SystemCheck/Results/swerve-x-lock/Explanation",
+                "NT:/SystemCheck/Results/swerve-forward-drive/Status",
+                "NT:/SystemCheck/Results/swerve-forward-drive/Explanation",
+                "NT:/SystemCheck/Results/swerve-reverse-drive/Status",
+                "NT:/SystemCheck/Results/swerve-reverse-drive/Explanation",
+                "NT:/SystemCheck/Results/intake-rack-stow/Status",
+                "NT:/SystemCheck/Results/intake-rack-stow/Explanation",
+                "NT:/SystemCheck/Results/intake-rack-safe/Status",
+                "NT:/SystemCheck/Results/intake-rack-safe/Explanation",
+                "NT:/SystemCheck/Results/intake-rack-deploy/Status",
+                "NT:/SystemCheck/Results/intake-rack-deploy/Explanation",
+                "NT:/SystemCheck/Results/intake-rack-return/Status",
+                "NT:/SystemCheck/Results/intake-rack-return/Explanation",
+                "NT:/SystemCheck/Results/intake-roller/Status",
+                "NT:/SystemCheck/Results/intake-roller/Explanation",
+                "NT:/SystemCheck/Results/conveyor/Status",
+                "NT:/SystemCheck/Results/conveyor/Explanation",
+                "NT:/SystemCheck/Results/bottom-indexer/Status",
+                "NT:/SystemCheck/Results/bottom-indexer/Explanation",
+                "NT:/SystemCheck/Results/top-indexer/Status",
+                "NT:/SystemCheck/Results/top-indexer/Explanation",
+                "NT:/SystemCheck/Results/hood-test-position/Status",
+                "NT:/SystemCheck/Results/hood-test-position/Explanation",
+                "NT:/SystemCheck/Results/hood-return/Status",
+                "NT:/SystemCheck/Results/hood-return/Explanation",
+                "NT:/SystemCheck/Results/shooter-flywheel/Status",
+                "NT:/SystemCheck/Results/shooter-flywheel/Explanation",
+                "NT:/SystemCheck/Results/coordinated-acquisition/Status",
+                "NT:/SystemCheck/Results/coordinated-acquisition/Explanation",
+                "NT:/SystemCheck/Results/coordinated-feed-path/Status",
+                "NT:/SystemCheck/Results/coordinated-feed-path/Explanation",
+                "NT:/SystemCheck/Results/vision-observation/Status",
+                "NT:/SystemCheck/Results/vision-observation/Explanation",
+                "NT:/SystemCheck/Results/neutral-verification/Status",
+                "NT:/SystemCheck/Results/neutral-verification/Explanation"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout03",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Passive Health",
+              "controller": [
+                "NT:/SystemCheck/Passive/Pigeon2/Connected",
+                "NT:/SystemCheck/Passive/Vision/Connected",
+                "NT:/SystemCheck/Passive/Vision/PoseInitialized",
+                "NT:/SystemCheck/Passive/Vision/LastAbsoluteCorrectionAgeSeconds",
+                "NT:/SystemCheck/Passive/SwerveModule0/Connected",
+                "NT:/SystemCheck/Passive/SwerveModule1/Connected",
+                "NT:/SystemCheck/Passive/SwerveModule2/Connected",
+                "NT:/SystemCheck/Passive/SwerveModule3/Connected",
+                "NT:/SystemCheck/Passive/IntakeRack/Connected",
+                "NT:/SystemCheck/Passive/IntakeRoller/Connected",
+                "NT:/SystemCheck/Passive/Conveyor/Connected",
+                "NT:/SystemCheck/Passive/BottomIndexer/Connected",
+                "NT:/SystemCheck/Passive/TopIndexer/Connected",
+                "NT:/SystemCheck/Passive/Hood/Connected",
+                "NT:/SystemCheck/Passive/ShooterFlywheel/Connected",
+                "NT:/SystemCheck/Passive/Pigeon2/DeviceIds",
+                "NT:/SystemCheck/Passive/SwerveModule0/DeviceIds",
+                "NT:/SystemCheck/Passive/SwerveModule1/DeviceIds",
+                "NT:/SystemCheck/Passive/SwerveModule2/DeviceIds",
+                "NT:/SystemCheck/Passive/SwerveModule3/DeviceIds",
+                "NT:/SystemCheck/Passive/IntakeRack/DeviceIds",
+                "NT:/SystemCheck/Passive/IntakeRoller/DeviceIds",
+                "NT:/SystemCheck/Passive/Conveyor/DeviceIds",
+                "NT:/SystemCheck/Passive/BottomIndexer/DeviceIds",
+                "NT:/SystemCheck/Passive/TopIndexer/DeviceIds",
+                "NT:/SystemCheck/Passive/Hood/DeviceIds",
+                "NT:/SystemCheck/Passive/ShooterFlywheel/DeviceIds",
+                "NT:/SystemCheck/Passive/SwerveModule0/CurrentsAmps",
+                "NT:/SystemCheck/Passive/SwerveModule1/CurrentsAmps",
+                "NT:/SystemCheck/Passive/SwerveModule2/CurrentsAmps",
+                "NT:/SystemCheck/Passive/SwerveModule3/CurrentsAmps",
+                "NT:/SystemCheck/Passive/IntakeRack/CurrentsAmps",
+                "NT:/SystemCheck/Passive/IntakeRoller/CurrentsAmps",
+                "NT:/SystemCheck/Passive/Conveyor/CurrentsAmps",
+                "NT:/SystemCheck/Passive/BottomIndexer/CurrentsAmps",
+                "NT:/SystemCheck/Passive/TopIndexer/CurrentsAmps",
+                "NT:/SystemCheck/Passive/Hood/CurrentsAmps",
+                "NT:/SystemCheck/Passive/ShooterFlywheel/CurrentsAmps",
+                "NT:/SystemCheck/Passive/SwerveModule0/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/SwerveModule1/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/SwerveModule2/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/SwerveModule3/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/IntakeRack/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/IntakeRoller/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/Conveyor/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/BottomIndexer/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/TopIndexer/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/Hood/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/ShooterFlywheel/NormalizedVelocities",
+                "NT:/SystemCheck/Passive/SwerveModule0/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/SwerveModule1/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/SwerveModule2/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/SwerveModule3/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/IntakeRack/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/IntakeRoller/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/Conveyor/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/BottomIndexer/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/TopIndexer/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/Hood/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/ShooterFlywheel/MaxTemperatureCelsius",
+                "NT:/SystemCheck/Passive/Pigeon2/ActiveFaults",
+                "NT:/SystemCheck/Passive/Vision/ActiveFaults",
+                "NT:/SystemCheck/Passive/SwerveModule0/ActiveFaults",
+                "NT:/SystemCheck/Passive/SwerveModule1/ActiveFaults",
+                "NT:/SystemCheck/Passive/SwerveModule2/ActiveFaults",
+                "NT:/SystemCheck/Passive/SwerveModule3/ActiveFaults",
+                "NT:/SystemCheck/Passive/IntakeRack/ActiveFaults",
+                "NT:/SystemCheck/Passive/IntakeRoller/ActiveFaults",
+                "NT:/SystemCheck/Passive/Conveyor/ActiveFaults",
+                "NT:/SystemCheck/Passive/BottomIndexer/ActiveFaults",
+                "NT:/SystemCheck/Passive/TopIndexer/ActiveFaults",
+                "NT:/SystemCheck/Passive/Hood/ActiveFaults",
+                "NT:/SystemCheck/Passive/ShooterFlywheel/ActiveFaults"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout04",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Controlled-Area Shot",
+              "controller": [
+                "NT:/SystemCheck/PracticeShot/Warning",
+                "NT:/SystemCheck/PracticeShot/Armed",
+                "NT:/SystemCheck/PracticeShot/AreaClearConfirmed",
+                "NT:/SystemCheck/PracticeShot/ExactlyOneFuelConfirmed",
+                "NT:/SystemCheck/PracticeShot/Start",
+                "NT:/SystemCheck/PracticeShot/Status",
+                "NT:/SystemCheck/PracticeShot/Made",
+                "NT:/SystemCheck/PracticeShot/Missed",
+                "NT:/AdvantageKit/RealOutputs/Shooter/Readiness",
+                "NT:/AdvantageKit/RealOutputs/Shooter/DistanceToTargetMeters",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ReadyToFeed",
+                "NT:/AdvantageKit/RealOutputs/Shooter/Feeding",
+                "NT:/AdvantageKit/RealOutputs/Vision/PoseReady"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout05",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Reports & CAN",
+              "controller": [
+                "NT:/SystemCheck/Report/Instructions",
+                "NT:/SystemCheck/Report/IndexUrl",
+                "NT:/SystemCheck/Report/FallbackIndexUrl",
+                "NT:/SystemCheck/Report/LatestHtmlUrl",
+                "NT:/SystemCheck/Report/LatestJsonUrl",
+                "NT:/SystemCheck/Report/LatestCsvUrl",
+                "NT:/SystemCheck/Report/StorageDirectory",
+                "NT:/SystemCheck/Report/Error",
+                "NT:/SystemCheck/Report/CanTopologyPhysicalOrderVerified",
+                "NT:/SystemCheck/CAN/rio/Status",
+                "NT:/SystemCheck/CAN/rio/Utilization",
+                "NT:/SystemCheck/CAN/rio/BusOffCount",
+                "NT:/SystemCheck/CAN/rio/TxFullCount",
+                "NT:/SystemCheck/CAN/rio/ReceiveErrorCount",
+                "NT:/SystemCheck/CAN/rio/TransmitErrorCount",
+                "NT:/SystemCheck/CAN/MECO_2/Status",
+                "NT:/SystemCheck/CAN/MECO_2/Utilization",
+                "NT:/SystemCheck/CAN/MECO_2/BusOffCount",
+                "NT:/SystemCheck/CAN/MECO_2/TxFullCount",
+                "NT:/SystemCheck/CAN/MECO_2/ReceiveErrorCount",
+                "NT:/SystemCheck/CAN/MECO_2/TransmitErrorCount",
+                "NT:/SystemCheck/CAN/MECO_CANIvore/Status",
+                "NT:/SystemCheck/CAN/MECO_CANIvore/Utilization",
+                "NT:/SystemCheck/CAN/MECO_CANIvore/BusOffCount",
+                "NT:/SystemCheck/CAN/MECO_CANIvore/TxFullCount",
+                "NT:/SystemCheck/CAN/MECO_CANIvore/ReceiveErrorCount",
+                "NT:/SystemCheck/CAN/MECO_CANIvore/TransmitErrorCount",
+                "NT:/SystemCheck/Live/Url",
+                "NT:/SystemCheck/Live/Error"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout06",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Simulation Faults",
+              "controller": [
+                "NT:/SystemCheck/SimulationFaults/DisconnectedMotor",
+                "NT:/SystemCheck/SimulationFaults/FrozenEncoder",
+                "NT:/SystemCheck/SimulationFaults/ExcessiveCurrent",
+                "NT:/SystemCheck/SimulationFaults/HighTemperature",
+                "NT:/SystemCheck/SimulationFaults/MissingVision",
+                "NT:/SystemCheck/SimulationFaults/LowBattery"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout07",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Shooting & Intake",
+              "controller": [
+                "NT:/AdvantageKit/RealOutputs/Shooter/Readiness",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ShotTargetMode",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ShotTargetX",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ShotTargetY",
+                "NT:/AdvantageKit/RealOutputs/Shooter/ReadyToFeed",
+                "NT:/AdvantageKit/RealOutputs/Shooter/Feeding",
+                "NT:/AdvantageKit/RealOutputs/Shooter/SolutionCalibrated",
+                "NT:/AdvantageKit/RealOutputs/Shooter/DistanceToTargetMeters",
+                "NT:/TunableNumbers/ShooterCalibration/Enabled",
+                "NT:/TunableNumbers/ShooterCalibration/HoodRotations",
+                "NT:/TunableNumbers/ShooterCalibration/FlywheelRPS",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationMode",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationDistanceInches",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationAppliedHoodRotations",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationMeasuredHoodRotations",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationAppliedFlywheelRPS",
+                "NT:/AdvantageKit/RealOutputs/Shooter/CalibrationMeasuredFlywheelRPS",
+                "NT:/AdvantageKit/RealOutputs/ShooterFlywheel/CommandedVoltage",
+                "NT:/AdvantageKit/RealOutputs/ShooterFlywheel/VelocityControlActive",
+                "NT:/AdvantageKit/RealOutputs/IntakeRoller/CommandedVoltage",
+                "NT:/AdvantageKit/RealOutputs/Conveyor/CommandedVoltage",
+                "NT:/AdvantageKit/RealOutputs/BottomIndexer/CommandedVoltage",
+                "NT:/AdvantageKit/RealOutputs/TopIndexer/CommandedVoltage",
+                "NT:/AdvantageKit/RealOutputs/Vision/PoseReady",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/HopperFuelCount",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/FuelProjectileCount",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/LaunchDebug/NominalLaunchPitchDegrees",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/LaunchDebug/LastLaunchPitchDegrees",
+                "NT:/AdvantageKit/RealOutputs/FieldSimulation/SuccessfulScoreCount"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout08",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Drive Telemetry",
+              "controller": [
+                "NT:/AdvantageKit/RealOutputs/DriveState/Pose",
+                "NT:/AdvantageKit/RealOutputs/DriveState/PhysicsPose",
+                "NT:/AdvantageKit/RealOutputs/DriveState/Speeds",
+                "NT:/AdvantageKit/RealOutputs/DriveState/PhysicsSpeeds",
+                "NT:/AdvantageKit/RealOutputs/DriveState/ModuleStates",
+                "NT:/AdvantageKit/RealOutputs/DriveState/ModuleTargets",
+                "NT:/AdvantageKit/RealOutputs/DriveState/ModulePositions",
+                "NT:/AdvantageKit/RealOutputs/DriveState/PoseErrorX",
+                "NT:/AdvantageKit/RealOutputs/DriveState/PoseErrorY",
+                "NT:/AdvantageKit/RealOutputs/DriveState/PoseErrorThetaDeg",
+                "NT:/AdvantageKit/RealOutputs/DriveState/OdometryFrequency",
+                "NT:/AdvantageKit/RealOutputs/DriveState/RawGyroHeading",
+                "NT:/AdvantageKit/RealOutputs/DriveState/EstimatedHeadingErrorDeg"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout09",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "REBUILT | Rack Diagnostics",
+              "controller": [
+                "NT:/AdvantageKit/RealOutputs/IntakeRack/RequestedPosition",
+                "NT:/AdvantageKit/RealOutputs/IntakeRack/GoalPosition",
+                "NT:/AdvantageKit/RealOutputs/IntakeRack/CommandOwner",
+                "NT:/AdvantageKit/RealOutputs/IntakeRack/ControlMode",
+                "NT:/AdvantageKit/RealOutputs/IntakeRack/ControllerDiagnostic",
+                "NT:/AdvantageKit/RealOutputs/IntakeRack/CommandedVoltage",
+                "NT:/AdvantageKit/IntakeRack/OutputPosition",
+                "NT:/AdvantageKit/IntakeRack/Velocity",
+                "NT:/AdvantageKit/IntakeRack/MotorVoltages",
+                "NT:/AdvantageKit/IntakeRack/MotorCurrents",
+                "NT:/AdvantageKit/IntakeRack/ConfigurationStatus",
+                "NT:/AdvantageKit/IntakeRack/ControlStatus",
+                "NT:/AdvantageKit/IntakeRack/ProfileStatus",
+                "NT:/AdvantageKit/IntakeRack/EncoderResetStatus",
+                "NT:/AdvantageKit/IntakeRack/AtReverseLimit",
+                "NT:/AdvantageKit/IntakeRack/AtForwardLimit"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout10",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 3,
+              "title": "16th Note | Drive & Fuel 3D",
+              "controller": {
+                "sources": [
+                  {
+                    "type": "robot",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Visualization/16thNote/RobotPose",
+                    "logType": "Pose3d",
+                    "visible": true,
+                    "options": {
+                      "model": "16th Note Detailed"
+                    }
+                  },
+                  {
+                    "type": "component",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Visualization/16thNote/ComponentPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {}
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Simulation/Fuel/GroundPoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
+                  },
+                  {
+                    "type": "gamePiece",
+                    "logKey": "NT:/AdvantageKit/RealOutputs/Simulation/Fuel/ProjectilePoses",
+                    "logType": "Pose3d[]",
+                    "visible": true,
+                    "options": {
+                      "variant": "Fuel"
+                    }
+                  }
+                ],
+                "game": "FRC:2026 Field"
+              },
+              "controllerUUID": "mecoCombinedRobotLayout11",
+              "renderer": {
+                "cameraIndex": -1,
+                "orbitFov": 50,
+                "cameraPosition": [
+                  8.77,
+                  8.5,
+                  16.0
+                ],
+                "cameraTarget": [
+                  8.77,
+                  0.75,
+                  4.0
+                ]
+              },
+              "controlsHeight": 285
+            },
+            {
+              "type": 4,
+              "title": "16th Note | Tank Drive",
+              "controller": [
+                "NT:/SmartDashboard/Drive/ForwardInput",
+                "NT:/SmartDashboard/Drive/TurnInput",
+                "NT:/AdvantageKit/RealOutputs/TankDrive/RequestedVolts",
+                "NT:/AdvantageKit/TankDrive/LeftAppliedVolts",
+                "NT:/AdvantageKit/TankDrive/RightAppliedVolts",
+                "NT:/AdvantageKit/TankDrive/HasPositionFeedback",
+                "NT:/AdvantageKit/TankDrive/LeftPositionMeters",
+                "NT:/AdvantageKit/TankDrive/RightPositionMeters",
+                "NT:/AdvantageKit/TankDrive/LeftVelocityMetersPerSecond",
+                "NT:/AdvantageKit/TankDrive/RightVelocityMetersPerSecond",
+                "NT:/AdvantageKit/TankDrive/HeadingRadians"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout12",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "16th Note | Fuel Status",
+              "controller": [
+                "NT:/SmartDashboard/Fuel/Backend",
+                "NT:/SmartDashboard/Fuel/ActiveConfiguration",
+                "NT:/SmartDashboard/Fuel/State",
+                "NT:/SmartDashboard/Fuel/Fault",
+                "NT:/SmartDashboard/Fuel/AutomaticBlockedBy",
+                "NT:/SmartDashboard/Fuel/AutoBlockedBy",
+                "NT:/SmartDashboard/Fuel/Devices",
+                "NT:/SmartDashboard/Fuel/Reference",
+                "NT:/SmartDashboard/Fuel/ActionStatus",
+                "NT:/SmartDashboard/Fuel/AngleTuningStatus",
+                "NT:/SmartDashboard/Fuel/Test/Status",
+                "NT:/SmartDashboard/Fuel/ConfigurationParseStatus",
+                "NT:/SmartDashboard/Fuel/DevicesConfigured",
+                "NT:/SmartDashboard/Fuel/AutomaticReady",
+                "NT:/SmartDashboard/Fuel/AutonomousReady",
+                "NT:/SmartDashboard/Fuel/Available",
+                "NT:/SmartDashboard/Fuel/Referenced",
+                "NT:/SmartDashboard/Fuel/PivotDegrees",
+                "NT:/SmartDashboard/Fuel/ShooterPrimaryMotorRpm",
+                "NT:/SmartDashboard/Fuel/ShooterSecondaryMotorRpm",
+                "NT:/SmartDashboard/Fuel/IndexerDuty",
+                "NT:/AdvantageKit/RealOutputs/Fuel/PivotGoalDegrees",
+                "NT:/AdvantageKit/RealOutputs/Fuel/ShooterPrimaryGoalMotorRpm",
+                "NT:/AdvantageKit/RealOutputs/Fuel/ShooterSecondaryGoalMotorRpm",
+                "NT:/AdvantageKit/RealOutputs/Fuel/IntakeDuty",
+                "NT:/AdvantageKit/RealOutputs/Fuel/IndexerDuty"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout13",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "16th Note | Commissioning",
+              "controller": [
+                "NT:/SmartDashboard/Fuel/Test/Mechanism/options",
+                "NT:/SmartDashboard/Fuel/Test/Mechanism/selected",
+                "NT:/SmartDashboard/Fuel/Test/Mechanism/active",
+                "NT:/SmartDashboard/Fuel/Test/Volts",
+                "NT:/SmartDashboard/Fuel/Test/Status",
+                "NT:/SmartDashboard/Fuel/Confirm intake at upper stop/running",
+                "NT:/SmartDashboard/Fuel/Apply configuration (disabled)/running",
+                "NT:/SmartDashboard/Fuel/ActionStatus",
+                "NT:/SmartDashboard/Fuel/Reference",
+                "NT:/SmartDashboard/Fuel/Devices",
+                "NT:/SmartDashboard/Fuel/AutomaticBlockedBy",
+                "NT:/AdvantageKit/Fuel/Inputs/Connected",
+                "NT:/AdvantageKit/Fuel/Inputs/Configured",
+                "NT:/AdvantageKit/Fuel/Inputs/CurrentAmps",
+                "NT:/AdvantageKit/Fuel/Inputs/AppliedVolts",
+                "NT:/AdvantageKit/Fuel/Inputs/MotorRpm",
+                "NT:/AdvantageKit/Fuel/Inputs/TemperatureCelsius",
+                "NT:/AdvantageKit/Fuel/Inputs/ControllerFaults",
+                "NT:/AdvantageKit/Fuel/Inputs/ResetDetected",
+                "NT:/AdvantageKit/Fuel/Inputs/BrownoutDetected",
+                "NT:/AdvantageKit/Fuel/Inputs/Healthy",
+                "NT:/AdvantageKit/Fuel/Inputs/RequestMode"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout14",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "16th Note | Fuel Tuning",
+              "controller": [
+                "NT:/SmartDashboard/Fuel/Config/FollowerCompatible",
+                "NT:/SmartDashboard/Fuel/Config/FollowerInverted",
+                "NT:/SmartDashboard/Fuel/Config/Pivot/kP",
+                "NT:/SmartDashboard/Fuel/Config/Pivot/kD",
+                "NT:/SmartDashboard/Fuel/Config/Pivot/GravityVolts",
+                "NT:/SmartDashboard/Fuel/Config/Pivot/MaxVelocity",
+                "NT:/SmartDashboard/Fuel/Config/Pivot/MaxAcceleration",
+                "NT:/SmartDashboard/Fuel/Config/Pivot/MaxDegrees",
+                "NT:/SmartDashboard/Fuel/Config/IntakeDegrees",
+                "NT:/SmartDashboard/Fuel/Config/FeedDegrees",
+                "NT:/SmartDashboard/Fuel/Config/AgitationDegrees",
+                "NT:/SmartDashboard/Fuel/Config/PositionToleranceDegrees",
+                "NT:/SmartDashboard/Fuel/Config/PrimaryMotorRpm",
+                "NT:/SmartDashboard/Fuel/Config/SecondaryMotorRpm",
+                "NT:/SmartDashboard/Fuel/Config/PrimaryToleranceMotorRpm",
+                "NT:/SmartDashboard/Fuel/Config/SecondaryToleranceMotorRpm",
+                "NT:/SmartDashboard/Fuel/Config/ReadySeconds",
+                "NT:/SmartDashboard/Fuel/Config/SpinupTimeoutSeconds",
+                "NT:/SmartDashboard/Fuel/Config/MotionTimeoutSeconds",
+                "NT:/SmartDashboard/Fuel/Config/FeedDwellSeconds",
+                "NT:/SmartDashboard/Fuel/Config/AgitationDwellSeconds",
+                "NT:/SmartDashboard/Fuel/Config/AgitationCycles",
+                "NT:/SmartDashboard/Fuel/Config/AgitationEnabled",
+                "NT:/SmartDashboard/Fuel/Config/IntakeDuty",
+                "NT:/SmartDashboard/Fuel/Config/IndexerDuty",
+                "NT:/SmartDashboard/Fuel/Config/ShooterCoupling/options",
+                "NT:/SmartDashboard/Fuel/Config/ShooterCoupling/selected",
+                "NT:/SmartDashboard/Fuel/Config/ShooterCoupling/active"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout15",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "16th Note | Motor Configuration",
+              "controller": [
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/CurrentAmps",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/MaxVolts",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/TestVoltsCap",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/FeedbackSign",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/kP",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/kV",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/Inverted",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_PRIMARY/DirectionConfirmed",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/CurrentAmps",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/MaxVolts",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/TestVoltsCap",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/FeedbackSign",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/kP",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/kV",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/Inverted",
+                "NT:/SmartDashboard/Fuel/Config/PIVOT/DirectionConfirmed",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/CurrentAmps",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/MaxVolts",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/TestVoltsCap",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/FeedbackSign",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/kP",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/kV",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/Inverted",
+                "NT:/SmartDashboard/Fuel/Config/ROLLERS/DirectionConfirmed",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/CurrentAmps",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/MaxVolts",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/TestVoltsCap",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/FeedbackSign",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/kP",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/kV",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/Inverted",
+                "NT:/SmartDashboard/Fuel/Config/SHOOTER_SECONDARY/DirectionConfirmed",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/CurrentAmps",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/MaxVolts",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/TestVoltsCap",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/FeedbackSign",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/kP",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/kV",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/Inverted",
+                "NT:/SmartDashboard/Fuel/Config/INDEXER/DirectionConfirmed"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout16",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "16th Note | Autonomous",
+              "controller": [
+                "NT:/SmartDashboard/Auto Choices/options",
+                "NT:/SmartDashboard/Auto Choices/selected",
+                "NT:/SmartDashboard/Auto Choices/active",
+                "NT:/SmartDashboard/Fuel/Config/Auto/Verified",
+                "NT:/SmartDashboard/Fuel/Config/Auto/StartDegrees",
+                "NT:/SmartDashboard/Fuel/Config/Auto/LeftVolts",
+                "NT:/SmartDashboard/Fuel/Config/Auto/RightVolts",
+                "NT:/SmartDashboard/Fuel/Config/Auto/BackSeconds",
+                "NT:/SmartDashboard/Fuel/Config/Auto/SettleSeconds",
+                "NT:/SmartDashboard/Fuel/Config/Auto/FeedSeconds",
+                "NT:/SmartDashboard/Fuel/Config/Auto/TotalSeconds",
+                "NT:/SmartDashboard/Fuel/AutoBlockedBy",
+                "NT:/SmartDashboard/Fuel/AutonomousReady"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout17",
+              "renderer": null,
+              "controlsHeight": 0
+            },
+            {
+              "type": 4,
+              "title": "16th Note | Sim Practice",
+              "controller": [
+                "NT:/SmartDashboard/Fuel/Sim/Prepare left trench shot (disabled)/running",
+                "NT:/SmartDashboard/Fuel/Sim/Prepare right trench shot (disabled)/running",
+                "NT:/SmartDashboard/Fuel/Sim/Reset empty (disabled)/running",
+                "NT:/SmartDashboard/Fuel/Sim/Reset six preloads (disabled)/running",
+                "NT:/SmartDashboard/Fuel/Sim/Prepare pickup practice (disabled)/running",
+                "NT:/SmartDashboard/Fuel/Sim/TrenchShotsEnabled",
+                "NT:/SmartDashboard/Fuel/Sim/ShotPreset",
+                "NT:/SmartDashboard/Fuel/Sim/LaunchSpeedMps",
+                "NT:/SmartDashboard/Fuel/Sim/PeakLimitFeet",
+                "NT:/SmartDashboard/Fuel/Sim/Hood",
+                "NT:/SmartDashboard/Fuel/Sim/Model",
+                "NT:/SmartDashboard/Fuel/Sim/ResetStatus",
+                "NT:/SmartDashboard/Fuel/Sim/ShotBlockedBy",
+                "NT:/SmartDashboard/Fuel/Sim/PredictedPeakFeet",
+                "NT:/SmartDashboard/Fuel/Sim/PickupStatus",
+                "NT:/SmartDashboard/Fuel/Sim/PickupActive",
+                "NT:/SmartDashboard/Fuel/Sim/NearestFuelMeters",
+                "NT:/SmartDashboard/Fuel/Sim/GroundCount",
+                "NT:/SmartDashboard/Fuel/Sim/HeldCount",
+                "NT:/SmartDashboard/Fuel/Sim/ScoredCount",
+                "NT:/AdvantageKit/RealOutputs/Simulation/Fuel/HeldCount",
+                "NT:/AdvantageKit/RealOutputs/Simulation/Fuel/ScoredCount",
+                "NT:/AdvantageKit/RealOutputs/Simulation/Fuel/LaunchedCount",
+                "NT:/AdvantageKit/RealOutputs/Simulation/Fuel/PickupStatus"
+              ],
+              "controllerUUID": "mecoCombinedRobotLayout18",
+              "renderer": null,
+              "controlsHeight": 0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "satellites": []
+}

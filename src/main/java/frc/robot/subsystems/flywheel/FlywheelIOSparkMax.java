@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.constants.types.FlywheelConstants.FlywheelGains;
 import frc.robot.constants.types.FlywheelConstants.FlywheelHardwareConfig;
+import frc.robot.systemcheck.MotorHealthData;
 import frc.robot.util.feedforwards.TunableSimpleMotorFeedforward;
 
 /** SparkMax-backed implementation of {@link FlywheelIO}. */
@@ -34,6 +35,8 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 	private final double[] motorCurrents;
 
 	private final Alert[] motorAlerts;
+	private final double currentLimitAmps;
+	private final int[] deviceIds;
 
 	private TunableSimpleMotorFeedforward feedforward;
 
@@ -65,6 +68,8 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 		this.name = name;
 
 		int numMotors = config.canIds().length;
+		currentLimitAmps = config.currentLimit();
+		deviceIds = config.canIds().clone();
 
 		assert numMotors > 0 && (numMotors == config.reversed().length);
 
@@ -108,6 +113,38 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 	}
 
 	@Override
+	public void updateHealth(MotorHealthData health) {
+		double[] temperatures = new double[motors.length];
+		String[] faults = new String[motors.length];
+		for (int i = 0; i < motors.length; i++) {
+			temperatures[i] = motors[i].getMotorTemperature();
+			StringBuilder description = new StringBuilder();
+			if (motors[i].hasActiveFault()) {
+				description.append("Faults: ").append(motors[i].getFaults());
+			}
+			if (motors[i].hasActiveWarning()) {
+				if (!description.isEmpty()) {
+					description.append("; ");
+				}
+				description.append("Warnings: ").append(motors[i].getWarnings());
+			}
+			faults[i] = description.toString();
+		}
+		health.temperaturesCelsius = temperatures;
+		health.activeFaults = faults;
+	}
+
+	@Override
+	public double getCurrentLimitAmps() {
+		return currentLimitAmps;
+	}
+
+	@Override
+	public int[] getDeviceIds() {
+		return deviceIds.clone();
+	}
+
+	@Override
 	public void updateInputs(FlywheelIOInputs inputs) {
 		inputs.velocity = motors[0].getEncoder().getVelocity();
 		inputs.position = motors[0].getEncoder().getPosition();
@@ -146,6 +183,7 @@ public class FlywheelIOSparkMax implements FlywheelIO {
 
 	@Override
 	public void setVoltage(double voltage) {
+		velocitySetpoint = 0.0;
 		motors[0].setVoltage(voltage);
 	}
 
