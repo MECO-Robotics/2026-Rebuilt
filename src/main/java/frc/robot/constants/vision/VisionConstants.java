@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import frc.robot.constants.subsystems.ShooterConstants;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +24,7 @@ public class VisionConstants {
 	public static String limelightName = "limelight";
 
 	// Robot to camera transforms
+	// Quest 3S faces robot -X and is mounted upside down.
 	public static Transform3d robotToQuest = new Transform3d(Units.inchesToMeters(-(27.0 / 2.0)),
 			Units.inchesToMeters(0), Units.inchesToMeters(8.5),
 			new Rotation3d(Units.degreesToRadians(180), 0.0, Units.degreesToRadians(180)));
@@ -32,9 +32,10 @@ public class VisionConstants {
 	// Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(-10),
 	// Units.inchesToMeters(22), new Rotation3d(0.0, Units.degreesToRadians(-20),
 	// 0.0));
+	// Limelight faces robot +X, tilted 30 degrees up (negative WPILib pitch).
 	public static Transform3d robotToLimelight = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(0),
 			Units.inchesToMeters(21.25),
-			new Rotation3d(0.0, Units.degreesToRadians(30), ShooterConstants.SHOOTER_YAW_OFFSET.getRadians()));
+			new Rotation3d(0.0, Units.degreesToRadians(-30), 0.0));
 
 	// Basic filtering thresholds
 	public static int minTagCountForOdometry = 2;

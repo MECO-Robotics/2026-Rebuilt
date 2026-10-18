@@ -201,8 +201,9 @@ public class VisionIOLimelight implements VisionIO {
 
 	private static double[] toLimelightRobotSpace(Transform3d robotToCamera) {
 		Rotation3d rotation = robotToCamera.getRotation();
+		// Limelight's existing robot-space API uses positive pitch for an upward tilt.
 		return new double[]{robotToCamera.getX(), -robotToCamera.getY(), robotToCamera.getZ(),
-				Units.radiansToDegrees(-rotation.getX()), Units.radiansToDegrees(rotation.getY()),
+				Units.radiansToDegrees(-rotation.getX()), Units.radiansToDegrees(-rotation.getY()),
 				Units.radiansToDegrees(-rotation.getZ())};
 	}
 

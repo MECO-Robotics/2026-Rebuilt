@@ -8,6 +8,8 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.BuildConstants;
 import frc.robot.constants.Constants;
 import frc.robot.simulation.RobotSimulation;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -44,8 +46,27 @@ public class Robot extends LoggedRobot {
 		// Set up data receivers & replay source
 		switch (Constants.currentMode) {
 			case REAL :
-				// Running on a real robot, log to a USB stick ("/U/logs")
-				Logger.addDataReceiver(new WPILOGWriter());
+				// Prefer the USB stick; preserve logs on the roboRIO if no USB is mounted.
+				Path usbLogDirectory = Path.of("/U/logs");
+				Path onboardLogDirectory = Path.of("/home/lvuser/logs");
+				Path logDirectory = Files.isDirectory(Path.of("/U")) ? usbLogDirectory : onboardLogDirectory;
+				try {
+					Files.createDirectories(logDirectory);
+					Logger.addDataReceiver(new WPILOGWriter(logDirectory.toString()));
+				} catch (Exception exception) {
+					// The onboard directory is a last resort if the USB path cannot be prepared.
+					if (logDirectory.equals(usbLogDirectory)) {
+						try {
+							Files.createDirectories(onboardLogDirectory);
+							Logger.addDataReceiver(new WPILOGWriter(onboardLogDirectory.toString()));
+						} catch (Exception fallbackException) {
+							throw new IllegalStateException("Unable to initialize USB or onboard WPILOG storage",
+									fallbackException);
+						}
+					} else {
+						throw new IllegalStateException("Unable to initialize onboard WPILOG storage", exception);
+					}
+				}
 				Logger.addDataReceiver(new NT4Publisher());
 				break;
 
