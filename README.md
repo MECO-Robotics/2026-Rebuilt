@@ -24,6 +24,8 @@ py -m sphinx -b html source build/html
 ```
 
 
+Experimental hybrid autonomy: see [architecture, limits, and validation instructions](docs/source/hybrid-navigation.rst).
+
 ## Subsystems
 
 We split our robot into many small subsystems to allow for heavy reuse of subsystems (this is why we have only two motor control subsystems).

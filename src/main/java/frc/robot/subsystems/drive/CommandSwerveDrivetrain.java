@@ -255,6 +255,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 		configureAutoBuilder();
 	}
 
+	/**
+	 * Robot-relative output for the exclusive hybrid supervisor; bounds are
+	 * enforced upstream.
+	 */
+	public void applyHybridSpeeds(ChassisSpeeds speeds) {
+		telemetry.logAutoCommandedSpeeds(speeds);
+		setControl(m_pathApplyRobotSpeeds.withSpeeds(ChassisSpeeds.discretize(speeds, 0.020)));
+	}
+
 	private void configureAutoBuilder() {
 		try {
 			var config = RobotConfig.fromGUISettings();

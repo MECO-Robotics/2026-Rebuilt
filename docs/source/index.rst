@@ -18,6 +18,8 @@ Included are both beginner-oriented guides and more in-depth documentation for m
    command-compositions
    shooting-intake-checklist
    system-check
+   hybrid-navigation
+   hybrid-validation
    tune-iterate
    troubleshooting
    

@@ -356,6 +356,8 @@ public class RobotContainer {
 	}
 
 	public void configureAuto() {
+		autoChooser.addOption("EXPERIMENTAL Hybrid Survey (neutral zone)",
+				frc.robot.navigation.HybridAutos.survey(drivetrain, vision));
 		// Unlike PathPlanner/Choreo routines, this stationary option does not reset
 		// odometry, so it must wait for an absolute vision-aligned field pose.
 		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", createVisionInitializedAutonomousHubShot());
