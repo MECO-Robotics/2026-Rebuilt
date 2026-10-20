@@ -258,4 +258,127 @@ class HybridMissionLifecycleTest {
 		assertEquals(0, drive.velocity.vxMetersPerSecond, 1e-9);
 	}
 
+	private HybridAutoDefinition commandTree(String tail) throws Exception {
+		return HybridAutoDefinition.parse("""
+				{"version":"2025.0","resetOdom":false,"choreoAuto":false,"command":{
+				  "type":"sequential","data":{"commands":[
+				    {"type":"deadline","data":{"commands":[
+				      {"type":"path","data":{"pathName":"Test"}},
+				      {"type":"named","data":{"name":"Intake"}}
+				    ]}},
+				    %s
+				  ]}}}
+				""".formatted(tail), name -> segment(2, 3, Commands.none()).path());
+	}
+
+	@Test
+	void splitLoopVisitsBothEndsBeforeScoringWithoutRestartingIntake() throws Exception {
+		var definition = HybridAutoDefinition.parse("""
+				{"version":"2025.0","resetOdom":false,"choreoAuto":false,"command":{
+				  "type":"sequential","data":{"commands":[
+				    {"type":"deadline","data":{"commands":[
+				      {"type":"sequential","data":{"commands":[
+				        {"type":"path","data":{"pathName":"Out"}},
+				        {"type":"path","data":{"pathName":"Return"}}]}},
+				      {"type":"named","data":{"name":"Intake"}}]}},
+				    {"type":"named","data":{"name":"Score"}}
+				  ]}}}
+				""",
+				name -> name.equals("Out")
+						? segment(2, 3, Commands.none()).path()
+						: segment(3, 2, Commands.none()).path());
+		var visits = new ArrayList<String>();
+		int[] starts = {0};
+		var command = new HybridCommandAuto(definition, name -> name.equals("Intake") ? Commands.run(() -> {
+		}).beforeStarting(() -> starts[0]++) : Commands.runOnce(() -> {
+			assertEquals(2, drive.pose.getX(), .1);
+			visits.add("Score");
+		}), name -> {
+			var item = new AutoMissionPlan.Segment(name, definition.paths().get(name),
+					Commands.runOnce(() -> visits.add(name)));
+			return supervisor(List.of(item));
+		}, drive, () -> true, () -> drive.velocity = new ChassisSpeeds(), 30);
+		scheduler.schedule(command);
+		for (int i = 0; i < 1000 && command.isScheduled(); i++)
+			tick();
+		assertFalse(command.isScheduled(), command.failure());
+		assertEquals("", command.failure());
+		assertEquals(List.of("Out", "Return", "Score"), visits);
+		assertEquals(1, starts[0]);
+	}
+
+	@Test
+	void commandTreeKeepsIntakeActiveAcrossRecoveryAndFeedsOnlyAfterArrival() throws Exception {
+		int[] events = {0, 0, 0};
+		var definition = commandTree("""
+				{"type":"named","data":{"name":"Feed"}}
+				""");
+		var navigation = supervisor(List.of(segment(2, 3, Commands.none())));
+		var command = new HybridCommandAuto(definition,
+				name -> name.equals("Intake")
+						? Commands.startEnd(() -> events[0]++, () -> events[1]++)
+						: Commands.runOnce(() -> {
+							assertEquals(3, drive.pose.getX(), .10);
+							assertTrue(Math.hypot(drive.velocity.vxMetersPerSecond,
+									drive.velocity.vyMetersPerSecond) < .15);
+							events[2]++;
+						}),
+				name -> navigation, drive, () -> true, () -> drive.velocity = new ChassisSpeeds(), 30);
+		for (int run = 0; run < 2; run++) {
+			drive.pose = new Pose2d(2, 2.30, Rotation2d.kZero);
+			scheduler.schedule(command);
+			for (int i = 0; i < 700 && command.isScheduled(); i++) {
+				tick();
+			}
+			assertFalse(command.isScheduled());
+			assertEquals("", command.failure());
+			assertTrue(navigation.recoveryAttempts() > 0);
+			assertArrayEquals(new int[]{run + 1, run + 1, run + 1}, events);
+		}
+	}
+
+	@Test
+	void commandTreeAbortsWithoutFeedingAndInterruptsIntake() throws Exception {
+		int[] events = {0, 0};
+		var definition = commandTree("""
+				{"type":"named","data":{"name":"Feed"}}
+				""");
+		var command = new HybridCommandAuto(definition, name -> name.equals("Intake") ? Commands.startEnd(() -> {
+		}, () -> events[0]++) : Commands.runOnce(() -> events[1]++),
+				name -> supervisor(List.of(segment(2, 3, Commands.none()))), drive, () -> true,
+				() -> drive.velocity = new ChassisSpeeds(), 30);
+		scheduler.schedule(command);
+		tick();
+		drive.pose = new Pose2d(6, 6, Rotation2d.kZero);
+		tick();
+		assertFalse(command.isScheduled());
+		assertFalse(command.failure().isEmpty());
+		assertArrayEquals(new int[]{1, 0}, events);
+		assertEquals(0, drive.velocity.vxMetersPerSecond);
+	}
+
+	@Test
+	void commandTreeChecksHealthBeforeStartingMechanismsAndCancelsOnGlobalDeadline() throws Exception {
+		int[] starts = {0};
+		var definition = commandTree("""
+				{"type":"wait","data":{"waitTime":100}}
+				""");
+		var command = new HybridCommandAuto(definition, name -> Commands.runOnce(() -> starts[0]++),
+				name -> supervisor(List.of(segment(2, 3, Commands.none()))), drive, () -> false,
+				() -> drive.velocity = new ChassisSpeeds(), 30);
+		scheduler.schedule(command);
+		tick();
+		assertFalse(command.isScheduled());
+		assertEquals(0, starts[0]);
+
+		var bounded = new HybridCommandAuto(definition, name -> Commands.none(),
+				name -> supervisor(List.of(segment(2, 3, Commands.none()))), drive, () -> true,
+				() -> drive.velocity = new ChassisSpeeds(), .10);
+		scheduler.schedule(bounded);
+		for (int i = 0; i < 20 && bounded.isScheduled(); i++)
+			tick();
+		assertFalse(bounded.isScheduled());
+		assertEquals("Whole-auto deadline", bounded.failure());
+		assertEquals(0, drive.velocity.vxMetersPerSecond);
+	}
 }

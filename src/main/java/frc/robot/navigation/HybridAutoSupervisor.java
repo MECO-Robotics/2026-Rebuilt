@@ -543,6 +543,11 @@ public final class HybridAutoSupervisor extends Command {
 	public NavigationState state() {
 		return state;
 	}
+	/** Reset an inactive leaf's status before its enclosing auto is reused. */
+	void prepareForAuto() {
+		state = NavigationState.INACTIVE;
+		completed = attempts = 0;
+	}
 	public String reason() {
 		return reason;
 	}

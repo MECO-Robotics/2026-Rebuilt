@@ -101,6 +101,20 @@ dependencies {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    // This fixture owns a full native robot; run it in its own JVM to avoid duplicate CAN IDs.
+    exclude '**/HybridAutoSimulationTest.class'
+}
+
+tasks.register('hybridSimTest', Test) {
+    description = 'Runs all migrated autos on both alliances in the desktop-only hybrid test arena.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    include '**/HybridAutoSimulationTest.class'
+    systemProperty 'meco.hybridSimulation', 'true'
+    outputs.upToDateWhen { false }
+    testLogging { events 'passed', 'failed', 'standardOut' }
 }
 
 // Simulation configuration (e.g. environment variables).
@@ -108,7 +122,7 @@ test {
 // The sim GUI is *disabled* by default to support running
 // AdvantageKit log replay, which requires that all HAL
 // sim extensions be disabled.
-wpi.sim.addGui().defaultEnabled = false
+wpi.sim.addGui().defaultEnabled = 'true'.equalsIgnoreCase(System.getenv('MECO_HYBRID_SIM'))
 wpi.sim.addDriverstation()
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
@@ -125,6 +139,7 @@ jar {
 deployArtifact.jarTask = jar
 wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
+wpi.java.configureTestTasks(tasks.named('hybridSimTest').get())
 
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {

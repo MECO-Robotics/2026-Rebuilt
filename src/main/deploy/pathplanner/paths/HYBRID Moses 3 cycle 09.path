@@ -1,0 +1,63 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 2.625523475937884,
+        "y": 5.374094019065191
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.3755234780874677,
+        "y": 5.374061235046589
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 6.0368837926660515,
+        "y": 5.628682253228783
+      },
+      "prevControl": {
+        "x": 5.787027624795747,
+        "y": 5.6371613674022125
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.025955542320621916,
+      "rotationDegrees": -37.17987419759638
+    },
+    {
+      "waypointRelativePos": 0.928973689742147,
+      "rotationDegrees": -44.8197047537295
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 400.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -48.688224122271954
+  },
+  "reversed": false,
+  "folder": "Hybrid migration",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 318.658849821377
+  },
+  "useDefaultConstraints": true
+}

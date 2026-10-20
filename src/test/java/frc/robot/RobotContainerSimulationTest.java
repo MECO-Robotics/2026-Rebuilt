@@ -126,8 +126,40 @@ class RobotContainerSimulationTest {
 		SimHooks.resumeTiming();
 	}
 
+	@SuppressWarnings("unchecked")
+	private void migratedAutosComposeWithRealMechanismRequirementsIndependentlyOfClearance()
+			throws ReflectiveOperationException {
+		var type = Class.forName("frc.robot.navigation.HybridAutoDefinition");
+		var load = type.getDeclaredMethod("load", String.class);
+		var build = type.getDeclaredMethod("build", java.util.function.Function.class,
+				java.util.function.Function.class);
+		load.setAccessible(true);
+		build.setAccessible(true);
+		var factories = (java.util.Map<String, java.util.function.Supplier<Command>>) getField(container,
+				"namedCommandFactories", java.util.Map.class);
+		var drive = getField(container, "drivetrain", edu.wpi.first.wpilibj2.command.Subsystem.class);
+		int count = 0;
+		for (var name : com.pathplanner.lib.auto.AutoBuilder.getAllAutoNames()) {
+			if (!name.startsWith("HYBRID "))
+				continue;
+			var definition = load.invoke(null, name);
+			java.util.function.Function<String, Command> named = key -> factories.get(key).get();
+			java.util.function.Function<String, Command> path = key -> edu.wpi.first.wpilibj2.command.Commands
+					.runOnce(() -> {
+					}, drive);
+			// Uses the real factories; detects drive/hood/conveyor/indexer ownership
+			// conflicts.
+			var tree = (Command) build.invoke(definition, named, path);
+			assertTrue(tree.getRequirements().contains(drive), name);
+			count++;
+		}
+		assertEquals(8, count);
+	}
+
 	@Test
 	void driverBindingsOperateAndReturnEveryRollerToNeutral() {
+		org.junit.jupiter.api.Assertions
+				.assertDoesNotThrow(this::migratedAutosComposeWithRealMechanismRequirementsIndependentlyOfClearance);
 		assertTrue(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel").length > 0,
 				"Simulation should populate field fuel before autonomous is started");
 		verifyRackSettlesWithoutJitter();

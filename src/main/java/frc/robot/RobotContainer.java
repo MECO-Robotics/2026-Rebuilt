@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -37,6 +38,7 @@ import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.commands.shooter.ShotTarget;
 import frc.robot.commands.shooter.ShotTargetSelector;
 import frc.robot.constants.Constants;
+import frc.robot.navigation.HybridAutos;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
@@ -63,6 +65,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
+	private final java.util.Map<String, java.util.function.Supplier<Command>> namedCommandFactories = new java.util.LinkedHashMap<>();
 	private static final double AUTO_LOOP_PERIOD_SECONDS = 0.020;
 
 	// Subsystems
@@ -138,8 +141,18 @@ public class RobotContainer {
 				this::followChoreoSample, true, drivetrain);
 
 		registerNamedCommands();
-		// Keep PathPlanner's built-in chooser behavior (default option is "None").
-		autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+		// Preserve the built-in "None" default; construct the survey only through
+		// the hybrid supervisor, including when its file contains unsupported edits.
+		var pathPlannerChooser = new SendableChooser<Command>();
+		pathPlannerChooser.setDefaultOption("None", Commands.none());
+		for (var autoName : AutoBuilder.getAllAutoNames()) {
+			if (autoName.startsWith(HybridAutos.MIGRATION_PREFIX)) {
+				var hybrid = HybridAutos.fromAutoFile(autoName, drivetrain, vision, this::freshNamedCommand);
+				pathPlannerChooser.addOption(hybrid.getName(), hybrid);
+			} else if (!HybridAutos.SURVEY_AUTO_NAME.equals(autoName))
+				pathPlannerChooser.addOption(autoName, AutoBuilder.buildAuto(autoName));
+		}
+		autoChooser = new LoggedDashboardChooser<>("Auto Choices", pathPlannerChooser);
 		sysIdChooser = new LoggedDashboardChooser<>("SysId");
 		configureAuto();
 		if (Constants.ENABLE_SYSID_AUTOS) {
@@ -283,20 +296,32 @@ public class RobotContainer {
 	}
 
 	private void registerNamedCommands() {
-		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployRack(intakeRack));
-		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowRack(intakeRack));
-		NamedCommands.registerCommand("FeedRollers", createAutonomousHubShot());
-		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
-		NamedCommands.registerCommand("Agitate", ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
-		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller, conveyor));
-		NamedCommands.registerCommand("AutoSpinUp",
-				ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel).withTimeout(2));
-		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
-		NamedCommands.registerCommand("AutoAim",
-				Commands.parallel(DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED),
+		registerNamedCommand("DeployIntake", () -> IntakeCommands.deployRack(intakeRack));
+		registerNamedCommand("StowIntake", () -> IntakeCommands.stowRack(intakeRack));
+		registerNamedCommand("FeedRollers", this::createAutonomousHubShot);
+		registerNamedCommand("IdleRollers", () -> ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
+		registerNamedCommand("Agitate", () -> ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
+		registerNamedCommand("SpinIntake", () -> IntakeCommands.spinIntake(intakeRoller, conveyor));
+		registerNamedCommand("AutoSpinUp",
+				() -> ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel).withTimeout(2));
+		registerNamedCommand("Fender", () -> ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
+		registerNamedCommand("AutoAim",
+				() -> Commands.parallel(DriveCommands.autoAimToHub(drivetrain, DrivetrainConstants.MAX_SPEED),
 						ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
-		NamedCommands.registerCommand("CoordinatedHubShot", createAutonomousHubShot());
+		registerNamedCommand("CoordinatedHubShot", this::createAutonomousHubShot);
 
+	}
+
+	private void registerNamedCommand(String name, java.util.function.Supplier<Command> factory) {
+		namedCommandFactories.put(name, factory);
+		NamedCommands.registerCommand(name, factory.get());
+	}
+
+	private Command freshNamedCommand(String name) {
+		var factory = namedCommandFactories.get(name);
+		if (factory == null)
+			throw new IllegalArgumentException("Unknown named command: " + name);
+		return factory.get();
 	}
 
 	private Command createLeftBlueBumpShootAuto() {
@@ -356,8 +381,7 @@ public class RobotContainer {
 	}
 
 	public void configureAuto() {
-		autoChooser.addOption("EXPERIMENTAL Hybrid Survey (neutral zone)",
-				frc.robot.navigation.HybridAutos.survey(drivetrain, vision));
+		autoChooser.addOption(HybridAutos.SURVEY_AUTO_NAME, HybridAutos.survey(drivetrain, vision));
 		// Unlike PathPlanner/Choreo routines, this stationary option does not reset
 		// odometry, so it must wait for an absolute vision-aligned field pose.
 		autoChooser.addDefaultOption("Fender I HARDLY KNOW HER -JAVI", createVisionInitializedAutonomousHubShot());

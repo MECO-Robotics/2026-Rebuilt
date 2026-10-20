@@ -32,6 +32,10 @@ public interface RobotSimulation {
 	void simulationPeriodic();
 
 	static void configureArenaOverride(Constants.Mode mode) {
+		if (mode == Constants.Mode.SIM && HybridSimulationEnvironment.enabled()) {
+			SimulatedArena.overrideInstance(HybridSimulationEnvironment.arena());
+			return;
+		}
 		if (mode == Constants.Mode.SIM || mode == Constants.Mode.REPLAY) {
 			SimulatedArena
 					.overrideInstance(new org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt(false));

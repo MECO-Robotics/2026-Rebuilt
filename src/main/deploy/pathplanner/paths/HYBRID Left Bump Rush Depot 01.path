@@ -1,0 +1,54 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 3.333245033112583,
+        "y": 2.67
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.7306705298013245,
+        "y": 1.7844205298013254
+      },
+      "isLocked": false,
+      "linkedName": "Left Bump Around end"
+    },
+    {
+      "anchor": {
+        "x": 1.126225165562914,
+        "y": 0.9059685430463587
+      },
+      "prevControl": {
+        "x": 1.8756747009500165,
+        "y": 0.40633551945495666
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 4.5,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 600.0,
+    "maxAngularAcceleration": 400.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 97.52752807087043
+  },
+  "reversed": false,
+  "folder": "Hybrid migration",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 45.0
+  },
+  "useDefaultConstraints": true
+}

@@ -1,6 +1,6 @@
 {
-  "robotWidth": 0.85,
-  "robotLength": 0.85,
+  "robotWidth": 0.8509,
+  "robotLength": 0.8644382,
   "holonomicMode": true,
   "pathFolders": [
     "Left Bump",
@@ -11,9 +11,12 @@
     "Moses Auto",
     "Right Bump",
     "Right Prom Counter",
-    "Right Rush"
+    "Right Rush",
+    "Hybrid migration"
   ],
-  "autoFolders": [],
+  "autoFolders": [
+    "Hybrid migration"
+  ],
   "defaultMaxVel": 4.5,
   "defaultMaxAccel": 3.0,
   "defaultMaxAngVel": 600.0,
@@ -39,6 +42,6 @@
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
   "robotFeatures": [
-    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.59,\"y\":0.0},\"size\":{\"width\":0.6096,\"length\":0.305},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
+    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.5351907,\"y\":0.0},\"size\":{\"width\":0.6096,\"length\":0.2059432},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
   ]
 }

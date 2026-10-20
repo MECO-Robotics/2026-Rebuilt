@@ -13,16 +13,190 @@ recovery coordinates are already in the absolute blue-origin field frame.
 No navigation transition resets odometry. Unknown alliance fails the start gate.
 
 The survey requires field-aligned, connected localization and an accepted
-absolute correction less than two seconds old. It uses a 0.9 m conservative
-circular footprint: the 0.8509 m square bumper, 0.3 m rack extension, and margin.
-Measure actual protrusions before hardware use. The deployed navgrid is
+absolute correction less than two seconds old. ``RobotNavigationFootprint`` uses
+the team's measured 34.033 inch bumper length, 33.5 inch bumper width, and
+42.141 inch total length with the intake extended only at the front. With the
+bumper rectangle centered at the drivetrain origin (as configured in PathPlanner),
+the front extent is 0.6381623 m. Its conservative circular radius is 0.7669803 m
+plus 0.05 m margin, or 0.8169803 m. PathPlanner's bumper display and intake
+extension length also reflect these measurements; the intake drawing retains
+its previous width, which has not been remeasured. The deployed navgrid is
 16.54 by 8.07 m at 0.3 m resolution. Verify its obstacles and field dimensions
-against the event field: a planner cannot correct an inaccurate map.
+against the event field: a planner cannot correct an inaccurate map. The team
+reports that this grid has been verified on a full field, but whether its blocked
+cells already include robot clearance is unknown. Static inflation remains
+enabled until that padding convention is established; no blocked cells have
+been removed to make an auto pass.
 
 There is **no real opponent detector** in this integration. The production source
 explicitly supplies an empty obstacle snapshot. QuestNav and AprilTags provide
 localization, not opponent detection. Simulated rerouting does not establish
 hardware opponent avoidance or competition readiness.
+
+Editing in PathPlanner
+----------------------
+
+Open the ``2026-Rebuilt`` project and select
+``EXPERIMENTAL Hybrid Survey (neutral zone)`` in the Autos list. The deployed
+``.auto`` file sequences ``Hybrid Survey Out`` and ``Hybrid Survey Return``.
+Edit their geometry in Paths and their order in the auto, then redeploy.
+The robot reads that sequence from the file and runs it through the hybrid
+supervisor; the chooser excludes the ordinary PathPlanner execution of this
+same auto so there is only one survey option.
+
+Keep Reset Odometry off. This survey accepts only sequential path commands,
+including nested sequences, with marker-free paths ending at zero velocity.
+Named commands, waits, parallel groups, Choreo, and empty missions are rejected
+with a Driver Station error and a stop command. Mechanism actions require
+explicit integration with the supervisor before adding them here.
+``Hybrid/Survey/LastVisitedPath`` records each completed path's arrival.
+This file does not enable hybrid recovery for other PathPlanner autos.
+
+Competition auto migration
+--------------------------
+
+The ``Hybrid migration`` folder in PathPlanner contains eight ``HYBRID ...``
+auto candidates and 47 separate path segments. The original autos remain
+available. ``16th Note Auto`` is empty and has no route to migrate. The
+stationary Fender option and the separately coded Choreo auto are unchanged.
+
+The new command-tree adapter preserves sequential, parallel, deadline, race,
+named-command, and wait structure. Every path leaf uses a hybrid supervisor.
+Intake/spin-up commands in the surrounding group stay active through recovery;
+they are not restarted with the follower. Named commands use fresh instances
+for each occurrence. A drive failure never counts as a completed leaf: it
+interrupts the complete auto, including active mechanisms, before advancing
+to shooting. Localization is required before mechanisms start and throughout
+the auto. There is a 30-second whole-auto deadline, with the existing bounded
+recovery policy on each path. External cancellation stops the complete tree.
+Concurrent navigation leaves, navigation inside a race, and navigation as a
+non-deadline child are rejected because they could skip physical arrival.
+WPILib also rejects simultaneous commands sharing subsystem requirements.
+
+The candidate paths start and end at zero velocity; extra stops and recovery
+will change cycle times and require simulation/hardware tuning. Original curve
+geometry and authored rotation targets are preserved. The redundant
+signal-only ``SpinIntake`` markers in copies of ``Left Double 1``,
+``Left Trench Bump 0``, and ``Right Bump 0`` were removed: their parent deadline
+already runs ``SpinIntake`` for the full drive.
+
+``Left Bump 2``, both ``Bump Rush Depot`` routes, and ``Moses 3 cycle`` are
+split at their existing waypoints into numbered segments. Each original cubic
+Bezier span keeps its anchors and control points. Rotation targets are shifted
+into each segment's coordinates; newly introduced stop headings interpolate
+between the surrounding authored rotations along the shorter angular direction.
+These stop headings and zero boundary speeds change trajectory timing.
+The surrounding intake deadline stays active across the entire split route.
+
+Moses uses explicit phases in its ``.auto`` file:
+
+* Deploy intake for 0.5 seconds, matching the other autos' deployment interval.
+* Drive segment 01, collect across 02--03, and spin up during approach 04.
+* Run ``CoordinatedHubShot`` after measured arrival at the first shooting stop.
+* Drive 05, collect across 06--07, spin up during 08, then run the second shot.
+* Drive 09 and collect across 10--11.
+
+This deliberately replaces the signal-only marker timeline with bounded
+commands. The three intake ranges are rounded to existing waypoint boundaries.
+The two AutoSpinUp/AutoAim/Agitate marker clusters become the existing
+readiness-gated ``CoordinatedHubShot`` at waypoints 4 and 8. Its existing limits
+are 2 seconds to become ready, 1 second of feed, and 3 seconds total. The source
+contains two shooting clusters despite its name, so the migration retains two
+shooting steps and a final collection leg. Intake activation positions and shot
+timing therefore differ from the old markers and must be tuned on the robot.
+
+All eight pass structural migration validation: every referenced path is
+marker-free, stops at rest, and has unambiguous geometry. Tests also compose
+each tree with the real named-command factories to check subsystem ownership.
+Clearance is a separate, pending validation step. No clearance checks have been
+disabled: the robot chooser still appends ``(BLOCKED)`` while those checks fail.
+``Hybrid/Migration/<auto name>`` shows path migration status, and
+``Hybrid/Readiness/<auto name>`` gives outstanding clearance reasons. Once the
+clearance model is established, update it and redeploy to rerun those checks.
+
+Clearance failures are relative to the current conservative model, not proof
+that the original field-tested routes collide. Establish whether the navgrid
+already represents allowed robot-center positions before changing its padding.
+Then review exact path corridors with the deployed intake footprint. Do not
+remove the self-crossing guard: split loops into ordered, unambiguous objectives
+so recovery cannot skip a branch.
+
+Run ``HybridMigrationTest`` to regenerate
+``build/reports/hybrid/migration-readiness.tsv``. A retained snapshot is
+available as :download:`the migration readiness report <_static/hybrid-migration-readiness.tsv>`.
+The report separates structural migration PASS from clearance PENDING and lists
+blue/red start, destination, and corridor failures. Structural validation does
+not establish whole-auto cycle time or full-field hardware success.
+The historical benchmark results in :doc:`hybrid-validation`
+precede this migration and used the earlier 0.9 m footprint; they do not validate
+these competition candidates.
+
+Desktop whole-auto simulation
+-----------------------------
+
+The optional hybrid simulation profile runs all eight migrated autos without
+waiting for the production clearance model. It is available only when both
+``Constants.currentMode == SIM`` and WPILib reports simulation, and requires an
+explicit opt-in. REAL and REPLAY cannot activate it, even if the opt-in is set.
+Normal startup still uses the production clearance gate and normal field arena.
+
+From the repository root on this workstation, launch the visual simulator::
+
+  env JAVA_HOME=/Users/amadeusjackson/wpilib/2026/jdk MECO_HYBRID_SIM=true ./gradlew simulateJava
+
+The opt-in also enables the Sim GUI by default. Set the desired alliance,
+select ``SIM TEST | HYBRID <auto name>`` in ``Auto Choices``, and enable
+Autonomous. Each enable places the physical simulated drivetrain and its
+estimator at that auto's first path pose, flipped once for Red. Recovery never
+resets the pose. Disable or switch to Teleop to interrupt the trial.
+
+Connect AdvantageScope through NetworkTables 4 and import
+``AdvantageScope Shooting and Intake.json`` from the repository root. Set the
+custom-assets folder to this repository's ``sim`` directory. Inspect
+``SmartDashboard/HybridSim`` for the selected auto, outcome, elapsed seconds,
+completed/total paths, recovery attempts, failure reason, and production-budget
+flag. Existing ``Hybrid/*`` telemetry provides detailed navigation state and
+routes; ``FieldSimulation/*`` provides intake/fuel/score telemetry.
+
+The profile is an **empty test arena**, with deterministic sparse fuel positions.
+The field artwork may still show 2026 structures, but those structures have no
+drive collision bodies in this profile. Navigation uses physical simulation
+ground truth and a zero-margin, obstacle-free field-coordinate rectangle.
+Real mechanism commands still run, including their own readiness checks.
+An unobstructed direct-route planner replaces the production AD* map in this
+fixture; separate AD* regression tests cover obstacle rerouting.
+This profile cannot validate robot footprint clearance, collision avoidance,
+vision alignment/drift, or production AD* behavior.
+
+Speed and acceleration remain at the conservative production defaults. The
+diagnostic state deadline is 30 seconds and whole-auto deadline is 180 seconds,
+so slow segmented routes can be observed. A result exceeding the production
+configuration's 30-second mission budget is flagged explicitly. ``COMPLETE``
+means the command tree finished and all navigation leaves arrived; it does not
+mean every shot scored or that competition timing is acceptable.
+
+Every trial appends an outcome row to
+``build/reports/hybrid/interactive-runs.csv``. To run the sixteen Blue/Red trials
+headlessly, plus a disable-interruption check::
+
+  env JAVA_HOME=/Users/amadeusjackson/wpilib/2026/jdk ./gradlew hybridSimTest
+
+This dedicated task uses one full robot in a separate JVM, avoiding duplicate
+native CAN device IDs in the ordinary test suite. It writes
+``build/reports/hybrid/whole-auto-simulation.csv``. Its contract is a bounded,
+classified outcome with completion/abort metrics; a passing harness test does
+not mean the autos completed. The batch accelerates the simulation clock and
+yields to native device workers; native asynchronous controllers can vary with
+wall-clock scheduling. Use the interactive simulator to investigate those
+outcomes before treating them as drivetrain tuning evidence.
+
+The retained initial batch contains **16 safe aborts and zero complete autos**:
+nine persistent recovery stalls, four state deadlines, two commanded stopping
+corridor failures, and one measured stopping corridor failure. These are
+unresolved simulation/control findings, not successful full-auto validation.
+See :download:`the whole-auto simulation results <_static/hybrid-whole-auto-simulation.csv>`.
+The regular regression suite continues to test controller recovery, path
+structure, and mechanism sequencing separately.
 
 Ownership and mission policy
 ----------------------------
@@ -44,11 +218,15 @@ A new autonomous enable starts a new mission.
 Actions must finish within the state deadline, including their own readiness
 checks; a command merely finishing is their declared success contract.
 
-Arbitrary PathPlanner autos cannot be paused and resumed safely. In this checkout,
-several named scoring commands also own the drivetrain. Migrate such routines
-explicitly into stopping objectives and mechanism-only arrival commands rather
-than wrapping their existing marker timelines. Conventional autos retain their
-existing event behavior.
+Arbitrary PathPlanner marker timelines cannot be paused and resumed safely.
+Several named scoring commands also own the drivetrain. The competition
+command-tree adapter runs those commands between independently validated
+navigation leaves, after the follower has stopped and released its child
+lifecycle. They are not supervisor arrival actions, and they cannot run in
+parallel with a drive leaf. A command-tree scoring step uses its own existing
+readiness checks; the supervisor's ACTION pose-hold check applies only to
+``AutoMissionPlan`` arrival actions. Conventional autos retain their existing
+event behavior.
 
 Controller policy
 -----------------
@@ -92,6 +270,7 @@ Configuration
 ``AutoSafetyConfig`` validates immutable per-run limits. Survey thresholds are
 read from ``Hybrid/Config/*`` tunables when the deferred command starts, not while
 a mission is running. These are provisional hypotheses, not calibrated settings.
+Competition candidates snapshot the configuration when the chooser is built.
 The existing ``LoggedTunableNumber`` tuning-mode policy also applies. Normal
 controller gains default to the drivetrain's 15 translation / 10 rotation P gains;
 ``Hybrid/Controller/*`` uses shared subscriptions across runs. BLine uses P gains
