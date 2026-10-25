@@ -227,12 +227,15 @@ public class RobotContainer {
 		coPilot.povLeft().and(teleopEnabled).onTrue(IntakeCommands.deployRack(intakeRack));
 		coPilot.povRight().and(teleopEnabled).onTrue(IntakeCommands.stowRack(intakeRack));
 
-		// Aim independently while the driver retains translation control.
-		controller.a().and(teleopEnabled)
-				.whileTrue(DriveCommands.joystickDriveAtAngle(drivetrain, () -> -controller.getLeftY(),
-						() -> -controller.getLeftX(), () -> ShooterCalculator
-								.calculate(drivetrain.getState().Pose, selectDriverShotTarget()).targetHeading(),
-						DrivetrainConstants.MAX_SPEED));
+		// Aim at the alliance hub and continuously apply the calibrated shot tables.
+		controller
+				.a().and(
+						teleopEnabled)
+				.whileTrue(DriveCommands
+						.joystickDriveAtAngle(drivetrain, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
+								() -> ShooterCalculator.calculate(drivetrain.getState().Pose).targetHeading(),
+								DrivetrainConstants.MAX_SPEED)
+						.alongWith(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
 
 		// Press once to latch a preset; release does not cancel its RPM hold.
 		controller.x().or(coPilot.x()).and(teleopEnabled)

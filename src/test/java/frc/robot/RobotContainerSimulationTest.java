@@ -130,6 +130,7 @@ class RobotContainerSimulationTest {
 	void driverBindingsOperateAndReturnEveryRollerToNeutral() {
 		assertTrue(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel").length > 0,
 				"Simulation should populate field fuel before autonomous is started");
+		pilotAAppliesLiveHubTablesAndFeedsOnlyWithBumper();
 		verifyRackSettlesWithoutJitter();
 		verifyDriveBindingMovesRobot();
 		verifyAllianceCanChangeWithoutRestartingSimulation();
@@ -142,6 +143,58 @@ class RobotContainerSimulationTest {
 		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
 		verifySystemCheckInterlocksAndAbort();
 		verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures();
+	}
+
+	private void pilotAAppliesLiveHubTablesAndFeedsOnlyWithBumper() {
+		Pose2d initialPose = container.drivetrain.getPhysicsPose();
+		Translation2d hub = FieldConstants.Hub.hubPosition();
+		controller.setAButton(true);
+		double previousRps = 0;
+		for (double distance : new double[]{2.4, 3.8}) {
+			container.drivetrain.resetPose(new Pose2d(hub.plus(new Translation2d(-distance, 0)), Rotation2d.kZero));
+			container.drivetrain.stop();
+			runCycles(100);
+			ShotSolution expected = ShooterCalculator.calculate(container.drivetrain.getState().Pose);
+			assertEquals(expected.flywheelRotationsPerSecond(), shooter.getVelocitySetpoint(), .15);
+			assertEquals(expected.hoodRotations(), hood.getDesiredPosition(), .001);
+			assertEquals(expected.flywheelRotationsPerSecond(), shooter.getVelocity(), 1.5,
+					"Simulated flywheel must reach the interpolated speed");
+			assertEquals(expected.hoodRotations(), hood.getPosition(), .004,
+					"Simulated hood must reach the interpolated angle");
+			assertTrue(shooter.getVelocitySetpoint() > previousRps + 1);
+			previousRps = shooter.getVelocitySetpoint();
+			assertNeutral(conveyor, "A alone must not feed");
+			assertNeutral(bottomIndexer, "A alone must not run bottom indexer");
+			assertNeutral(topIndexer, "A alone must not run top indexer");
+		}
+		controller.setRightBumperButton(true);
+		runCycles(50);
+		assertOutputActive(conveyor, "A plus RB feeds when up to speed");
+		assertOutputActive(bottomIndexer, "A plus RB runs bottom indexer");
+		assertOutputActive(topIndexer, "A plus RB runs top indexer");
+		Command aimingCommand = shooter.getCurrentCommand();
+		Command feedingCommand = conveyor.getCurrentCommand();
+		for (int cycle = 0; cycle < 250; cycle++) {
+			runCycles(1);
+			assertEquals(aimingCommand, shooter.getCurrentCommand(), "Held A must not restart the shot command");
+			assertEquals(feedingCommand, conveyor.getCurrentCommand(), "Held RB must not restart feeding");
+			assertTrue(shooter.isVelocityControlActive(), "Flywheel must stay in velocity control");
+			assertTrue(shooter.getVelocitySetpoint() > 0, "Flywheel target must remain positive");
+			assertTrue(shooter.getVelocity() > 1, "Simulated flywheel must not stop");
+			assertOutputActive(conveyor, "Conveyor must stay on throughout the volley");
+			assertOutputActive(bottomIndexer, "Bottom indexer must stay on throughout the volley");
+			assertOutputActive(topIndexer, "Top indexer must stay on throughout the volley");
+		}
+		controller.setRightBumperButton(false);
+		runCycles(5);
+		assertNeutral(conveyor, "RB release stops feeding while A stays held");
+		assertTrue(shooter.isVelocityControlActive());
+		controller.setAButton(false);
+		runCycles(5);
+		assertNeutral(shooter, "A release stops the automatic flywheel command");
+		container.drivetrain.resetPose(initialPose);
+		container.drivetrain.stop();
+		runCycles(SETTLE_CYCLES);
 	}
 
 	private void verifyRackSettlesWithoutJitter() {
@@ -360,7 +413,7 @@ class RobotContainerSimulationTest {
 	private void verifyIndependentAgitateAndAim() {
 		controller.setAButton(true);
 		runCycles(SETTLE_CYCLES);
-		assertNeutral(shooter, "A aims without starting the shooter");
+		assertTrue(shooter.isVelocityControlActive(), "A aims and spins up using the shot table");
 		assertNeutral(conveyor, "A does not feed");
 		controller.setAButton(false);
 		runCycles(2);

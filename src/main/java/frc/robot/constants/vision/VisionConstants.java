@@ -34,8 +34,7 @@ public class VisionConstants {
 	// 0.0));
 	// Limelight faces robot +X, tilted 30 degrees up (negative WPILib pitch).
 	public static Transform3d robotToLimelight = new Transform3d(Units.inchesToMeters(0), Units.inchesToMeters(0),
-			Units.inchesToMeters(21.25),
-			new Rotation3d(0.0, Units.degreesToRadians(-30), 0.0));
+			Units.inchesToMeters(21.25), new Rotation3d(0.0, Units.degreesToRadians(-30), 0.0));
 
 	// Basic filtering thresholds
 	public static int minTagCountForOdometry = 2;

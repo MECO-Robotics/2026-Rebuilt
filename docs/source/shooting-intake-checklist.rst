@@ -31,7 +31,7 @@ ball movement require observation on the robot; no automated test commands real 
 Driver controls
 ---------------
 
-- Hold driver ``A`` to auto-aim while retaining left-stick translation. This does not start the shooter or feed motors.
+- Hold driver ``A`` to aim at the alliance hub while retaining left-stick translation and continuously update hood angle and flywheel speed from the interpolation tables. A alone does not feed. Release A to stop automatic spin-up; RB remains the feeding control.
 - Press ``X`` once to latch the hub hood/RPM preset, or ``Y`` once for the ferry preset. Releasing the button keeps
   the preset active. Copilot ``X``/``Y`` select the same presets; copilot ``A`` latches the trench preset.
 - Press ``B`` on either controller to interrupt the preset, command shooter voltage to zero (leave velocity PID),
@@ -208,12 +208,11 @@ The prepared AdvantageScope layout includes these editable NetworkTables values:
 - ``/TunableNumbers/ShooterCalibration/FlywheelRPS``
 
 Set ``Enabled`` true only during a controlled calibration session, then press ``X`` to latch the live hood/RPM preset.
-Hold driver ``A`` for pose-based aiming if needed, and hold right bumper for each firing trial.
+Aim manually and hold right bumper for each firing trial. Do not hold A during live calibration: A replaces the calibration preset with the interpolation-table solution.
 Release right bumper to stop feed and press ``B`` to stop the shooter. Hood input is clamped to 0--0.049 rotations and
 flywheel input is clamped to 0--60 RPS. Autonomous shooting always ignores calibration mode.
 
-Calibration aiming selects the alliance hub. Outside calibration, driver ``A`` uses the visible-tag hub/ferry selection;
-manual presets and manual feeding remain independent of that aim selection.
+Driver ``A`` always targets the alliance hub using the interpolation tables. X/Y/copilot presets replace the A command if pressed while A is held; release and press A again to resume automatic aiming and spin-up.
 
 Watch ``Shooter/CalibrationDistanceInches`` and the applied/measured hood and flywheel rows in the
 ``Shot & Intake Status`` tab. Dashboard values are temporary calibration inputs, not permanent shot-table changes.

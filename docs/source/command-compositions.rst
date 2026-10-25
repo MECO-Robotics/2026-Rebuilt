@@ -117,7 +117,7 @@ right bumper uses a separate agitation/feed command independent of ``A``; driver
 Release, Disable, and interruption clear feedback; ``Shooter/FeedBlockedReason`` explains the blocked state.
 
 For live shot calibration, enable the AdvantageScope/NetworkTables calibration switch, then press ``X`` to latch
-bounded live hood/flywheel values. ``A`` aims independently and right bumper fires the trial. ``B`` switches the
+bounded live hood/flywheel values. Aim manually during calibration and use right bumper to fire the trial; A replaces calibration with table-based aiming and spin-up. ``B`` switches the
 shooter to zero voltage. Autonomous commands use the saved shot table and ignore the calibration switch.
 
 
@@ -132,7 +132,7 @@ Examples:
 - left trigger deploys the rack and ejects using independent intake/conveyor/indexer directions
 - right bumper runs the intake immediately, then starts continuous feed and rack retraction together after initial flywheel spin-up
 - releasing either trigger or right bumper stops its fuel-path rollers; right-bumper release returns the rack deployed
-- ``A`` aims while allowing translation; it owns no shooter or fuel-path mechanisms
+- ``A`` aims at the alliance hub while allowing translation and owns the hood and flywheel to continuously apply interpolation-table setpoints; it does not own the fuel path
 - ``X``/``Y`` latch hub/ferry hood and flywheel presets with ``onTrue``; releasing the button does not cancel RPM hold
 - copilot ``X``/``Y`` latch hub/ferry and copilot ``A`` latches trench
 - ``B`` on either controller interrupts the preset and commands zero-voltage shooter output, disabling velocity PID
