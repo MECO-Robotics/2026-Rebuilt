@@ -1,10 +1,7 @@
 package frc.robot;
 
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import choreo.auto.AutoFactory;
-import choreo.trajectory.SwerveSample;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -14,6 +11,8 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
 import com.pathplanner.lib.util.DriveFeedforwards;
 
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -21,8 +20,8 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -38,11 +37,11 @@ import frc.robot.commands.shooter.ShooterCommands;
 import frc.robot.commands.shooter.ShotTarget;
 import frc.robot.commands.shooter.ShotTargetSelector;
 import frc.robot.constants.Constants;
-import frc.robot.navigation.HybridAutos;
 import frc.robot.constants.drive.DrivetrainConstants;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.constants.vision.VisionConstants;
+import frc.robot.navigation.HybridAutos;
 import frc.robot.simulation.RobotSimulation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.flywheel.Flywheel;
@@ -55,7 +54,6 @@ import frc.robot.subsystems.vision.VisionIOQuestNav;
 import frc.robot.subsystems.vision.VisionIOQuestNavSim;
 import frc.robot.systemcheck.SystemCheckManager;
 import frc.robot.util.HubShiftUtil;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -241,11 +239,14 @@ public class RobotContainer {
 		coPilot.povRight().and(teleopEnabled).onTrue(IntakeCommands.stowRack(intakeRack));
 
 		// Aim independently while the driver retains translation control.
-		controller.a().and(teleopEnabled)
-				.whileTrue(DriveCommands.joystickDriveAtAngle(drivetrain, () -> -controller.getLeftY(),
-						() -> -controller.getLeftX(), () -> ShooterCalculator
-								.calculate(drivetrain.getState().Pose, selectDriverShotTarget()).targetHeading(),
-						DrivetrainConstants.MAX_SPEED));
+		controller
+				.a().and(
+						teleopEnabled)
+				.whileTrue(DriveCommands
+						.joystickDriveAtAngle(drivetrain, () -> -controller.getLeftY(), () -> -controller.getLeftX(),
+								() -> ShooterCalculator.calculate(drivetrain.getState().Pose).targetHeading(),
+								DrivetrainConstants.MAX_SPEED)
+						.alongWith(ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel)));
 
 		// Press once to latch a preset; release does not cancel its RPM hold.
 		controller.x().or(coPilot.x()).and(teleopEnabled)
