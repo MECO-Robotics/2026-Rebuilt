@@ -107,6 +107,9 @@ public class ShooterCommands {
 				bottomIndexer.setVoltage(INDEXER_PRESET.FEED_BOTTOM.get());
 				topIndexer.setVoltage(INDEXER_PRESET.FEED_TOP.get());
 				conveyor.setVoltage(CONVEYOR_PRESET.FEED.get());
+				if (launchedFuelSimulation != null) {
+					launchedFuelSimulation.tryLaunch();
+				}
 			} else {
 				bottomIndexer.stop();
 				topIndexer.stop();

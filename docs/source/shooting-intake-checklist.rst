@@ -272,3 +272,13 @@ and start another volley to apply edits. RB release restores the usual deploymen
 speed and sends the rack to the deployed preset. Other rack commands retain their
 normal motion settings. Initial flywheel readiness and continuous feeding behavior
 are unchanged.
+
+Simulation feeding
+------------------
+
+Pilot RB uses the same initial flywheel-speed gate in simulation as on the robot.
+Select a shooter preset (such as Y) or hold A before expecting the conveyor and
+indexers to feed. While feeding, RB also launches stored simulated fuel; an empty
+simulated hopper cannot produce projectiles. Releasing RB stops simulated launches.
+Check ``Shooter/FeedBlockedReason`` and ``Conveyor/CommandedVoltage`` to distinguish
+blocked feeding from a model that does not visibly animate its rollers.

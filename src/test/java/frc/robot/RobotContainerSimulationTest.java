@@ -64,6 +64,7 @@ class RobotContainerSimulationTest {
 	private Flywheel topIndexer;
 	private PositionJoint intakeRack;
 	private PositionJoint hood;
+	private frc.robot.simulation.IntakeSim simulatedIntake;
 
 	@BeforeEach
 	void setUpFullRobotSimulation() throws ReflectiveOperationException {
@@ -95,6 +96,9 @@ class RobotContainerSimulationTest {
 		setCalibrationInputs(false, 0.000, 30.0);
 
 		container = new RobotContainer();
+		Object simulation = getField(container, "simulation", RobotSimulation.class);
+		var launcher = getField(simulation, "launchedFuelSim", frc.robot.simulation.LaunchedFuelSim.class);
+		simulatedIntake = getField(launcher, "intakeSim", frc.robot.simulation.IntakeSim.class);
 		shooter = getField(container, "shooterFlywheel", Flywheel.class);
 		intake = getField(container, "intakeRoller", Flywheel.class);
 		conveyor = getField(container, "conveyor", Flywheel.class);
@@ -411,6 +415,7 @@ class RobotContainerSimulationTest {
 	}
 
 	private void verifyIndependentAgitateAndAim() {
+		simulatedIntake.intakeSimulation.setGamePiecesCount(6);
 		controller.setAButton(true);
 		runCycles(SETTLE_CYCLES);
 		assertTrue(shooter.isVelocityControlActive(), "A aims and spins up using the shot table");
@@ -436,11 +441,15 @@ class RobotContainerSimulationTest {
 		}
 		assertTrue(sawBlockedPulse && sawBlockedGap, "Blocked feedback pulses instead of staying silent or steady");
 		assertEquals("SELECT_SHOOTER_PRESET", SmartDashboard.getString("Shooter/FeedBlockedReason", "missing"));
-		controller.setXButton(true);
+		assertEquals(6, simulatedIntake.getStoredFuelCount(), "Blocked RB must not launch stored fuel");
+		controller.setYButton(true);
 		runCycles(2);
-		controller.setXButton(false);
-		runCycles(SETTLE_CYCLES);
-		assertOutputActive(bottomIndexer, "Indexer feeds with preset and RB alone");
+		controller.setYButton(false);
+		for (int cycle = 0; cycle < 150 && Math.abs(bottomIndexer.getCommandedVoltage()) < .01; cycle++) {
+			runCycles(1);
+		}
+		assertOutputActive(bottomIndexer, "Indexer feeds with Y preset and RB alone");
+
 		assertOutputActive(topIndexer, "Indexer feeds with preset and RB alone");
 		assertOutputActive(conveyor, "Conveyor feeds with preset and RB alone");
 		assertEquals(0.35, controller.getRumble(GenericHID.RumbleType.kBothRumble), 1e-4,
@@ -458,6 +467,7 @@ class RobotContainerSimulationTest {
 			assertOutputActive(topIndexer, "Top indexer keeps spinning throughout retraction");
 		}
 		assertTrue(observedRetraction, "Rack must actually move inward while rollers run");
+		assertTrue(simulatedIntake.getStoredFuelCount() < 6, "Y plus RB must launch fuel from the simulated hopper");
 		assertEquals(IntakeConstants.RACK_PRESETS.SAFE.get(), intakeRack.getPosition(), .02);
 		controller.setRightBumperButton(false);
 		runCycles(SETTLE_CYCLES);
@@ -467,6 +477,9 @@ class RobotContainerSimulationTest {
 		assertNeutral(bottomIndexer, "Indexer stops on agitation release");
 		assertNeutral(topIndexer, "Indexer stops on agitation release");
 		assertNeutral(conveyor, "Conveyor stops on agitation release");
+		simulatedIntake.intakeSimulation.setGamePiecesCount(6);
+		runCycles(25);
+		assertEquals(6, simulatedIntake.getStoredFuelCount(), "RB release must stop simulated launches");
 		assertTrue(shooter.isVelocityControlActive(), "Agitation release keeps preset RPM");
 		assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getDesiredPosition(), 1e-6);
 		runCycles(100);
