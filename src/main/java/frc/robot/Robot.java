@@ -109,6 +109,10 @@ public class Robot extends LoggedRobot {
 		// This must be called from the robot's periodic block in order for anything in
 		// the Command-based framework to work.
 		CommandScheduler.getInstance().run();
+		// A completed or interrupted auto must not fall through to mechanism defaults.
+		if (isAutonomousEnabled() && (autonomousCommand == null || !autonomousCommand.isScheduled())) {
+			robotContainer.stopAutonomousOutputs();
+		}
 		if (Constants.currentMode == Constants.Mode.SIM || Constants.currentMode == Constants.Mode.REPLAY) {
 			robotContainer.updateVisualization();
 		}
@@ -151,6 +155,15 @@ public class Robot extends LoggedRobot {
 		}
 	}
 
+	/**
+	 * Stop immediately when autonomous is exited, including a mode change or
+	 * disable.
+	 */
+	@Override
+	public void autonomousExit() {
+		robotContainer.stopAutonomousOutputs();
+	}
+
 	/** This function is called periodically during autonomous. */
 	@Override
 	public void autonomousPeriodic() {
@@ -166,6 +179,7 @@ public class Robot extends LoggedRobot {
 		if (autonomousCommand != null) {
 			autonomousCommand.cancel();
 		}
+		robotContainer.simulationTeleopInit();
 	}
 
 	/** This function is called periodically during operator control. */

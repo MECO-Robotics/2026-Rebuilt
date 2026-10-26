@@ -282,3 +282,15 @@ indexers to feed. While feeding, RB also launches stored simulated fuel; an empt
 simulated hopper cannot produce projectiles. Releasing RB stops simulated launches.
 Check ``Shooter/FeedBlockedReason`` and ``Conveyor/CommandedVoltage`` to distinguish
 blocked feeding from a model that does not visibly animate its rollers.
+
+Simulation practice fuel resets
+-------------------------------
+
+The practice arena starts with exactly 400 fuel in the neutral zone, in addition
+to MapleSim's normal depot/outpost fuel. This is a custom practice layout, not a
+claim about the official starting distribution. Efficiency mode is disabled.
+Each Autonomous or Teleop initialization restores the field, empties the simulated
+hopper and resets the simulated score. Auto-to-Teleop therefore starts with fresh
+fuel rather than preserving match progress. Teleop fuel resets do not move the
+robot. Autonomous retains its existing starting-pose behavior. These hooks do not
+change real-robot operation. Simulating the full fuel count can increase CPU load.

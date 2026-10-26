@@ -166,9 +166,28 @@ Examples of named commands in this repo include:
 - ``AutoAim``
 - ``CoordinatedHubShot``
 
-``FeedRollers`` is retained for compatibility with existing PathPlanner autos, but now invokes the same coordinated
-hub-shot command used by teleop. Its PathPlanner groups use a three-second race window, so the command can wait up to
-two seconds for readiness and accumulate one second of valid feed time without extending the routine unnecessarily.
+``FeedRollers`` and ``Agitate`` run a coordinated hub shot for the duration of their enclosing PathPlanner
+race/deadline. They run the intake roller, maintain flywheel speed and hood position, and aim continuously.
+The conveyor and both indexers wait for initial stable shot readiness, then feed continuously through speed,
+hood and heading fluctuations until the stage ends. Loss of a valid pose or calibrated shot solution blocks
+feeding and requires readiness again. Each new stage checks readiness again. Cancellation stops all rollers
+and the shooter. These commands must have an enclosing duration; they do not finish on their own.
+The standalone default/Choreo shot and systems-check practice shot retain their separate bounded timing.
+
+Adjacent feeding and intake-retraction phases now share one ``FeedRollers`` command for the entire
+six-second stop. A parallel sequence waits three seconds before running ``StowIntake``; it does not restart
+the shooter or readiness check. The former adjacent ``FeedRollers`` stages in Left Bump Old are also merged.
+Standalone shooting stages retain their three-second windows. Initial readiness uses part of each window.
+Moses 3 Cycle instead uses ``HubVolley`` at its first two stops: it waits up to three seconds for
+initial readiness, then feeds continuously for three seconds and finishes immediately. A six-second overall
+timeout bounds the command. The rack retracts during feeding using the saved shot retraction speed and hold
+position; there is no separate retraction wait. The command stops its rollers when it completes or is interrupted.
+This is timed feeding, not hopper-empty detection, and uses the same logic in simulation and on hardware.
+Moses's second approach runs ``PrepareHubShot`` alongside the path to prepare hood and flywheel
+without taking control of driving or feeding. It transitions directly into ``HubVolley`` without a fixed
+``AutoAim`` wait. The routine ends immediately after ``Moses 2``: no final shooter preparation, aiming or
+volley is scheduled, and the end-of-autonomous guard neutralizes outputs. Initial readiness still gates feeding. The first stop's one-second
+preparation stage and all path geometry remain unchanged. Other autos retain their six-second combined stops.
 The dashboard chooser defaults to the coordinated fender shot; the explicit ``none`` option remains available when no
 autonomous action is desired. PathPlanner and Choreo routines explicitly seed odometry, while the standalone fender
 option has no trajectory from which to obtain a starting pose and therefore requires an accepted absolute vision
@@ -184,3 +203,12 @@ Guidelines
 - Prefer ``parallel``, ``deadline``, and ``sequence`` over custom state machines when standard command groups are
   enough.
 - Put controller-specific wiring in ``RobotContainer``, not inside subsystem classes.
+
+End of autonomous
+-----------------
+
+After the selected autonomous command finishes or is interrupted, Robot cancels remaining commands and
+neutralizes drivetrain, shooter, intake roller, conveyor, both indexers, intake rack and hood. This shutdown
+is reapplied after the scheduler while autonomous remains enabled, so defaults cannot resume aiming or
+move the hood to stow. Exiting autonomous also performs the shutdown. Teleop bindings resume normally
+after the mode switch; they are not subject to the autonomous stop guard.

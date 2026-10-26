@@ -29,12 +29,14 @@ public interface RobotSimulation {
 
 	void autonomousInit(Command autonomousCommand);
 
+	default void teleopInit() {
+	}
+
 	void simulationPeriodic();
 
 	static void configureArenaOverride(Constants.Mode mode) {
 		if (mode == Constants.Mode.SIM || mode == Constants.Mode.REPLAY) {
-			SimulatedArena
-					.overrideInstance(new org.ironmaple.simulation.seasonspecific.rebuilt2026.Arena2026Rebuilt(false));
+			SimulatedArena.overrideInstance(new PracticeRebuiltArena());
 		}
 	}
 
@@ -78,6 +80,7 @@ public interface RobotSimulation {
 	class MapleRobotSimulation implements RobotSimulation {
 		private final CommandSwerveDrivetrain drive;
 		private final LaunchedFuelSim launchedFuelSim;
+		private final IntakeSim intakeSim;
 		private final Hopper hopper;
 		private final RobotRemyVisualizer robotRemyVisualizer;
 
@@ -87,7 +90,7 @@ public interface RobotSimulation {
 			// MapleSim creates an empty arena. Populate starting fuel immediately so
 			// teleop-only simulation sessions do not require entering autonomous first.
 			SimulatedArena.getInstance().resetFieldForAuto();
-			IntakeSim intakeSim = new IntakeSim(drive.getSimulation());
+			intakeSim = new IntakeSim(drive.getSimulation());
 			launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
 			hopper = new Hopper(intakeSim::getStoredFuelCount, intakeRack::getPosition, drive::getPhysicsPose);
 			robotRemyVisualizer = new RobotRemyVisualizer(drive::getPhysicsPose, hood::getPosition,
@@ -108,8 +111,7 @@ public interface RobotSimulation {
 
 		@Override
 		public void autonomousInit(Command autonomousCommand) {
-			SimulatedArena.getInstance().resetFieldForAuto();
-			launchedFuelSim.resetSuccessfulScoreCount();
+			resetPracticeFuel();
 			resetMapleAutonomousPose(autonomousCommand);
 		}
 
@@ -130,6 +132,18 @@ public interface RobotSimulation {
 			Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", launchedFuelSim.getSuccessfulScoreCount());
 			Logger.recordOutput("FieldSimulation/FuelProjectilePositions", fuelProjectilePoses);
 			Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
+		}
+
+		@Override
+		public void teleopInit() {
+			resetPracticeFuel();
+		}
+
+		private void resetPracticeFuel() {
+			intakeSim.setRunning(false);
+			intakeSim.intakeSimulation.setGamePiecesCount(0);
+			SimulatedArena.getInstance().resetFieldForAuto();
+			launchedFuelSim.resetSuccessfulScoreCount();
 		}
 
 		private void resetMapleAutonomousPose(Command autonomousCommand) {

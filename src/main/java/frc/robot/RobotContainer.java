@@ -288,10 +288,16 @@ public class RobotContainer {
 	private void registerNamedCommands() {
 		NamedCommands.registerCommand("DeployIntake", IntakeCommands.deployRack(intakeRack));
 		NamedCommands.registerCommand("StowIntake", IntakeCommands.stowRack(intakeRack));
-		NamedCommands.registerCommand("FeedRollers", createAutonomousHubShot());
+		NamedCommands.registerCommand("FeedRollers", createPathPlannerHubShot());
+		NamedCommands.registerCommand("HubVolley", ShooterCommands.autonomousHubVolley(drivetrain, hood,
+				shooterFlywheel, bottomIndexer, topIndexer, conveyor, intakeRoller, intakeRack, this::isShotPoseReady));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
-		NamedCommands.registerCommand("Agitate", ShooterCommands.agitateIntake(bottomIndexer, topIndexer));
+		NamedCommands.registerCommand("Agitate", createPathPlannerHubShot());
 		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller, conveyor));
+		// Keep shot preparation active for the entire approach; the path owns its
+		// duration.
+		NamedCommands.registerCommand("PrepareHubShot",
+				ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel));
 		NamedCommands.registerCommand("AutoSpinUp",
 				ShooterCalculator.calculateAndShoot(drivetrain, hood, shooterFlywheel).withTimeout(2));
 		NamedCommands.registerCommand("Fender", ShooterCommands.hubPreset(shooterFlywheel, hood).withTimeout(2));
@@ -313,6 +319,11 @@ public class RobotContainer {
 
 	private Command createTimedHubShot() {
 		return createAutonomousHubShot();
+	}
+
+	private Command createPathPlannerHubShot() {
+		return ShooterCommands.pathPlannerHubShot(drivetrain, hood, shooterFlywheel, bottomIndexer, topIndexer,
+				conveyor, intakeRoller, this::isShotPoseReady);
 	}
 
 	private Command createAutonomousHubShot() {
@@ -443,10 +454,30 @@ public class RobotContainer {
 		return autoCommand != null ? autoCommand : Commands.none();
 	}
 
+	/** Cancels remaining auto/default commands and leaves all actuators neutral. */
+	public void stopAutonomousOutputs() {
+		edu.wpi.first.wpilibj2.command.CommandScheduler.getInstance().cancelAll();
+		drivetrain.stop();
+		intakeRoller.stop();
+		conveyor.stop();
+		bottomIndexer.stop();
+		topIndexer.stop();
+		shooterFlywheel.stop();
+		intakeRack.stop();
+		hood.stop();
+	}
+
 	/** Logs robot and component transforms for the custom Robot_Remy asset. */
 	public void updateVisualization() {
 		if (Constants.currentMode != Constants.Mode.REAL) {
 			simulation.visualizationPeriodic();
+		}
+	}
+
+	/** Resets simulation practice fuel when Teleop starts. */
+	public void simulationTeleopInit() {
+		if (Constants.currentMode == Constants.Mode.SIM) {
+			simulation.teleopInit();
 		}
 	}
 

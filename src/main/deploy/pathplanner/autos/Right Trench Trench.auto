@@ -81,13 +81,13 @@
           }
         },
         {
-          "type": "race",
+          "type": "deadline",
           "data": {
             "commands": [
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.0
+                  "waitTime": 6.0
                 }
               },
               {
@@ -95,30 +95,24 @@
                 "data": {
                   "name": "FeedRollers"
                 }
-              }
-            ]
-          }
-        },
-        {
-          "type": "deadline",
-          "data": {
-            "commands": [
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 2.0
-                }
               },
               {
-                "type": "named",
+                "type": "sequential",
                 "data": {
-                  "name": "Agitate"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "StowIntake"
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 3.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "StowIntake"
+                      }
+                    }
+                  ]
                 }
               }
             ]
@@ -214,13 +208,13 @@
           }
         },
         {
-          "type": "race",
+          "type": "deadline",
           "data": {
             "commands": [
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 3.0
+                  "waitTime": 6.0
                 }
               },
               {
@@ -228,30 +222,24 @@
                 "data": {
                   "name": "FeedRollers"
                 }
-              }
-            ]
-          }
-        },
-        {
-          "type": "deadline",
-          "data": {
-            "commands": [
-              {
-                "type": "wait",
-                "data": {
-                  "waitTime": 2.0
-                }
               },
               {
-                "type": "named",
+                "type": "sequential",
                 "data": {
-                  "name": "Agitate"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "StowIntake"
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 3.0
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "StowIntake"
+                      }
+                    }
+                  ]
                 }
               }
             ]
