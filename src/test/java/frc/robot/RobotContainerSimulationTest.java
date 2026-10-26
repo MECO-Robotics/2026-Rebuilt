@@ -134,6 +134,7 @@ class RobotContainerSimulationTest {
 	void driverBindingsOperateAndReturnEveryRollerToNeutral() {
 		assertTrue(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel").length > 0,
 				"Simulation should populate field fuel before autonomous is started");
+		verifyPracticeFuelResets();
 		pilotAAppliesLiveHubTablesAndFeedsOnlyWithBumper();
 		verifyRackSettlesWithoutJitter();
 		verifyDriveBindingMovesRobot();
@@ -147,6 +148,28 @@ class RobotContainerSimulationTest {
 		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
 		verifySystemCheckInterlocksAndAbort();
 		verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures();
+	}
+
+	private void verifyPracticeFuelResets() {
+		assertNeutralFuelCount();
+		for (int repetition = 0; repetition < 2; repetition++) {
+			SimulatedArena.getInstance().clearGamePieces();
+			Pose2d pose = container.drivetrain.getPhysicsPose();
+			container.simulationTeleopInit();
+			assertNeutralFuelCount();
+			assertEquals(pose, container.drivetrain.getPhysicsPose(), "Fuel reset must not teleport the robot");
+			SimulatedArena.getInstance().clearGamePieces();
+			container.simulationAutonomousInit(edu.wpi.first.wpilibj2.command.Commands.none());
+			assertNeutralFuelCount();
+		}
+	}
+
+	private void assertNeutralFuelCount() {
+		double minX = FieldConstants.Trench.neutralEdgeX(Alliance.Blue);
+		double maxX = FieldConstants.Trench.neutralEdgeX(Alliance.Red);
+		long count = java.util.Arrays.stream(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"))
+				.filter(pose -> pose.getX() > minX && pose.getX() < maxX).count();
+		assertEquals(400, count, "Practice field must contain exactly 400 neutral-zone fuel");
 	}
 
 	private void pilotAAppliesLiveHubTablesAndFeedsOnlyWithBumper() {
@@ -670,6 +693,202 @@ class RobotContainerSimulationTest {
 		assertNeutral(bottomIndexer, "Bottom indexer after autonomous shot completes");
 		assertNeutral(topIndexer, "Top indexer after autonomous shot completes");
 		assertNeutral(conveyor, "Conveyor after autonomous shot completes");
+		// PathPlanner shooting stages must not inherit the default auto's one-second
+		// cutoff.
+		for (String stage : new String[]{"FeedRollers", "Agitate"}) {
+			Command timedStage = com.pathplanner.lib.auto.NamedCommands.getCommand(stage);
+			scheduler.schedule(timedStage);
+			boolean started = false;
+			int feedingCycles = 0;
+			Set<String> stageStates = new LinkedHashSet<>();
+			for (int cycle = 0; cycle < 600 && feedingCycles < 150; cycle++) {
+				runCycles(1);
+				assertTrue(timedStage.isScheduled(), stage + " must wait for its PathPlanner deadline");
+				stageStates.add(SmartDashboard.getString("Shooter/Readiness", "missing"));
+				boolean feeding = Math.abs(conveyor.getCommandedVoltage()) > VOLTAGE_TOLERANCE;
+				if (feeding)
+					started = true;
+				if (started) {
+					assertTrue(feeding, stage + " must not pause an established volley");
+					assertEquals(ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(), bottomIndexer.getCommandedVoltage(),
+							VOLTAGE_TOLERANCE);
+					assertEquals(ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(),
+							VOLTAGE_TOLERANCE);
+					assertEquals(ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
+							VOLTAGE_TOLERANCE);
+					assertEquals(IntakeConstants.ROLLER_PRESETS.INTAKE.get(), intake.getCommandedVoltage(),
+							VOLTAGE_TOLERANCE);
+					feedingCycles++;
+				}
+			}
+			assertTrue(feedingCycles > 100, stage + " should feed continuously for more than two seconds: "
+					+ feedingCycles + " cycles; " + stageStates);
+			// Inject a measured speed sag after initial readiness without changing the
+			// request.
+			try {
+				var inputs = getField(shooter, "inputs",
+						frc.robot.subsystems.flywheel.FlywheelIOInputsAutoLogged.class);
+				inputs.velocity = 0.0;
+				timedStage.execute();
+				assertEquals(ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
+						VOLTAGE_TOLERANCE);
+				assertEquals(ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(), bottomIndexer.getCommandedVoltage(),
+						VOLTAGE_TOLERANCE);
+				assertEquals(ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(),
+						VOLTAGE_TOLERANCE);
+			} catch (ReflectiveOperationException exception) {
+				throw new AssertionError(exception);
+			}
+			scheduler.cancel(timedStage);
+			runCycles(1);
+			assertNeutral(intake, stage + " intake cancellation");
+			assertNeutral(conveyor, stage + " conveyor cancellation");
+			assertNeutral(bottomIndexer, stage + " bottom indexer cancellation");
+			assertNeutral(topIndexer, stage + " top indexer cancellation");
+			assertNeutral(shooter, stage + " shooter cancellation");
+		}
+
+		// Load the actual Moses stop, including concurrent rack retraction and its
+		// feeding-based timer.
+		container.drivetrain.resetPose(new Pose2d(
+				hub.plus(new Translation2d(fieldDirection * robotCenterDistanceMeters, 0.0)), startingHeading));
+		container.drivetrain.stop();
+		Command aimPreparation = com.pathplanner.lib.auto.NamedCommands.getCommand("AutoAim");
+		scheduler.schedule(aimPreparation);
+		int stablePreparationCycles = 0;
+		for (int cycle = 0; cycle < 500 && stablePreparationCycles < 10; cycle++) {
+			runCycles(1);
+			var prepared = ShooterCalculator.calculate(container.drivetrain.getState().Pose);
+			var speeds = container.drivetrain.getPhysicsSpeeds();
+			boolean ready = Math
+					.abs(shooter.getVelocity()
+							- prepared.flywheelRotationsPerSecond()) < ShooterConstants.FLYWHEEL_READY_TOLERANCE_RPS
+					&& Math.abs(hood.getPosition()
+							- prepared.hoodRotations()) < ShooterConstants.HOOD_READY_TOLERANCE_ROTATIONS
+					&& Math.abs(container.drivetrain.getState().Pose.getRotation().minus(prepared.targetHeading())
+							.getDegrees()) < ShooterConstants.HEADING_READY_TOLERANCE_DEGREES
+					&& Math.hypot(speeds.vxMetersPerSecond,
+							speeds.vyMetersPerSecond) < ShooterConstants.MAX_SHOOTING_TRANSLATION_METERS_PER_SECOND
+					&& Math.abs(
+							speeds.omegaRadiansPerSecond) < ShooterConstants.MAX_SHOOTING_ROTATION_RADIANS_PER_SECOND;
+			stablePreparationCycles = ready ? stablePreparationCycles + 1 : 0;
+		}
+		assertEquals(10, stablePreparationCycles, "Timing regression requires an actually settled initial shot");
+		scheduler.cancel(aimPreparation);
+		try {
+			var document = (org.json.simple.JSONObject) new org.json.simple.parser.JSONParser()
+					.parse(java.nio.file.Files
+							.readString(java.nio.file.Path.of("src/main/deploy/pathplanner/autos/Moses 3 Cycle.auto")));
+			var root = (org.json.simple.JSONObject) document.get("command");
+			var stages = (org.json.simple.JSONArray) ((org.json.simple.JSONObject) root.get("data")).get("commands");
+			for (int pathStage : new int[]{4}) {
+				var approach = (org.json.simple.JSONObject) stages.get(pathStage);
+				var approachCommands = (org.json.simple.JSONArray) ((org.json.simple.JSONObject) approach.get("data"))
+						.get("commands");
+				var preparation = (org.json.simple.JSONObject) approachCommands.get(2);
+				assertEquals("PrepareHubShot", ((org.json.simple.JSONObject) preparation.get("data")).get("name"));
+				var next = (org.json.simple.JSONObject) stages.get(pathStage + 1);
+				assertEquals("named", next.get("type"), "Approach must transition directly to shooting without a wait");
+				assertEquals("HubVolley", ((org.json.simple.JSONObject) next.get("data")).get("name"));
+			}
+			assertEquals(7, stages.size(), "Moses must end after its final path without another aim/shot stage");
+			var finalPath = (org.json.simple.JSONObject) stages.get(6);
+			var finalCommands = (org.json.simple.JSONArray) ((org.json.simple.JSONObject) finalPath.get("data"))
+					.get("commands");
+			assertEquals(2, finalCommands.size(), "Final path must not prepare another shot");
+			assertEquals("Moses 2",
+					((org.json.simple.JSONObject) ((org.json.simple.JSONObject) finalCommands.get(0)).get("data"))
+							.get("pathName"));
+			Command stop = com.pathplanner.lib.auto.CommandUtil
+					.commandFromJson((org.json.simple.JSONObject) stages.get(3), false, false);
+			scheduler.schedule(stop);
+			boolean feeding = false;
+			int firstFeedCycle = -1;
+			int endCycle = -1;
+			boolean rackRetracting = false;
+			for (int cycle = 0; cycle < 310; cycle++) {
+				runCycles(1);
+				if (!stop.isScheduled()) {
+					endCycle = cycle;
+					break;
+				}
+				if (cycle > 1) {
+					assertTrue(shooter.isVelocityControlActive(), "Shooter must stay commanded throughout the volley");
+				}
+				if (Math.abs(conveyor.getCommandedVoltage()) > VOLTAGE_TOLERANCE && !feeding) {
+					feeding = true;
+					firstFeedCycle = cycle;
+				}
+				if (feeding) {
+					assertOutputActive(conveyor, "Continuous conveyor");
+					assertOutputActive(bottomIndexer, "Continuous bottom indexer");
+					assertOutputActive(topIndexer, "Continuous top indexer");
+					assertOutputActive(intake, "Continuous intake");
+					rackRetracting |= Math.abs(positionGoal(intakeRack)
+							- frc.robot.commands.ShotIntakeSettings.load().holdPositionMeters()) < 0.001;
+				}
+			}
+			assertTrue(firstFeedCycle >= 0, "Volley must actually feed before completing");
+			assertTrue(rackRetracting, "Rack must retract during feeding without an extra timed stage");
+			assertTrue(endCycle >= 0, "Volley must finish within its bounded timeout");
+			assertEquals(3.0, (endCycle - firstFeedCycle) * 0.02, 0.06,
+					"Move on after three seconds of feeding, not six seconds at the shooting stop");
+			runCycles(1);
+			assertNeutral(shooter, "Merged stop shooter");
+			assertNeutral(conveyor, "Merged stop conveyor");
+			assertNeutral(bottomIndexer, "Merged stop bottom indexer");
+			assertNeutral(topIndexer, "Merged stop top indexer");
+			assertNeutral(intake, "Merged stop intake");
+		} catch (java.io.IOException | org.json.simple.parser.ParseException exception) {
+			throw new AssertionError(exception);
+		}
+
+		Command blockedVolley = frc.robot.commands.shooter.ShooterCommands.autonomousHubVolley(container.drivetrain,
+				hood, shooter, bottomIndexer, topIndexer, conveyor, intake, intakeRack, () -> false);
+		scheduler.schedule(blockedVolley);
+		for (int cycle = 0; cycle < 160; cycle++) {
+			runCycles(1);
+			assertEquals(0.0, conveyor.getCommandedVoltage(), VOLTAGE_TOLERANCE, "Unready volley must not feed");
+		}
+		assertFalse(blockedVolley.isScheduled(), "Missing readiness must abort after three seconds");
+		assertNeutral(intake, "Blocked volley intake");
+		assertNeutral(shooter, "Blocked volley shooter");
+
+		Command preparation = com.pathplanner.lib.auto.NamedCommands.getCommand("PrepareHubShot");
+		assertFalse(preparation.getRequirements().contains(container.drivetrain),
+				"Preparation must not interrupt the path");
+		scheduler.schedule(preparation);
+		for (int cycle = 0; cycle < 130; cycle++) {
+			runCycles(1);
+			assertTrue(preparation.isScheduled(), "Approach preparation must not expire after two seconds");
+			assertTrue(shooter.isVelocityControlActive(), "Prepare the shooter throughout the approach");
+			assertEquals(0.0, conveyor.getCommandedVoltage(), VOLTAGE_TOLERANCE);
+			assertEquals(0.0, bottomIndexer.getCommandedVoltage(), VOLTAGE_TOLERANCE);
+			assertEquals(0.0, topIndexer.getCommandedVoltage(), VOLTAGE_TOLERANCE);
+		}
+		scheduler.cancel(preparation);
+		runCycles(1);
+		assertNeutral(shooter, "Approach preparation cancellation");
+
+		// The Robot calls this after the scheduler when the selected auto is done.
+		scheduler.schedule(com.pathplanner.lib.auto.NamedCommands.getCommand("AutoAim"));
+		runCycles(10);
+		for (int cycle = 0; cycle < 10; cycle++) {
+			container.stopAutonomousOutputs();
+			runCycles(1);
+			container.stopAutonomousOutputs();
+			assertNeutral(shooter, "End-of-auto shooter");
+			assertNeutral(intake, "End-of-auto intake");
+			assertNeutral(conveyor, "End-of-auto conveyor");
+			assertNeutral(bottomIndexer, "End-of-auto bottom indexer");
+			assertNeutral(topIndexer, "End-of-auto top indexer");
+			assertTrue(hood.isOpenLoopMode(), "Hood must not return to a stow command after auto");
+			assertEquals(0.0, hood.getCommandedVoltage(), VOLTAGE_TOLERANCE);
+			assertTrue(intakeRack.isOpenLoopMode());
+			assertEquals(0.0, intakeRack.getCommandedVoltage(), VOLTAGE_TOLERANCE);
+			assertEquals(null, container.drivetrain.getCurrentCommand(), "Auto aim must be canceled");
+		}
+
 		DriverStationSim.setAutonomous(false);
 		DriverStationSim.notifyNewData();
 		DriverStation.refreshData();

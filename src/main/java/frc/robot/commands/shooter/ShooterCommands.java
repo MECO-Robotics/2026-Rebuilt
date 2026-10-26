@@ -259,6 +259,38 @@ public class ShooterCommands {
 	}
 
 	/**
+	 * PathPlanner owns the duration; readiness is required once before continuous
+	 * feeding.
+	 */
+	public static Command pathPlannerHubShot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter,
+			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, Flywheel intake,
+			BooleanSupplier poseReady) {
+		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, () -> 0.0, () -> 0.0,
+				ShooterCommands::currentAllianceHubTarget, poseReady, () -> false, () -> false, () -> 0.0, () -> 0.0,
+				ready -> {
+				}, false, 0.0, 0.0, 0.0, "PathPlannerHubShot", true).alongWith(Flywheel.setVoltage(intake,
+						frc.robot.constants.subsystems.IntakeConstants.ROLLER_PRESETS.INTAKE));
+	}
+
+	/**
+	 * Three seconds of continuous feeding, with bounded preparation and concurrent
+	 * rack retraction.
+	 */
+	public static Command autonomousHubVolley(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter,
+			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, Flywheel intake, PositionJoint rack,
+			BooleanSupplier poseReady) {
+		boolean[] feeding = {false};
+		Command shot = coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, () -> 0.0, () -> 0.0,
+				ShooterCommands::currentAllianceHubTarget, poseReady, () -> false, () -> false, () -> 0.0, () -> 0.0,
+				ready -> feeding[0] = ready, true, 3.0, 3.0, 6.0, "AutonomousHubVolley", true);
+		return Commands
+				.deadline(shot, frc.robot.commands.IntakeCommands.holdRackRetractedWhileFeeding(rack, () -> feeding[0]),
+						Flywheel.setVoltage(intake,
+								frc.robot.constants.subsystems.IntakeConstants.ROLLER_PRESETS.INTAKE))
+				.withName("AutonomousHubVolley");
+	}
+
+	/**
 	 * Controlled-area Test-mode shot. It prepares for at most five seconds and,
 	 * once normally ready, feeds for exactly three accumulated ready seconds.
 	 */
@@ -278,9 +310,22 @@ public class ShooterCommands {
 			BooleanSupplier forceFeed, BooleanSupplier calibrationMode, DoubleSupplier calibrationHoodRotations,
 			DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback, boolean finishAfterFeed,
 			double readyTimeoutSeconds, double feedSeconds, double totalTimeoutSeconds, String commandName) {
+		return coordinatedShot(drive, hood, shooter, bottomIndexer, topIndexer, conveyor, xSupplier, ySupplier,
+				targetSupplier, poseReady, forceFeed, calibrationMode, calibrationHoodRotations, calibrationFlywheelRps,
+				readyFeedback, finishAfterFeed, readyTimeoutSeconds, feedSeconds, totalTimeoutSeconds, commandName,
+				false);
+	}
+
+	private static Command coordinatedShot(CommandSwerveDrivetrain drive, PositionJoint hood, Flywheel shooter,
+			Flywheel bottomIndexer, Flywheel topIndexer, Flywheel conveyor, DoubleSupplier xSupplier,
+			DoubleSupplier ySupplier, Supplier<ShotTarget> targetSupplier, BooleanSupplier poseReady,
+			BooleanSupplier forceFeed, BooleanSupplier calibrationMode, DoubleSupplier calibrationHoodRotations,
+			DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback, boolean finishAfterFeed,
+			double readyTimeoutSeconds, double feedSeconds, double totalTimeoutSeconds, String commandName,
+			boolean continuousAutoFeed) {
 		ShotCoordinator coordinator = new ShotCoordinator(drive, hood, shooter, bottomIndexer, topIndexer, conveyor,
 				targetSupplier, poseReady, forceFeed, calibrationMode, calibrationHoodRotations, calibrationFlywheelRps,
-				readyFeedback, finishAfterFeed, readyTimeoutSeconds, feedSeconds);
+				readyFeedback, finishAfterFeed, readyTimeoutSeconds, feedSeconds, continuousAutoFeed);
 
 		Command mechanisms = Commands.run(coordinator::execute, hood, shooter, bottomIndexer, topIndexer, conveyor)
 				.beforeStarting(coordinator::initialize).finallyDo(interrupted -> coordinator.end());
@@ -353,6 +398,7 @@ public class ShooterCommands {
 		private final DoubleSupplier calibrationFlywheelRps;
 		private final Consumer<Boolean> readyFeedback;
 		private final boolean finishAfterFeed;
+		private final boolean continuousAutoFeed;
 		private final double readyTimeoutSeconds;
 		private final double feedSeconds;
 		private final Debouncer readinessDebouncer = new Debouncer(ShooterConstants.READY_DEBOUNCE_SECONDS);
@@ -372,7 +418,7 @@ public class ShooterCommands {
 				Flywheel topIndexer, Flywheel conveyor, Supplier<ShotTarget> targetSupplier, BooleanSupplier poseReady,
 				BooleanSupplier forceFeed, BooleanSupplier calibrationMode, DoubleSupplier calibrationHoodRotations,
 				DoubleSupplier calibrationFlywheelRps, Consumer<Boolean> readyFeedback, boolean finishAfterFeed,
-				double readyTimeoutSeconds, double feedSeconds) {
+				double readyTimeoutSeconds, double feedSeconds, boolean continuousAutoFeed) {
 			this.drive = drive;
 			this.hood = hood;
 			this.shooter = shooter;
@@ -387,6 +433,7 @@ public class ShooterCommands {
 			this.calibrationFlywheelRps = calibrationFlywheelRps;
 			this.readyFeedback = readyFeedback;
 			this.finishAfterFeed = finishAfterFeed;
+			this.continuousAutoFeed = continuousAutoFeed;
 			this.readyTimeoutSeconds = readyTimeoutSeconds;
 			this.feedSeconds = feedSeconds;
 		}
@@ -438,12 +485,20 @@ public class ShooterCommands {
 
 			ShotReadiness rawReadiness = determineReadiness();
 			// Teleop waits for initial speed, then feeds until bumper release.
-			// Timed autonomous shots retain their existing readiness gate.
+			// Bounded practice shots retain their existing readiness gate.
 			boolean automaticReady = readinessDebouncer
 					.calculate(!ferrySideChanged && !calibrationActive && rawReadiness == ShotReadiness.READY);
-			boolean ready = finishAfterFeed
-					? automaticReady
-					: volleyFeedGate.calculate(forced, shooter.getVelocity(), solution.flywheelRotationsPerSecond());
+			// A lost pose or invalid solution still blocks feeding; speed/aim/hood
+			// fluctuations after initial readiness do not chop a PathPlanner volley.
+			if (continuousAutoFeed && (!currentPoseReady || !solution.calibrated() || calibrationActive)) {
+				feedStarted = false;
+			}
+			boolean ready = continuousAutoFeed
+					? currentPoseReady && solution.calibrated() && !calibrationActive && (feedStarted || automaticReady)
+					: finishAfterFeed
+							? automaticReady
+							: volleyFeedGate.calculate(forced, shooter.getVelocity(),
+									solution.flywheelRotationsPerSecond());
 			readiness = forced
 					? (ready ? ShotReadiness.FORCE_FEED_OVERRIDE : ShotReadiness.FLYWHEEL_SPINNING_UP)
 					: calibrationActive ? ShotReadiness.CALIBRATION_MODE : rawReadiness;
