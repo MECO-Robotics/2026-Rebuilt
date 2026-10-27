@@ -142,12 +142,47 @@ class RobotContainerSimulationTest {
 		verifyShooterPresetLatchesUntilStopped();
 		verifyAcquireDeploysAndStopsOnRelease();
 		verifyEjectStopsOnRelease();
+		verifyAutonomousCollectionRunsIndexers();
 		verifyDefaultAutonomousRefusesUninitializedPose();
 		verifyAutonomousShotTimesOutSafely();
 		verifyIndependentAgitateAndAim();
 		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
 		verifySystemCheckInterlocksAndAbort();
 		verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures();
+	}
+
+	private void verifyAutonomousCollectionRunsIndexers() {
+		DriverStationSim.setAutonomous(true);
+		runCycles(2);
+		Command collection = com.pathplanner.lib.auto.NamedCommands.getCommand("SpinIntake");
+		for (int repetition = 0; repetition < 2; repetition++) {
+			scheduler.schedule(collection);
+			for (int cycle = 0; cycle < 50; cycle++) {
+				runCycles(1);
+				assertTrue(collection.isScheduled(), "Collection must last until its auto stage ends");
+				assertOutputActive(intake, "Autonomous collection intake");
+				assertOutputActive(conveyor, "Autonomous collection conveyor");
+				assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get() / 2.0,
+						bottomIndexer.getCommandedVoltage(), VOLTAGE_TOLERANCE);
+				assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_TOP.get() / 2.0, topIndexer.getCommandedVoltage(),
+						VOLTAGE_TOLERANCE);
+				assertNeutral(shooter, "Collection must not start the shooter");
+			}
+			if (repetition == 0) {
+				scheduler.cancel(collection);
+			} else {
+				DriverStationSim.setEnabled(false);
+			}
+			runCycles(2);
+			assertFalse(collection.isScheduled());
+			assertNeutral(intake, "Intake after collection ends");
+			assertNeutral(conveyor, "Conveyor after collection ends");
+			assertNeutral(bottomIndexer, "Bottom indexer after collection ends");
+			assertNeutral(topIndexer, "Top indexer after collection ends");
+		}
+		DriverStationSim.setAutonomous(false);
+		DriverStationSim.setEnabled(true);
+		runCycles(2);
 	}
 
 	private void verifyPracticeFuelResets() {

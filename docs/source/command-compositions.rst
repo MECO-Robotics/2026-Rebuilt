@@ -166,6 +166,11 @@ Examples of named commands in this repo include:
 - ``AutoAim``
 - ``CoordinatedHubShot``
 
+``SpinIntake`` runs the intake roller, conveyor, and both indexers in the same collection
+directions as teleop acquisition. All four outputs stop when the stage ends or is interrupted.
+Existing paths use this behavior without waypoint or timing changes. Collection does not
+wait for shooter readiness; shooting commands retain their readiness checks.
+
 ``FeedRollers`` and ``Agitate`` run a coordinated hub shot for the duration of their enclosing PathPlanner
 race/deadline. They run the intake roller, maintain flywheel speed and hood position, and aim continuously.
 The conveyor and both indexers wait for initial stable shot readiness, then feed continuously through speed,

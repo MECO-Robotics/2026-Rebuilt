@@ -293,7 +293,8 @@ public class RobotContainer {
 				shooterFlywheel, bottomIndexer, topIndexer, conveyor, intakeRoller, intakeRack, this::isShotPoseReady));
 		NamedCommands.registerCommand("IdleRollers", ShooterCommands.idleRollers(bottomIndexer, topIndexer, conveyor));
 		NamedCommands.registerCommand("Agitate", createPathPlannerHubShot());
-		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller, conveyor));
+		NamedCommands.registerCommand("SpinIntake", IntakeCommands.spinIntake(intakeRoller, conveyor)
+				.alongWith(ShooterCommands.acquireFeedPath(bottomIndexer, topIndexer)));
 		// Keep shot preparation active for the entire approach; the path owns its
 		// duration.
 		NamedCommands.registerCommand("PrepareHubShot",
