@@ -178,6 +178,8 @@ hood and heading fluctuations until the stage ends. Loss of a valid pose or cali
 feeding and requires readiness again. Each new stage checks readiness again. Cancellation stops all rollers
 and the shooter. These commands must have an enclosing duration; they do not finish on their own.
 The standalone default/Choreo shot and systems-check practice shot retain their separate bounded timing.
+Coordinated shooting uses the same conveyor direction as teleop RB (the negative of
+``CONVEYOR_PRESET.FEED``); collection retains its separate conveyor output.
 
 Adjacent feeding and intake-retraction phases now share one ``FeedRollers`` command for the entire
 six-second stop. A parallel sequence waits three seconds before running ``StowIntake``; it does not restart

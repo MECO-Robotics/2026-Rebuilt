@@ -749,7 +749,7 @@ class RobotContainerSimulationTest {
 							VOLTAGE_TOLERANCE);
 					assertEquals(ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(),
 							VOLTAGE_TOLERANCE);
-					assertEquals(ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
+					assertEquals(-ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
 							VOLTAGE_TOLERANCE);
 					assertEquals(IntakeConstants.ROLLER_PRESETS.INTAKE.get(), intake.getCommandedVoltage(),
 							VOLTAGE_TOLERANCE);
@@ -765,7 +765,7 @@ class RobotContainerSimulationTest {
 						frc.robot.subsystems.flywheel.FlywheelIOInputsAutoLogged.class);
 				inputs.velocity = 0.0;
 				timedStage.execute();
-				assertEquals(ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
+				assertEquals(-ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
 						VOLTAGE_TOLERANCE);
 				assertEquals(ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(), bottomIndexer.getCommandedVoltage(),
 						VOLTAGE_TOLERANCE);
@@ -856,6 +856,8 @@ class RobotContainerSimulationTest {
 				}
 				if (feeding) {
 					assertOutputActive(conveyor, "Continuous conveyor");
+					assertEquals(-ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
+							VOLTAGE_TOLERANCE, "Autonomous shooting must match the working RB conveyor direction");
 					assertOutputActive(bottomIndexer, "Continuous bottom indexer");
 					assertOutputActive(topIndexer, "Continuous top indexer");
 					assertOutputActive(intake, "Continuous intake");
