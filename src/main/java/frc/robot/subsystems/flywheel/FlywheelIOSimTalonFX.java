@@ -135,6 +135,14 @@ public class FlywheelIOSimTalonFX implements FlywheelIO {
 	}
 
 	@Override
+	public void applySimulatedLoad(double energyJoules) {
+		double omega = plant.getAngularVelocityRadPerSec();
+		double remainingOmega = frc.robot.simulation.FlywheelEnergy.afterShot(omega,
+				config.momentOfInertiaKgMetersSquared(), energyJoules);
+		plant.setState(plant.getAngularPositionRad(), remainingOmega);
+	}
+
+	@Override
 	public void setVoltage(double voltage) {
 		velocitySetpoint = 0.0;
 		velocityControlActive = false;

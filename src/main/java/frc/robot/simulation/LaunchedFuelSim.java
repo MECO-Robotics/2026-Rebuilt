@@ -36,6 +36,7 @@ public class LaunchedFuelSim {
 	private final IntakeSim intakeSim;
 	private final PositionJoint hood;
 	private final Flywheel shooterFlywheel;
+	private final java.util.function.BooleanSupplier feedPathReady;
 	private int successfulScoreCount = 0;
 
 	private double lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
@@ -44,11 +45,12 @@ public class LaunchedFuelSim {
 	private int burstShotIndex = 0;
 
 	public LaunchedFuelSim(CommandSwerveDrivetrain drive, IntakeSim intakeSim, PositionJoint hood,
-			Flywheel shooterFlywheel) {
+			Flywheel shooterFlywheel, java.util.function.BooleanSupplier feedPathReady) {
 		this.drive = drive;
 		this.intakeSim = intakeSim;
 		this.hood = hood;
 		this.shooterFlywheel = shooterFlywheel;
+		this.feedPathReady = feedPathReady;
 	}
 
 	/** Attempts to launch a staggered burst of fuel from robot storage. */
@@ -69,7 +71,9 @@ public class LaunchedFuelSim {
 		Logger.recordOutput("FieldSimulation/LaunchDebug/NominalLaunchPitchDegrees",
 				Math.toDegrees(toMapleLaunchPitchRadians(hoodDeflectionRadians)));
 
-		if (!inSim || !hasVelocity) {
+		if (!inSim || !hasVelocity || !feedPathReady.getAsBoolean()) {
+			// Do not catch up a paused burst by launching several overdue balls.
+			pendingBurstShots = 0;
 			return;
 		}
 
@@ -108,6 +112,8 @@ public class LaunchedFuelSim {
 
 	public void resetSuccessfulScoreCount() {
 		successfulScoreCount = 0;
+		pendingBurstShots = 0;
+		lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
 		Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
 	}
 
@@ -141,6 +147,8 @@ public class LaunchedFuelSim {
 		double randomizedHoodDeflectionRadians = getRandomizedHoodDeflectionRadians();
 		double launchPitchRadians = toMapleLaunchPitchRadians(randomizedHoodDeflectionRadians);
 		double randomizedSpeedMps = getRandomizedProjectileSpeedMps(projectileSpeedMps);
+		shooterFlywheel
+				.applySimulatedLoad(0.5 * MapleSimConstants.FUEL_MASS_KG * randomizedSpeedMps * randomizedSpeedMps);
 		Rotation2d shooterFacing = getShooterFacing(drive.getPhysicsPose().getRotation());
 		Logger.recordOutput("FieldSimulation/LaunchDebug/LastLaunchPitchDegrees", Math.toDegrees(launchPitchRadians));
 
@@ -192,22 +200,11 @@ public class LaunchedFuelSim {
 		double mainWheelLinearSpeedMps = Math.abs(shooterFlywheel.getVelocity())
 				* MapleSimConstants.MPS_PER_FLYWHEEL_RPS;
 		return mainWheelLinearSpeedMps * getBackspinEnergyTransferScale()
-				* ShooterConstants.SHOOTER_SURFACE_EFFICIENCY_SCALE * getFlywheelSlowdownScale();
+				* ShooterConstants.SHOOTER_SURFACE_EFFICIENCY_SCALE;
 	}
 
 	private double getBackspinEnergyTransferScale() {
 		return (1.0 + MapleSimConstants.COUNTER_TO_MAIN_SHOOTER_WHEEL_SPEED_RATIO) / 2.0;
-	}
-
-	private double getFlywheelSlowdownScale() {
-		if (!MapleSimConstants.ENABLE_FLYWHEEL_MOI_SIMULATION) {
-			return 1.0;
-		}
-
-		double ballReflectedInertia = MapleSimConstants.FUEL_MASS_KG
-				* Math.pow(MapleSimConstants.SHOOTER_WHEEL_RADIUS_METERS, 2);
-		return MapleSimConstants.SHOOTER_SYSTEM_MOI_KG_METERS_SQUARED
-				/ (MapleSimConstants.SHOOTER_SYSTEM_MOI_KG_METERS_SQUARED + ballReflectedInertia);
 	}
 
 	private ChassisSpeeds getLaunchChassisSpeedsFieldRelative() {

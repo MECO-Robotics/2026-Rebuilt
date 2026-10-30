@@ -56,6 +56,7 @@ class RobotContainerSimulationTest {
 
 	private final CommandScheduler scheduler = CommandScheduler.getInstance();
 	private RobotContainer container;
+	private Pose2d practiceStartingPose;
 	private XboxControllerSim controller;
 	private Flywheel shooter;
 	private Flywheel intake;
@@ -97,6 +98,7 @@ class RobotContainerSimulationTest {
 
 		container = new RobotContainer();
 		Object simulation = getField(container, "simulation", RobotSimulation.class);
+		practiceStartingPose = getField(simulation, "practiceStartingPose", Pose2d.class);
 		var launcher = getField(simulation, "launchedFuelSim", frc.robot.simulation.LaunchedFuelSim.class);
 		simulatedIntake = getField(launcher, "intakeSim", frc.robot.simulation.IntakeSim.class);
 		shooter = getField(container, "shooterFlywheel", Flywheel.class);
@@ -142,6 +144,7 @@ class RobotContainerSimulationTest {
 		verifyShooterPresetLatchesUntilStopped();
 		verifyAcquireDeploysAndStopsOnRelease();
 		verifyEjectStopsOnRelease();
+		verifyPickupAndEjectRequireMovingMechanisms();
 		verifyAutonomousCollectionRunsIndexers();
 		verifyDefaultAutonomousRefusesUninitializedPose();
 		verifyAutonomousShotTimesOutSafely();
@@ -185,18 +188,105 @@ class RobotContainerSimulationTest {
 		runCycles(2);
 	}
 
+	private void verifyPickupAndEjectRequireMovingMechanisms() {
+		scheduler.cancelAll();
+		container.drivetrain.resetPose(new Pose2d(2, 2, Rotation2d.kZero));
+		container.drivetrain.stop();
+		SimulatedArena.getInstance().clearGamePieces();
+		simulatedIntake.intakeSimulation.setGamePiecesCount(0);
+		// D-pad deployment requests the simulation intake, but idle motors must
+		// not magically collect a ball touching the intake opening.
+		controller.setPOV(0);
+		runCycles(150);
+		var pose = container.drivetrain.getPhysicsPose();
+		var pickupPoint = pose.getTranslation().plus(new Translation2d(0.53, 0).rotateBy(pose.getRotation()));
+		SimulatedArena.getInstance()
+				.addGamePiece(new org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnField(pickupPoint));
+		runCycles(10);
+		assertEquals(0, simulatedIntake.getStoredFuelCount(), "Deployment alone cannot collect");
+		controller.setPOV(-1);
+		controller.setRightTriggerAxis(1.0);
+		runCycles(100);
+		assertEquals(1, simulatedIntake.getStoredFuelCount(), "Working intake must physically collect nearby fuel");
+		controller.setRightTriggerAxis(0.0);
+		runCycles(5);
+		controller.setLeftTriggerAxis(1.0);
+		runCycles(100);
+		assertEquals(0, simulatedIntake.getStoredFuelCount(), "Eject must remove stored fuel");
+		assertEquals(1,
+				java.util.Arrays.stream(SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"))
+						.filter(ball -> Math.abs(ball.getY() - pose.getY()) < 0.4).count(),
+				"Ejected fuel must return to the physical field");
+		controller.setLeftTriggerAxis(0.0);
+		runCycles(5);
+		SimulatedArena.getInstance().resetFieldForAuto();
+	}
+
 	private void verifyPracticeFuelResets() {
 		assertNeutralFuelCount();
-		for (int repetition = 0; repetition < 2; repetition++) {
-			SimulatedArena.getInstance().clearGamePieces();
-			Pose2d pose = container.drivetrain.getPhysicsPose();
-			container.simulationTeleopInit();
-			assertNeutralFuelCount();
-			assertEquals(pose, container.drivetrain.getPhysicsPose(), "Fuel reset must not teleport the robot");
+		Pose2d practicePose = practiceStartingPose;
+		for (boolean disconnect : new boolean[]{false, true}) {
+			DriverStationSim.setAutonomous(true);
+			refreshSimulationState();
 			SimulatedArena.getInstance().clearGamePieces();
 			container.simulationAutonomousInit(edu.wpi.first.wpilibj2.command.Commands.none());
+			assertEquals(0, SimulatedArena.getInstance().gamePiecesOnField().size(),
+					"Auto init must not repopulate fuel");
+			Pose2d endPose = new Pose2d(2, 2, Rotation2d.fromDegrees(35));
+			container.drivetrain.resetPose(endPose);
+			SimulatedArena.getInstance()
+					.addGamePiece(new org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnField(
+							new Translation2d(3, 2)));
+			simulatedIntake.intakeSimulation.setGamePiecesCount(3);
+			var fuelBefore = SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel");
+			DriverStationSim.setAutonomous(false);
+			container.simulationTeleopInit();
+			refreshSimulationState();
+			assertEquals(endPose, container.drivetrain.getPhysicsPose(), "Teleop must preserve the auto end pose");
+			org.junit.jupiter.api.Assertions.assertArrayEquals(fuelBefore,
+					SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel"));
+			assertEquals(3, simulatedIntake.getStoredFuelCount(), "Teleop must preserve hopper fuel");
+
+			if (disconnect) {
+				DriverStationSim.setDsAttached(false);
+			} else {
+				DriverStationSim.setEnabled(false);
+			}
+			refreshSimulationState();
+			assertFalse(disconnect ? DriverStation.isDSAttached() : DriverStation.isEnabled(),
+					"DS transition must be visible");
 			assertNeutralFuelCount();
+			assertEquals(0, simulatedIntake.getStoredFuelCount());
+			assertTrue(SimulatedArena.getInstance().gamePieceLaunched().isEmpty());
+			assertEquals(practicePose.getX(), container.drivetrain.getPhysicsPose().getX(), .001);
+			assertEquals(practicePose.getY(), container.drivetrain.getPhysicsPose().getY(), .001);
+			SimulatedArena.getInstance().clearGamePieces();
+			refreshSimulationState();
+			assertEquals(0, SimulatedArena.getInstance().gamePiecesOnField().size(),
+					"Reset must happen once per disable/disconnect, not every loop");
+			DriverStationSim.setEnabled(true);
+			DriverStationSim.setDsAttached(true);
+			refreshSimulationState();
+			container.simulationTeleopInit();
+			assertEquals(0, SimulatedArena.getInstance().gamePiecesOnField().size(),
+					"Re-enabling must not reset the arena again");
 		}
+		SimulatedArena.getInstance().resetFieldForAuto();
+	}
+
+	private void refreshSimulationState() {
+		// HAL's new-data notification forces DS attached. Override that write to
+		// exercise a genuine disconnect in the cached control word.
+		boolean attached = DriverStationSim.getDsAttached();
+		try (var callback = DriverStationSim.registerDsAttachedCallback((name, value) -> {
+			if (!attached && value.getBoolean()) {
+				DriverStationSim.setDsAttached(false);
+			}
+		}, false)) {
+			DriverStationSim.notifyNewData();
+		}
+		DriverStation.refreshData();
+		container.simulationPeriodic();
 	}
 
 	private void assertNeutralFuelCount() {

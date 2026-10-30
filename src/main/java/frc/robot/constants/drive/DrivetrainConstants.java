@@ -181,13 +181,10 @@ public final class DrivetrainConstants {
 
 	private static Supplier<SwerveModuleSimulation> createSwerveModuleSimulationFactory() {
 		DCMotor driveMotorModel = DCMotor.getKrakenX60Foc(1);
-		double calibratedWheelRadiusMeters = kSpeedAt12Volts.in(MetersPerSecond)
-				/ (driveMotorModel.freeSpeedRadPerSec / FrontLeft.DriveMotorGearRatio);
 		SwerveModuleSimulationConfig moduleConfig = new SwerveModuleSimulationConfig(driveMotorModel,
 				DCMotor.getKrakenX60Foc(1), FrontLeft.DriveMotorGearRatio, FrontLeft.SteerMotorGearRatio,
-				Volts.of(FrontLeft.DriveFrictionVoltage), Volts.of(FrontLeft.SteerFrictionVoltage),
-				Meters.of(calibratedWheelRadiusMeters), KilogramSquareMeters.of(FrontLeft.SteerInertia),
-				kSimWheelCoefficientOfFriction);
+				Volts.of(FrontLeft.DriveFrictionVoltage), Volts.of(FrontLeft.SteerFrictionVoltage), WHEEL_RADIUS,
+				KilogramSquareMeters.of(FrontLeft.SteerInertia), kSimWheelCoefficientOfFriction);
 		return () -> new SwerveModuleSimulation(moduleConfig);
 	}
 

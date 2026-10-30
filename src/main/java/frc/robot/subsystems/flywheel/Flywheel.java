@@ -135,6 +135,13 @@ public class Flywheel extends SubsystemBase {
 		setVoltage(0.0);
 	}
 
+	/**
+	 * Simulation-only energy transfer from the spinning wheel to a launched ball.
+	 */
+	public void applySimulatedLoad(double energyJoules) {
+		flywheel.applySimulatedLoad(energyJoules);
+	}
+
 	/** Returns current measured velocity. */
 	public double getVelocity() {
 		return inputs.velocity;

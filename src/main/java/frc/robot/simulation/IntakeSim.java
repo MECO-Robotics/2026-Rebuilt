@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Meters;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import java.util.function.BooleanSupplier;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.drivesims.AbstractDriveTrainSimulation;
 
@@ -11,8 +12,11 @@ public class IntakeSim {
 
 	public static final IntakeSimulation.IntakeSide INTAKE_SIDE = IntakeSimulation.IntakeSide.FRONT;
 	public final IntakeSimulation intakeSimulation;
+	private final BooleanSupplier transportReady;
+	private boolean requested;
 
-	public IntakeSim(AbstractDriveTrainSimulation driveTrainSimulation) {
+	public IntakeSim(AbstractDriveTrainSimulation driveTrainSimulation, BooleanSupplier transportReady) {
+		this.transportReady = transportReady;
 		this.intakeSimulation = IntakeSimulation.OverTheBumperIntake(
 				// Specify the type of game pieces that the intake can collect
 				"Fuel",
@@ -29,7 +33,12 @@ public class IntakeSim {
 	}
 
 	public void setRunning(boolean running) {
-		if (running) {
+		requested = running;
+		update();
+	}
+
+	public void update() {
+		if (requested && transportReady.getAsBoolean()) {
 			intakeSimulation.startIntake();
 		} else {
 			intakeSimulation.stopIntake();

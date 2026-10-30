@@ -29,9 +29,6 @@ public final class MapleSimConstants {
 	/** Conversion from flywheel RPS to projectile speed in m/s. */
 	public static final double MPS_PER_FLYWHEEL_RPS = ShooterConstants.MAIN_WHEEL_METERS_PER_SECOND_PER_RPS;
 
-	/** Shooter wheel radius used for flywheel-to-ball speed transfer math. */
-	public static final double SHOOTER_WHEEL_RADIUS_METERS = Units.inchesToMeters(2.0);
-
 	/**
 	 * Counter-wheel linear speed divided by main shooter-wheel linear speed.
 	 * <p>
@@ -42,13 +39,6 @@ public final class MapleSimConstants {
 
 	/** Simulated fuel mass for flywheel slowdown calculations. */
 	public static final double FUEL_MASS_KG = 0.5 * 0.45359237;
-
-	/** Enables flywheel MOI-based speed reduction during simulated launches. */
-	public static final boolean ENABLE_FLYWHEEL_MOI_SIMULATION = false;
-
-	/** Shooter system inertia used to model flywheel speed drop during launch. */
-	public static final double SHOOTER_SYSTEM_MOI_KG_METERS_SQUARED = 24.0 * 0.45359237
-			* Math.pow(Units.inchesToMeters(1.0), 2);
 
 	/** Minimum flywheel speed before a shot can launch in simulation. */
 	public static final double MIN_FLYWHEEL_RPS_FOR_SHOT = 5.0;

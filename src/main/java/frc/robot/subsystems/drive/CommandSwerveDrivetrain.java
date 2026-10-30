@@ -788,11 +788,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 	private SwerveModuleSimulationConfig createSwerveModuleSimulationFactory() {
 		SwerveModuleConstants<?, ?, ?> module = m_moduleConstants[0];
 		DCMotor driveMotorModel = DCMotor.getKrakenX60Foc(1);
-		double calibratedWheelRadiusMeters = DrivetrainConstants.kSpeedAt12Volts.in(MetersPerSecond)
-				/ (driveMotorModel.freeSpeedRadPerSec / module.DriveMotorGearRatio);
 		return new SwerveModuleSimulationConfig(driveMotorModel, DCMotor.getKrakenX60Foc(1), module.DriveMotorGearRatio,
 				module.SteerMotorGearRatio, Volts.of(module.DriveFrictionVoltage),
-				Volts.of(module.SteerFrictionVoltage), Meters.of(calibratedWheelRadiusMeters),
+				Volts.of(module.SteerFrictionVoltage), Meters.of(module.WheelRadius),
 				KilogramSquareMeters.of(module.SteerInertia), DrivetrainConstants.kSimWheelCoefficientOfFriction);
 	}
 

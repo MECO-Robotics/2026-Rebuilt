@@ -19,6 +19,7 @@ Included are both beginner-oriented guides and more in-depth documentation for m
    shooting-intake-checklist
    system-check
    tune-iterate
+   simulation-practice
    troubleshooting
    
 .. toctree::

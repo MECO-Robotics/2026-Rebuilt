@@ -289,8 +289,11 @@ Simulation practice fuel resets
 The practice arena starts with exactly 400 fuel in the neutral zone, in addition
 to MapleSim's normal depot/outpost fuel. This is a custom practice layout, not a
 claim about the official starting distribution. Efficiency mode is disabled.
-Each Autonomous or Teleop initialization restores the field, empties the simulated
-hopper and resets the simulated score. Auto-to-Teleop therefore starts with fresh
-fuel rather than preserving match progress. Teleop fuel resets do not move the
-robot. Autonomous retains its existing starting-pose behavior. These hooks do not
-change real-robot operation. Simulating the full fuel count can increase CPU load.
+Switching directly from enabled Autonomous to enabled Teleop preserves the robot
+pose, field fuel, hopper fuel, projectiles, and score. Disabling or disconnecting
+the Driver Station resets the field, empties the hopper, clears projectiles and
+score, and returns the robot to its startup practice pose. This happens once per
+transition, not continuously while disabled. A disable between Auto and Teleop
+therefore starts a fresh practice field. Autonomous still places the robot at
+the selected path's starting pose when it begins. These hooks do not change
+real-robot operation. Simulating the full fuel count can increase CPU load.

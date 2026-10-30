@@ -65,6 +65,12 @@ public interface FlywheelIO {
 	public default void setVoltage(double voltage) {
 	}
 
+	/**
+	 * Removes projectile energy from a simulated flywheel; hardware does nothing.
+	 */
+	public default void applySimulatedLoad(double energyJoules) {
+	}
+
 	/** Applies controller/feedforward gains. */
 	public default void setGains(FlywheelGains gains) {
 	}

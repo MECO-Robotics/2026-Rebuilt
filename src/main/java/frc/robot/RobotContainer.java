@@ -130,7 +130,9 @@ public class RobotContainer {
 						() -> new VisionIOQuestNav(VisionConstants.robotToQuest, absoluteVision,
 								() -> drivetrain.getState().Pose),
 						() -> new VisionIOQuestNavSim(drivetrain::getPhysicsPose, absoluteVision)));
-		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel);
+		simulation = RobotSimulation.create(drivetrain, intakeRack, hood, shooterFlywheel,
+				new frc.robot.simulation.FuelTransportSim(intakeRack, intakeRoller, conveyor, bottomIndexer,
+						topIndexer));
 		simulation.bindCommandHooks();
 		systemCheckManager = new SystemCheckManager(drivetrain, intakeRack, intakeRoller, conveyor, bottomIndexer,
 				topIndexer, hood, shooterFlywheel, vision, this::isShotPoseReady);
@@ -475,7 +477,7 @@ public class RobotContainer {
 		}
 	}
 
-	/** Resets simulation practice fuel when Teleop starts. */
+	/** Enters simulation Teleop without resetting the pose, fuel, or score. */
 	public void simulationTeleopInit() {
 		if (Constants.currentMode == Constants.Mode.SIM) {
 			simulation.teleopInit();

@@ -4,6 +4,7 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.commands.IntakeCommands;
 import frc.robot.commands.shooter.ShooterCommands;
@@ -41,9 +42,9 @@ public interface RobotSimulation {
 	}
 
 	static RobotSimulation create(CommandSwerveDrivetrain drive, PositionJoint intakeRack, PositionJoint hood,
-			Flywheel shooterFlywheel) {
+			Flywheel shooterFlywheel, FuelTransportSim transport) {
 		if (Constants.currentMode == Constants.Mode.SIM && drive.getSimulation() != null) {
-			return new MapleRobotSimulation(drive, intakeRack, hood, shooterFlywheel);
+			return new MapleRobotSimulation(drive, intakeRack, hood, shooterFlywheel, transport);
 		}
 		return new NoopRobotSimulation(drive, intakeRack, hood, shooterFlywheel);
 	}
@@ -83,15 +84,24 @@ public interface RobotSimulation {
 		private final IntakeSim intakeSim;
 		private final Hopper hopper;
 		private final RobotRemyVisualizer robotRemyVisualizer;
+		private final FuelTransportSim transport;
+		private final Pose2d practiceStartingPose;
+		private boolean wasEnabled;
+		private boolean wasDsAttached;
+		private double lastEjectSeconds = Double.NEGATIVE_INFINITY;
 
 		MapleRobotSimulation(CommandSwerveDrivetrain drive, PositionJoint intakeRack, PositionJoint hood,
-				Flywheel shooterFlywheel) {
+				Flywheel shooterFlywheel, FuelTransportSim transport) {
 			this.drive = drive;
+			this.transport = transport;
+			practiceStartingPose = drive.getPhysicsPose();
+			wasEnabled = DriverStation.isEnabled();
+			wasDsAttached = DriverStation.isDSAttached();
 			// MapleSim creates an empty arena. Populate starting fuel immediately so
 			// teleop-only simulation sessions do not require entering autonomous first.
 			SimulatedArena.getInstance().resetFieldForAuto();
-			intakeSim = new IntakeSim(drive.getSimulation());
-			launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel);
+			intakeSim = new IntakeSim(drive.getSimulation(), transport::canCollect);
+			launchedFuelSim = new LaunchedFuelSim(drive, intakeSim, hood, shooterFlywheel, transport::canFeed);
 			hopper = new Hopper(intakeSim::getStoredFuelCount, intakeRack::getPosition, drive::getPhysicsPose);
 			robotRemyVisualizer = new RobotRemyVisualizer(drive::getPhysicsPose, hood::getPosition,
 					shooterFlywheel::getPosition, intakeRack::getPosition, () -> 0);
@@ -111,12 +121,24 @@ public interface RobotSimulation {
 
 		@Override
 		public void autonomousInit(Command autonomousCommand) {
-			resetPracticeFuel();
 			resetMapleAutonomousPose(autonomousCommand);
 		}
 
 		@Override
 		public void simulationPeriodic() {
+			boolean enabled = DriverStation.isEnabled();
+			boolean attached = DriverStation.isDSAttached();
+			if ((wasEnabled && !enabled) || (wasDsAttached && !attached)) {
+				resetPracticeFuel();
+				drive.resetPose(practiceStartingPose);
+			}
+			wasEnabled = enabled;
+			wasDsAttached = attached;
+			intakeSim.update();
+			ejectFuel();
+			Logger.recordOutput("FieldSimulation/Transport/CanCollect", transport.canCollect());
+			Logger.recordOutput("FieldSimulation/Transport/CanFeed", transport.canFeed());
+			Logger.recordOutput("FieldSimulation/Transport/CanEject", transport.canEject());
 			Pose3d[] arenaFuelPoses = SimulatedArena.getInstance().getGamePiecesArrayByType("Fuel");
 			Pose3d[] hopperFuelPoses = hopper.getGamePiecePoses();
 			Pose3d[] fuelPoses = concat(arenaFuelPoses, hopperFuelPoses);
@@ -134,12 +156,26 @@ public interface RobotSimulation {
 			Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
 		}
 
-		@Override
-		public void teleopInit() {
-			resetPracticeFuel();
+		private void ejectFuel() {
+			double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
+			if (!transport.canEject() || now - lastEjectSeconds < 0.08 || !intakeSim.launchFuel()) {
+				return;
+			}
+			lastEjectSeconds = now;
+			var pose = drive.getPhysicsPose();
+			var offset = new edu.wpi.first.math.geometry.Translation2d(0.75, 0).rotateBy(pose.getRotation());
+			var fuel = new org.ironmaple.simulation.seasonspecific.rebuilt2026.RebuiltFuelOnField(
+					pose.getTranslation().plus(offset));
+			var chassisSpeeds = drive.getPhysicsSpeeds();
+			var velocity = new edu.wpi.first.math.geometry.Translation2d(2.0 + chassisSpeeds.vxMetersPerSecond,
+					chassisSpeeds.vyMetersPerSecond + chassisSpeeds.omegaRadiansPerSecond * 0.75)
+							.rotateBy(pose.getRotation());
+			fuel.setLinearVelocity(velocity.getX(), velocity.getY());
+			SimulatedArena.getInstance().addGamePiece(fuel);
 		}
 
 		private void resetPracticeFuel() {
+			lastEjectSeconds = Double.NEGATIVE_INFINITY;
 			intakeSim.setRunning(false);
 			intakeSim.intakeSimulation.setGamePiecesCount(0);
 			SimulatedArena.getInstance().resetFieldForAuto();
