@@ -542,8 +542,8 @@ public class ShooterCommands {
 			feeding = shouldFeed;
 			readyFeedback.accept(shouldFeed);
 			if (shouldFeed) {
-				bottomIndexer.setVoltage(INDEXER_PRESET.FEED_BOTTOM.get());
-				topIndexer.setVoltage(INDEXER_PRESET.FEED_TOP.get());
+				bottomIndexer.setVoltage(-INDEXER_PRESET.FEED_BOTTOM.get());
+				topIndexer.setVoltage(-INDEXER_PRESET.FEED_TOP.get());
 				// Match the verified teleop RB conveyor direction.
 				conveyor.setVoltage(-CONVEYOR_PRESET.FEED.get());
 				feedStarted = true;
