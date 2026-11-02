@@ -65,6 +65,8 @@ public class Telemetry {
 	/* Robot pose for field positioning */
 	private final NetworkTable table = inst.getTable("Pose");
 	private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
+	// Standard Field2d robot entry used by Elastic; retain the existing pose topic.
+	private final DoubleArrayPublisher elasticFieldPub = table.getDoubleArrayTopic("Robot").publish();
 	private final DoubleArrayPublisher physicsFieldPub = table.getDoubleArrayTopic("robotPoseActual").publish();
 	private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
 
@@ -133,6 +135,7 @@ public class Telemetry {
 		m_poseArray[1] = state.Pose.getY();
 		m_poseArray[2] = state.Pose.getRotation().getDegrees();
 		fieldPub.set(m_poseArray);
+		elasticFieldPub.set(m_poseArray);
 		m_physicsPoseArray[0] = physicsPose.getX();
 		m_physicsPoseArray[1] = physicsPose.getY();
 		m_physicsPoseArray[2] = physicsPose.getRotation().getDegrees();

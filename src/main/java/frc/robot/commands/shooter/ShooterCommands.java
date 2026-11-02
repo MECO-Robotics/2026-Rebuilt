@@ -104,8 +104,8 @@ public class ShooterCommands {
 					shooter.getVelocitySetpoint());
 			feedingActive[0] = feeding;
 			if (feeding) {
-				bottomIndexer.setVoltage(INDEXER_PRESET.FEED_BOTTOM.get());
-				topIndexer.setVoltage(INDEXER_PRESET.FEED_TOP.get());
+				bottomIndexer.setVoltage(IndexerFeedDirection.MANUAL.bottomVolts());
+				topIndexer.setVoltage(IndexerFeedDirection.MANUAL.topVolts());
 				conveyor.setVoltage(-CONVEYOR_PRESET.FEED.get());
 				if (launchedFuelSimulation != null) {
 					launchedFuelSimulation.tryLaunch();
@@ -446,6 +446,7 @@ public class ShooterCommands {
 			solution = ShooterCalculator.calculate(drive.getState().Pose, target);
 			readiness = ShotReadiness.POSE_NOT_READY;
 			feeding = false;
+			SmartDashboard.putBoolean("Shooter/Feeding", false);
 			feedStarted = false;
 			volleyFeedGate.reset();
 			calibrationActive = false;
@@ -505,7 +506,7 @@ public class ShooterCommands {
 			setFeeding(ready);
 
 			if (feeding && launchedFuelSimulation != null) {
-				launchedFuelSimulation.tryLaunch();
+				launchedFuelSimulation.tryLaunch(IndexerFeedDirection.COORDINATED);
 			}
 
 			Logger.recordOutput("Shooter/DistanceToTargetMeters", solution.distanceMeters());
@@ -540,10 +541,11 @@ public class ShooterCommands {
 
 		private void setFeeding(boolean shouldFeed) {
 			feeding = shouldFeed;
+			SmartDashboard.putBoolean("Shooter/Feeding", shouldFeed);
 			readyFeedback.accept(shouldFeed);
 			if (shouldFeed) {
-				bottomIndexer.setVoltage(-INDEXER_PRESET.FEED_BOTTOM.get());
-				topIndexer.setVoltage(-INDEXER_PRESET.FEED_TOP.get());
+				bottomIndexer.setVoltage(IndexerFeedDirection.COORDINATED.bottomVolts());
+				topIndexer.setVoltage(IndexerFeedDirection.COORDINATED.topVolts());
 				// Match the verified teleop RB conveyor direction.
 				conveyor.setVoltage(-CONVEYOR_PRESET.FEED.get());
 				feedStarted = true;

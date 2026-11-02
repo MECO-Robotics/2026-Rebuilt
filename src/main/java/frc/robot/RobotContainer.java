@@ -149,6 +149,8 @@ public class RobotContainer {
 		}
 
 		SmartDashboard.putBoolean("Flywheel Spinning?", false);
+		// Publish before the first shot so Elastic can discover the status at startup.
+		SmartDashboard.putBoolean("Shooter/Feeding", false);
 
 		// Configure the button bindings
 		configureButtonBindings();

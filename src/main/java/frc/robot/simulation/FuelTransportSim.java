@@ -1,6 +1,7 @@
 package frc.robot.simulation;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import frc.robot.commands.shooter.IndexerFeedDirection;
 import frc.robot.constants.subsystems.IntakeConstants;
 import frc.robot.constants.subsystems.ShooterConstants;
 import frc.robot.subsystems.flywheel.Flywheel;
@@ -19,9 +20,12 @@ public record FuelTransportSim(PositionJoint rack, Flywheel intake, Flywheel con
 	}
 
 	public boolean canFeed() {
+		return canFeed(IndexerFeedDirection.MANUAL) || canFeed(IndexerFeedDirection.COORDINATED);
+	}
+
+	public boolean canFeed(IndexerFeedDirection direction) {
 		return DriverStation.isEnabled() && moving(conveyor, -ShooterConstants.CONVEYOR_PRESET.FEED.get())
-				&& moving(bottomIndexer, ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get())
-				&& moving(topIndexer, ShooterConstants.INDEXER_PRESET.FEED_TOP.get());
+				&& moving(bottomIndexer, direction.bottomVolts()) && moving(topIndexer, direction.topVolts());
 	}
 
 	public boolean canEject() {

@@ -821,6 +821,7 @@ class RobotContainerSimulationTest {
 		// PathPlanner shooting stages must not inherit the default auto's one-second
 		// cutoff.
 		for (String stage : new String[]{"FeedRollers", "Agitate"}) {
+			simulatedIntake.intakeSimulation.setGamePiecesCount(6);
 			Command timedStage = com.pathplanner.lib.auto.NamedCommands.getCommand(stage);
 			scheduler.schedule(timedStage);
 			boolean started = false;
@@ -834,10 +835,12 @@ class RobotContainerSimulationTest {
 				if (feeding)
 					started = true;
 				if (started) {
+					assertTrue(SmartDashboard.getBoolean("Shooter/Feeding", false),
+							"Auto dashboard must reflect feeding");
 					assertTrue(feeding, stage + " must not pause an established volley");
-					assertEquals(ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(), bottomIndexer.getCommandedVoltage(),
-							VOLTAGE_TOLERANCE);
-					assertEquals(ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(),
+					assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(),
+							bottomIndexer.getCommandedVoltage(), VOLTAGE_TOLERANCE);
+					assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(),
 							VOLTAGE_TOLERANCE);
 					assertEquals(-ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
 							VOLTAGE_TOLERANCE);
@@ -848,6 +851,8 @@ class RobotContainerSimulationTest {
 			}
 			assertTrue(feedingCycles > 100, stage + " should feed continuously for more than two seconds: "
 					+ feedingCycles + " cycles; " + stageStates);
+			assertEquals(0, simulatedIntake.getStoredFuelCount(),
+					stage + " must launch stored fuel with real auto directions");
 			// Inject a measured speed sag after initial readiness without changing the
 			// request.
 			try {
@@ -857,15 +862,16 @@ class RobotContainerSimulationTest {
 				timedStage.execute();
 				assertEquals(-ShooterConstants.CONVEYOR_PRESET.FEED.get(), conveyor.getCommandedVoltage(),
 						VOLTAGE_TOLERANCE);
-				assertEquals(ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(), bottomIndexer.getCommandedVoltage(),
+				assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_BOTTOM.get(), bottomIndexer.getCommandedVoltage(),
 						VOLTAGE_TOLERANCE);
-				assertEquals(ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(),
+				assertEquals(-ShooterConstants.INDEXER_PRESET.FEED_TOP.get(), topIndexer.getCommandedVoltage(),
 						VOLTAGE_TOLERANCE);
 			} catch (ReflectiveOperationException exception) {
 				throw new AssertionError(exception);
 			}
 			scheduler.cancel(timedStage);
 			runCycles(1);
+			assertFalse(SmartDashboard.getBoolean("Shooter/Feeding", true), "Cancelled auto must clear feeding status");
 			assertNeutral(intake, stage + " intake cancellation");
 			assertNeutral(conveyor, stage + " conveyor cancellation");
 			assertNeutral(bottomIndexer, stage + " bottom indexer cancellation");
@@ -972,10 +978,13 @@ class RobotContainerSimulationTest {
 
 		Command blockedVolley = frc.robot.commands.shooter.ShooterCommands.autonomousHubVolley(container.drivetrain,
 				hood, shooter, bottomIndexer, topIndexer, conveyor, intake, intakeRack, () -> false);
+		SmartDashboard.putBoolean("Shooter/Feeding", true); // An indicator is not a force-feed input.
 		scheduler.schedule(blockedVolley);
 		for (int cycle = 0; cycle < 160; cycle++) {
 			runCycles(1);
 			assertEquals(0.0, conveyor.getCommandedVoltage(), VOLTAGE_TOLERANCE, "Unready volley must not feed");
+			assertFalse(SmartDashboard.getBoolean("Shooter/Feeding", true),
+					"Blocked command must correct stale dashboard status");
 		}
 		assertFalse(blockedVolley.isScheduled(), "Missing readiness must abort after three seconds");
 		assertNeutral(intake, "Blocked volley intake");

@@ -9,6 +9,16 @@ X/Y and copilot presets retain their normal behavior. D-pad deployment alone
 does not run the collection motors. No real gains or controller bindings are
 changed by the simulation physics settings.
 
+Elastic testing dashboard
+-------------------------
+
+Import ``dashboards/remy-sim-testing.json`` with Elastic's **File → Open Layout**
+for Driving, Shooter Testing, and Auto Testing tabs. Connect to localhost for
+simulation. See ``dashboards/README.md`` for topic mappings, status limitations,
+and import instructions. The updated drivetrain telemetry publishes the standard
+``/Pose/Robot`` Field2d entry alongside its existing pose topic. Use AdvantageScope
+for the 3D robot and fuel view.
+
 Practice session resets
 -----------------------
 
@@ -17,6 +27,24 @@ remaining field and hopper fuel, airborne shots, and score. Disable or disconnec
 the Driver Station to reset the practice field and return to the startup pose.
 A disable between modes also resets the session. Starting an auto still uses
 its selected path's starting pose. Reconnecting AdvantageScope does not reset it.
+
+Shooting status and direction parity
+-----------------------------------
+
+``Shooter/Feeding`` is an output, not a force-feed control. Auto and RB publish
+it to SmartDashboard from their actual feeding decisions and clear it when
+feeding stops. Changing the displayed boolean does not command a motor.
+
+``IndexerFeedDirection`` supplies the existing signed voltage requests to both
+commands and simulation: manual RB uses the presets, coordinated auto uses their
+negatives. The launching command passes its direction explicitly, including in
+Test mode. Simulation still checks moving motors and conveyor direction; it does
+not treat an illuminated dashboard indicator as permission to launch.
+
+Simulation aiming and projectiles use the original CAD-aligned +X yaw (0 degrees).
+REAL and REPLAY retain their existing 180-degree shooter yaw. The attempted shared
+180-degree simulation offset was reverted after the model faced the wrong way.
+No path headings, real motor directions, or readiness thresholds were changed.
 
 Fuel follows actuator behavior
 -----------------------------
@@ -59,9 +87,11 @@ This is not a complete 3D mechanical simulation. Stored hopper fuel is counted
 and visually packed, not individually simulated for compression or jams. The
 planar drivetrain does not climb bumps, tip, or collide with overhead trench
 structure; ramps remain passable. Tape grip, ball deformation, electrical faults,
-and actual stopping distances still need hardware validation. Existing CAD
-simulation and REAL shooter coordinate offsets remain separate; button mappings
-are shared, but the display alone does not verify physical forward direction.
+and actual stopping distances still need hardware validation. Simulation aiming and projectile yaw use the original 0-degree offset.
+CAD import and intake-extension geometry remain separate from the control frame;
+the display alone does not verify physical forward direction. Talon motor plants
+and per-mechanism battery estimates do not reproduce every real current-limiting
+or simultaneous-load condition.
 
 Verification
 ------------

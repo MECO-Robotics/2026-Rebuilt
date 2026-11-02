@@ -36,7 +36,7 @@ public class LaunchedFuelSim {
 	private final IntakeSim intakeSim;
 	private final PositionJoint hood;
 	private final Flywheel shooterFlywheel;
-	private final java.util.function.BooleanSupplier feedPathReady;
+	private final java.util.function.Predicate<frc.robot.commands.shooter.IndexerFeedDirection> feedPathReady;
 	private int successfulScoreCount = 0;
 
 	private double lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
@@ -45,7 +45,8 @@ public class LaunchedFuelSim {
 	private int burstShotIndex = 0;
 
 	public LaunchedFuelSim(CommandSwerveDrivetrain drive, IntakeSim intakeSim, PositionJoint hood,
-			Flywheel shooterFlywheel, java.util.function.BooleanSupplier feedPathReady) {
+			Flywheel shooterFlywheel,
+			java.util.function.Predicate<frc.robot.commands.shooter.IndexerFeedDirection> feedPathReady) {
 		this.drive = drive;
 		this.intakeSim = intakeSim;
 		this.hood = hood;
@@ -55,6 +56,11 @@ public class LaunchedFuelSim {
 
 	/** Attempts to launch a staggered burst of fuel from robot storage. */
 	public void tryLaunch() {
+		tryLaunch(frc.robot.commands.shooter.IndexerFeedDirection.MANUAL);
+	}
+
+	/** Uses the same signed requests as the command that initiated the shot. */
+	public void tryLaunch(frc.robot.commands.shooter.IndexerFeedDirection direction) {
 		double nowSeconds = Timer.getFPGATimestamp();
 		boolean inSim = Constants.currentMode == Constants.Mode.SIM && drive.getSimulation() != null;
 		boolean hasVelocity = hasLaunchVelocity();
@@ -71,7 +77,7 @@ public class LaunchedFuelSim {
 		Logger.recordOutput("FieldSimulation/LaunchDebug/NominalLaunchPitchDegrees",
 				Math.toDegrees(toMapleLaunchPitchRadians(hoodDeflectionRadians)));
 
-		if (!inSim || !hasVelocity || !feedPathReady.getAsBoolean()) {
+		if (!inSim || !hasVelocity || !feedPathReady.test(direction)) {
 			// Do not catch up a paused burst by launching several overdue balls.
 			pendingBurstShots = 0;
 			return;
