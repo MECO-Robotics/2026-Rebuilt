@@ -103,3 +103,25 @@ autonomous indexers, readiness, and cancellation/disable shutdown.
 ``FuelTransportSimTest`` rejects stopped, reversed, and invalid transport inputs.
 ``FlywheelEnergyTest`` verifies that ball launches remove energy without reversing
 or creating wheel motion. These tests supplement, rather than replace, robot testing.
+
+PathPlanner System Check auto
+-----------------------------
+
+The ``System Check`` chooser option follows its authored path, deploys the rack
+at the ``DeployIntake`` marker, and runs the intake, conveyor, and both indexers
+inside the ``SpinIntake`` marker interval. The zoned event ends at its authored
+end position; path cancellation also ends its mechanism commands.
+
+After the path ends, ``HubVolley`` aims and prepares for up to three seconds,
+then feeds for three seconds if initial readiness is achieved, with a six-second
+overall bound. A readiness failure ends without feeding. Aiming and shooting are
+sequential auto stages rather than drivetrain-owning path events. The route,
+rotation targets, and driving constraints are unchanged. This is a driving and
+shooting autonomous routine, separate from the interlocked Test-mode system check.
+
+When these files are changed outside PathPlanner, reopen the project before
+editing or saving its path. Saving an older in-memory copy can restore marker
+names without their attached commands. Both intake markers must retain a Named
+Command action matching their name; a marker label alone does not run a command.
+``SpinIntake`` must retain its end position to stop collection before shooting.
+After saving, restart desktop simulation so it loads the updated deploy files.

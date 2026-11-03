@@ -33,31 +33,31 @@
     {
       "anchor": {
         "x": 7.454445779427842,
-        "y": 0.6759970617711373
+        "y": 0.6518352648370227
       },
       "prevControl": {
-        "x": 7.9357420736151605,
-        "y": 0.40077139896137126
+        "x": 8.26816968404059,
+        "y": 0.8446721248462483
       },
       "nextControl": {
-        "x": 6.973149485240524,
-        "y": 0.9512227245809033
+        "x": 6.914955311183165,
+        "y": 0.5239864363689444
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.807062397503644,
-        "y": 1.0958853407434401
+        "x": 2.4284594576414507,
+        "y": 0.6518352648370227
       },
       "prevControl": {
-        "x": 2.5592611721027683,
-        "y": 1.208113782343294
+        "x": 2.2004653738678184,
+        "y": 0.5030567247078714
       },
       "nextControl": {
-        "x": 3.0548636229045196,
-        "y": 0.9836568991435863
+        "x": 2.656275537630157,
+        "y": 0.8004976478149863
       },
       "isLocked": false,
       "linkedName": null
@@ -88,6 +88,10 @@
     {
       "waypointRelativePos": 2.188802083333333,
       "rotationDegrees": 175.83633253427303
+    },
+    {
+      "waypointRelativePos": 2.683050728699553,
+      "rotationDegrees": 177.02071021861158
     }
   ],
   "constraintZones": [],
@@ -97,25 +101,23 @@
       "name": "DeployIntake",
       "waypointRelativePos": 0.2965848806366048,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "DeployIntake"
+        }
+      }
     },
     {
       "name": "SpinIntake",
       "waypointRelativePos": 0.399867374005305,
       "endWaypointRelativePos": 2.512931034482762,
-      "command": null
-    },
-    {
-      "name": "AutoAim",
-      "waypointRelativePos": 3.9805205570291764,
-      "endWaypointRelativePos": null,
-      "command": null
-    },
-    {
-      "name": "Agitate",
-      "waypointRelativePos": 3.9852453580901854,
-      "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "SpinIntake"
+        }
+      }
     }
   ],
   "globalConstraints": {

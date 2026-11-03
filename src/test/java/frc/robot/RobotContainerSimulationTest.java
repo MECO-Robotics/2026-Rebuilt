@@ -152,6 +152,50 @@ class RobotContainerSimulationTest {
 		verifyCalibrationModeUsesLiveSetpointsAndRequiresForceFeed();
 		verifySystemCheckInterlocksAndAbort();
 		verifyFullSystemCheckCompletesWithoutSimulationOnlyFailures();
+		verifyPathPlannerSystemCheckIntakeEvents();
+	}
+
+	private void verifyPathPlannerSystemCheckIntakeEvents() {
+		scheduler.cancelAll();
+		DriverStationSim.setTest(false);
+		DriverStationSim.setAutonomous(true);
+		DriverStationSim.setEnabled(true);
+		runCycles(2);
+		Command auto = new com.pathplanner.lib.commands.PathPlannerAuto("System Check");
+		container.simulationAutonomousInit(auto);
+		scheduler.schedule(auto);
+		boolean sawCollection = false;
+		boolean sawCollectionStop = false;
+		boolean sawShootingPreparation = false;
+		for (int cycle = 0; cycle < 2200 && auto.isScheduled(); cycle++) {
+			runCycles(1);
+			boolean collecting = Math.abs(intake.getCommandedVoltage()) > 0.1
+					&& Math.abs(conveyor.getCommandedVoltage() - 5.0) < VOLTAGE_TOLERANCE;
+			if (collecting) {
+				sawCollection = true;
+				assertEquals(IntakeConstants.RACK_PRESETS.DEPLOY.get(), intakeRack.getDesiredPosition(), 1e-6);
+				assertOutputActive(bottomIndexer, "System Check collection bottom indexer");
+				assertOutputActive(topIndexer, "System Check collection top indexer");
+			}
+			if (sawCollection && Math.abs(intake.getCommandedVoltage()) < 0.1) {
+				sawCollectionStop = true;
+			}
+			if (shooter.getVelocitySetpoint() > 0) {
+				assertTrue(sawCollection, "Collection must run during the path, before the final shot");
+				assertTrue(sawCollectionStop, "Collection zone must end before shooting preparation");
+				sawShootingPreparation = true;
+			}
+		}
+		assertTrue(sawCollection, "System Check must execute its intake marker");
+		assertTrue(sawCollectionStop, "Zoned intake event must stop before the final shot");
+		assertTrue(sawShootingPreparation, "System Check must reach its separate shooting stage");
+		assertFalse(auto.isScheduled(), "System Check must finish within a bounded run");
+		assertNeutral(intake, "System Check finished intake");
+		assertNeutral(conveyor, "System Check finished conveyor");
+		assertNeutral(bottomIndexer, "System Check finished bottom indexer");
+		assertNeutral(topIndexer, "System Check finished top indexer");
+		DriverStationSim.setAutonomous(false);
+		runCycles(2);
 	}
 
 	private void verifyAutonomousCollectionRunsIndexers() {
