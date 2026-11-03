@@ -51,3 +51,18 @@ bounds/overlap checks, and Java compilation passed. Import/rendering and live
 widget updates in the installed Elastic app still need a local check.
 
 Official instructions: https://frc-elastic.gitbook.io/docs/getting-started/app-navigation
+
+## Simulated scoring
+
+The Driving tab has Auto, Teleop, and Total fuel counters. These read
+`/AdvantageKit/RealOutputs/FieldSimulation/Scoring/Auto`, `/Teleop`, and `/Total`
+(the last two share the same `Scoring` prefix). They count successful practice
+shots, not official active-hub match points. Mode is captured at launch, so an
+auto shot landing after the teleop transition still counts toward Auto. Total is
+Auto + Teleop; Test-mode shots are excluded. Disable or DS disconnect resets all
+three, while a direct enabled auto-to-teleop transition preserves them.
+
+Restart simulation and reopen `remy-sim-testing.json` in Elastic to load the new
+widget topics. This layout preserves the saved user arrangement, including the
+three scoring widgets. No running Elastic preferences were overwritten. These
+counters are simulation-only and are not an FMS score feed on the real robot.

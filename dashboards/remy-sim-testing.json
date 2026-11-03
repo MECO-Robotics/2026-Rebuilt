@@ -8,28 +8,16 @@
         "layouts": [],
         "containers": [
           {
-            "title": "Auto Choices",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 640.0,
-            "height": 64.0,
-            "type": "Dropdown Chooser",
-            "properties": {
-              "topic": "/SmartDashboard/Auto Choices",
-              "period": 0.05,
-              "sort_options": false
-            }
-          },
-          {
             "title": "Feeding requested",
             "x": 640.0,
             "y": 0.0,
             "width": 320.0,
-            "height": 64.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Shooter/Feeding",
               "period": 0.05,
+              "data_type": "boolean",
               "true_color": 4283215696,
               "false_color": 4294198070,
               "true_icon": "None",
@@ -41,18 +29,19 @@
             "x": 960.0,
             "y": 0.0,
             "width": 320.0,
-            "height": 64.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/IntakeRack/OutputPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Remy — estimated pose",
             "x": 0.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 640.0,
             "height": 384.0,
             "type": "Field",
@@ -73,148 +62,214 @@
           {
             "title": "Flywheel target (RPS)",
             "x": 640.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/ShooterFlywheel/DesiredVelocity",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Flywheel actual (RPS)",
             "x": 960.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/ShooterFlywheel/Velocity",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Shot distance (m; coordinated only)",
             "x": 640.0,
-            "y": 256.0,
+            "y": 384.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Shooter/DistanceToHubMeters",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Rack target (m)",
             "x": 960.0,
-            "y": 256.0,
-            "width": 320.0,
+            "y": 384.0,
+            "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/IntakeRack/GoalPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Hood actual (rotations)",
             "x": 640.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/Hood/OutputPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Hood target (rotations)",
             "x": 960.0,
-            "y": 384.0,
-            "width": 320.0,
+            "y": 512.0,
+            "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Hood/GoalPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Estimated pose [x m, y m, heading deg]",
             "x": 0.0,
-            "y": 448.0,
+            "y": 512.0,
             "width": 640.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/Pose/Robot",
               "period": 0.05,
+              "data_type": "double[]",
               "show_submit_button": true
             }
           },
           {
             "title": "Conveyor request (V)",
             "x": 0.0,
-            "y": 576.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Conveyor/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Bottom indexer request (V)",
             "x": 320.0,
-            "y": 576.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/BottomIndexer/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Top indexer request (V)",
             "x": 640.0,
-            "y": 576.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/TopIndexer/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Rack command owner",
             "x": 960.0,
-            "y": 576.0,
-            "width": 320.0,
+            "y": 640.0,
+            "width": 128.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/IntakeRack/CommandOwner",
               "period": 0.05,
+              "data_type": "string",
               "show_submit_button": true
+            }
+          },
+          {
+            "title": "Auto Choices",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 640.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Choices",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "Teleop fuel scored (sim)",
+            "x": 1088.0,
+            "y": 512.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/FieldSimulation/Scoring/Teleop",
+              "period": 0.06,
+              "data_type": "int",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Total fuel scored (sim)",
+            "x": 1088.0,
+            "y": 640.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/FieldSimulation/Scoring/Total",
+              "period": 0.06,
+              "data_type": "int",
+              "show_submit_button": false
+            }
+          },
+          {
+            "title": "Auto fuel scored (sim)",
+            "x": 1088.0,
+            "y": 384.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/FieldSimulation/Scoring/Auto",
+              "period": 0.06,
+              "data_type": "int",
+              "show_submit_button": false
             }
           }
         ]
@@ -230,11 +285,12 @@
             "x": 0.0,
             "y": 0.0,
             "width": 320.0,
-            "height": 64.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Shooter/Feeding",
               "period": 0.05,
+              "data_type": "boolean",
               "true_color": 4283215696,
               "false_color": 4294198070,
               "true_icon": "None",
@@ -246,11 +302,12 @@
             "x": 320.0,
             "y": 0.0,
             "width": 640.0,
-            "height": 64.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Shooter/Readiness",
               "period": 0.05,
+              "data_type": "string",
               "show_submit_button": true
             }
           },
@@ -259,7 +316,7 @@
             "x": 960.0,
             "y": 0.0,
             "width": 320.0,
-            "height": 64.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Shooter/FeedBlockedReason",
@@ -270,268 +327,288 @@
           {
             "title": "Flywheel target (RPS)",
             "x": 0.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/ShooterFlywheel/DesiredVelocity",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Flywheel actual (RPS)",
             "x": 320.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/ShooterFlywheel/Velocity",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Hood actual (rotations)",
             "x": 640.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/Hood/OutputPosition",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Rack actual (m)",
             "x": 960.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/IntakeRack/OutputPosition",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Shot distance (m; coordinated only)",
             "x": 0.0,
-            "y": 256.0,
+            "y": 384.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Shooter/DistanceToHubMeters",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Flywheel applied motor volts",
             "x": 320.0,
-            "y": 256.0,
+            "y": 384.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/ShooterFlywheel/MotorVoltages",
               "period": 0.05,
+              "data_type": "double[]",
               "show_submit_button": true
             }
           },
           {
             "title": "Hood target (rotations)",
             "x": 640.0,
-            "y": 256.0,
+            "y": 384.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Hood/GoalPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Rack target (m)",
             "x": 960.0,
-            "y": 256.0,
+            "y": 384.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/IntakeRack/GoalPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "BottomIndexer request (V)",
             "x": 0.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/BottomIndexer/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "BottomIndexer applied motor volts",
             "x": 0.0,
-            "y": 512.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/BottomIndexer/MotorVoltages",
               "period": 0.05,
+              "data_type": "double[]",
               "show_submit_button": true
             }
           },
           {
             "title": "BottomIndexer speed (RPS)",
             "x": 0.0,
-            "y": 640.0,
+            "y": 768.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/BottomIndexer/Velocity",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "TopIndexer request (V)",
             "x": 320.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/TopIndexer/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "TopIndexer applied motor volts",
             "x": 320.0,
-            "y": 512.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/TopIndexer/MotorVoltages",
               "period": 0.05,
+              "data_type": "double[]",
               "show_submit_button": true
             }
           },
           {
             "title": "TopIndexer speed (RPS)",
             "x": 320.0,
-            "y": 640.0,
+            "y": 768.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/TopIndexer/Velocity",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Conveyor request (V)",
             "x": 640.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Conveyor/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Conveyor applied motor volts",
             "x": 640.0,
-            "y": 512.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/Conveyor/MotorVoltages",
               "period": 0.05,
+              "data_type": "double[]",
               "show_submit_button": true
             }
           },
           {
             "title": "Conveyor speed (RPS)",
             "x": 640.0,
-            "y": 640.0,
+            "y": 768.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/Conveyor/Velocity",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "IntakeRoller request (V)",
             "x": 960.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/IntakeRoller/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "IntakeRoller applied motor volts",
             "x": 960.0,
-            "y": 512.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/IntakeRoller/MotorVoltages",
               "period": 0.05,
+              "data_type": "double[]",
               "show_submit_button": true
             }
           },
           {
             "title": "IntakeRoller speed (RPS)",
             "x": 960.0,
-            "y": 640.0,
+            "y": 768.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/IntakeRoller/Velocity",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           }
@@ -544,28 +621,16 @@
         "layouts": [],
         "containers": [
           {
-            "title": "Auto Choices",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 640.0,
-            "height": 64.0,
-            "type": "Dropdown Chooser",
-            "properties": {
-              "topic": "/SmartDashboard/Auto Choices",
-              "period": 0.05,
-              "sort_options": false
-            }
-          },
-          {
             "title": "Feeding requested",
             "x": 640.0,
             "y": 0.0,
             "width": 320.0,
-            "height": 64.0,
+            "height": 128.0,
             "type": "Boolean Box",
             "properties": {
               "topic": "/SmartDashboard/Shooter/Feeding",
               "period": 0.05,
+              "data_type": "boolean",
               "true_color": 4283215696,
               "false_color": 4294198070,
               "true_icon": "None",
@@ -577,18 +642,19 @@
             "x": 960.0,
             "y": 0.0,
             "width": 320.0,
-            "height": 64.0,
+            "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/IntakeRack/CommandOwner",
               "period": 0.05,
+              "data_type": "string",
               "show_submit_button": true
             }
           },
           {
             "title": "Remy — estimated pose",
             "x": 0.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 640.0,
             "height": 384.0,
             "type": "Field",
@@ -609,135 +675,158 @@
           {
             "title": "Flywheel target (RPS)",
             "x": 640.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/ShooterFlywheel/DesiredVelocity",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Flywheel actual (RPS)",
             "x": 960.0,
-            "y": 64.0,
+            "y": 128.0,
             "width": 320.0,
-            "height": 192.0,
+            "height": 256.0,
             "type": "Graph",
             "properties": {
               "topic": "/AdvantageKit/ShooterFlywheel/Velocity",
               "period": 0.05,
+              "data_type": "double",
               "time_displayed": 10.0,
-              "line_width": 2.0,
-              "color": 4278238420
+              "color": 4278238420,
+              "line_width": 2.0
             }
           },
           {
             "title": "Auto/coordinated readiness (last update)",
             "x": 640.0,
-            "y": 256.0,
+            "y": 384.0,
             "width": 640.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/SmartDashboard/Shooter/Readiness",
               "period": 0.05,
+              "data_type": "string",
               "show_submit_button": true
             }
           },
           {
             "title": "Rack actual (m)",
             "x": 640.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/IntakeRack/OutputPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Rack target (m)",
             "x": 960.0,
-            "y": 384.0,
+            "y": 512.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/IntakeRack/GoalPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Estimated pose [x m, y m, heading deg]",
             "x": 0.0,
-            "y": 448.0,
+            "y": 512.0,
             "width": 640.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/Pose/Robot",
               "period": 0.05,
+              "data_type": "double[]",
               "show_submit_button": true
             }
           },
           {
             "title": "Conveyor request (V)",
             "x": 0.0,
-            "y": 576.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/Conveyor/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Bottom indexer request (V)",
             "x": 320.0,
-            "y": 576.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/BottomIndexer/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Top indexer request (V)",
             "x": 640.0,
-            "y": 576.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/RealOutputs/TopIndexer/CommandedVoltage",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
             }
           },
           {
             "title": "Hood actual (rotations)",
             "x": 960.0,
-            "y": 576.0,
+            "y": 640.0,
             "width": 320.0,
             "height": 128.0,
             "type": "Text Display",
             "properties": {
               "topic": "/AdvantageKit/Hood/OutputPosition",
               "period": 0.05,
+              "data_type": "double",
               "show_submit_button": true
+            }
+          },
+          {
+            "title": "Auto Choices",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 640.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Choices",
+              "period": 0.06,
+              "sort_options": false
             }
           }
         ]

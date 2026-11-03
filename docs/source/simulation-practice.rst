@@ -125,3 +125,14 @@ names without their attached commands. Both intake markers must retain a Named
 Command action matching their name; a marker label alone does not run a command.
 ``SpinIntake`` must retain its end position to stop collection before shooting.
 After saving, restart desktop simulation so it loads the updated deploy files.
+
+Practice score counters
+-----------------------
+
+Elastic's Driving tab uses ``FieldSimulation/Scoring/Auto``, ``Teleop``, and
+``Total`` under ``/AdvantageKit/RealOutputs/``. A successful shot counts once in
+its enabled launch mode, even if it lands after the auto-to-teleop transition.
+Total is Auto + Teleop. Test-mode shots are excluded. Disable or Driver Station
+disconnect resets the session; direct enabled auto-to-teleop preserves it. The
+legacy ``FieldSimulation/SuccessfulScoreCount`` topic mirrors Total. These are
+practice hit counts, not MapleSim active-hub match points or real-robot scores.

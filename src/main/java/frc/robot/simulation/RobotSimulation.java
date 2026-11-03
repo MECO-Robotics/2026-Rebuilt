@@ -151,7 +151,7 @@ public interface RobotSimulation {
 			Logger.recordOutput("FieldSimulation/FuelPositions", fuelPoses);
 			Logger.recordOutput("FieldSimulation/HopperFuelPositions", hopperFuelPoses);
 			Logger.recordOutput("FieldSimulation/HopperFuelCount", hopperFuelPoses.length);
-			Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", launchedFuelSim.getSuccessfulScoreCount());
+			launchedFuelSim.publishScores();
 			Logger.recordOutput("FieldSimulation/FuelProjectilePositions", fuelProjectilePoses);
 			Logger.recordOutput("FieldSimulation/FuelProjectileCount", fuelProjectilePoses.length);
 		}

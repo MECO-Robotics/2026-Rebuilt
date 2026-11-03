@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.constants.Constants;
@@ -37,7 +38,7 @@ public class LaunchedFuelSim {
 	private final PositionJoint hood;
 	private final Flywheel shooterFlywheel;
 	private final java.util.function.Predicate<frc.robot.commands.shooter.IndexerFeedDirection> feedPathReady;
-	private int successfulScoreCount = 0;
+	private final PracticeScoreCounter scores = new PracticeScoreCounter();
 
 	private double lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
 	private double nextBurstShotTimestampSeconds = Double.NEGATIVE_INFINITY;
@@ -117,14 +118,21 @@ public class LaunchedFuelSim {
 	}
 
 	public void resetSuccessfulScoreCount() {
-		successfulScoreCount = 0;
+		scores.reset();
 		pendingBurstShots = 0;
 		lastBurstTimestampSeconds = Double.NEGATIVE_INFINITY;
-		Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
+		publishScores();
 	}
 
 	public int getSuccessfulScoreCount() {
-		return successfulScoreCount;
+		return scores.totalCount();
+	}
+
+	public void publishScores() {
+		Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", scores.totalCount());
+		Logger.recordOutput("FieldSimulation/Scoring/Auto", scores.autoCount());
+		Logger.recordOutput("FieldSimulation/Scoring/Teleop", scores.teleopCount());
+		Logger.recordOutput("FieldSimulation/Scoring/Total", scores.totalCount());
 	}
 
 	private boolean hasLaunchVelocity() {
@@ -150,6 +158,7 @@ public class LaunchedFuelSim {
 	}
 
 	private void launchSingleFuel(int burstIndex, double projectileSpeedMps) {
+		Runnable recordScore = scores.onLaunch(DriverStation.isAutonomousEnabled(), DriverStation.isTeleopEnabled());
 		double randomizedHoodDeflectionRadians = getRandomizedHoodDeflectionRadians();
 		double launchPitchRadians = toMapleLaunchPitchRadians(randomizedHoodDeflectionRadians);
 		double randomizedSpeedMps = getRandomizedProjectileSpeedMps(projectileSpeedMps);
@@ -168,8 +177,8 @@ public class LaunchedFuelSim {
 								.withTargetTolerance(
 										new Translation3d(Units.feetToMeters(2), Units.feetToMeters(2), 0.1))
 								.withHitTargetCallBack(() -> {
-									successfulScoreCount++;
-									Logger.recordOutput("FieldSimulation/SuccessfulScoreCount", successfulScoreCount);
+									recordScore.run();
+									publishScores();
 									SimulatedArena.getInstance().addGamePiece(createHubBackSpawnFuel());
 								}).withProjectileTrajectoryDisplayCallBack(
 										pose3ds -> Logger.recordOutput("Flywheel/FuelProjectileSuccessfulShot",
